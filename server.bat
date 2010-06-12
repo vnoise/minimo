@@ -1,0 +1,2 @@
+rackup -s webrick
+pause

@@ -1,0 +1,83 @@
+html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,p,blockquote,th,td {
+    margin:0;
+    padding:0;
+    font-weight: inherit;
+    font-style: inherit;
+    font-family: inherit;
+}
+
+img, body, html {
+    border:0;
+}
+
+address,caption,cite,code,dfn,em,strong,th,var {
+    font-style:normal;
+    font-weight:normal;
+}
+
+body {
+    line-height: 1.5;
+    font-family: Lucida Grande;
+    background:#FFFFFF url(images/bg.jpg) repeat-x scroll 0 0;
+    font-family: arial, sans-serif;
+    font-size: 80%;
+}
+
+
+.instrument {
+    border: 1px solid #999;
+    margin-top: 20px;
+    width: 320px;
+    background: #ccc;
+}
+
+.instrument table {
+    width: 100%;
+}
+
+.instrument td.pattern {
+    width: 70px;
+    height: 70px;
+    background: #eee;
+}
+
+.instrument td.active {
+    background: #c00;
+}
+
+.instrument td.current {
+    background: #0c0;
+}
+
+.instrument td.current.active {
+    background: #cc0;
+}
+
+.instrument th {
+    padding: 5px;
+    font-weight: bold;
+}
+
+.instrument .label {
+    font-weight: bold;
+    float: right;
+    font-size: 20px;
+    padding: 10px;
+}
+
+.instrument .slider {
+    width: 100%;
+    height: 50px;
+    border: 1px solid #ccc;
+    background: #eee;
+    -webkit-border-radius: 10px;
+    cursor: hand;
+}
+
+.instrument .slider .handle {
+    cursor: hand;
+    background: #666;
+    width: 50px;
+    height: 50px;    
+    -webkit-border-radius: 10px;
+}
