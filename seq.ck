@@ -9,10 +9,10 @@ class Instrument {
     100::ms => dur decay;
     80 => float freq;
     
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float pattern[];    
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float automationAttack[];
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float automationDecay[];
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float automationFreq[];
+    float pattern[16];
+    float automationAttack[16];
+    float automationDecay[16];
+    float automationFreq[16];
 
     noise => adsr;
     sinus => adsr;
@@ -25,8 +25,8 @@ class Instrument {
     public void play(int pos) {
         pattern[pos] => float level;
         
-        attack + automationAttack[pos] * attack => adsr.attackTime;
-        decay + automationDecay[pos] * decay => adsr.decayTime;
+        attack + automationAttack[pos] * 500::ms => adsr.attackTime;
+        decay + automationDecay[pos] * 500::ms => adsr.decayTime;
         freq + automationFreq[pos] * freq => sinus.freq;
 
         if (level > 0) {
@@ -93,7 +93,7 @@ fun void receive(string address) {
                     value => instrument.automationDecay[pos];
                 }
 
-                <<< address, index, pos, value >>>;
+                <<< address, index, key, pos, value >>>;
             }
 
             if (address == "/parameter,isf") {

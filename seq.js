@@ -20,7 +20,7 @@ function Instrument(key, index) {
     this.automation = {};
 
     $.each(['attack', 'freq', 'decay'], function(i, key) {
-        this.automation[key] = new Sequencer(this, this.container.find('.automation.' + key).get(0), key);
+        this.automation[key] = new Automation(this, this.container.find('.automation.' + key).get(0), key);
     }.bind(this));
 
     this.volume = new Slider(this, 'volume', 1);
@@ -40,10 +40,77 @@ Instrument.prototype.clock = function(index) {
 };
 
 
-function Sequencer(instrument, container, key) {
+function Automation(instrument, container, key) {
     this.instrument = instrument;
     this.container = container;
     this.key = key;
+    this.canvas = Raphael(this.container, 320, 200);
+    this.pattern = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    this.clockPattern = [];
+    this.stepPattern = [];
+
+    this.draw();
+}
+
+Automation.prototype.draw = function() {
+    for (var x = 0, i = 0; x < 320; x += 20, i += 1) {
+        this.stepPattern[i] = this.canvas.rect(x, 200, 20, 200).attr({
+            fill: "#faa",
+            stroke: "none",
+            opacity: 1
+        });
+
+        this.clockPattern[i] = this.canvas.rect(x, 0, 20, 200).
+            attr({ fill: '#999', opacity: i % 4 == 0 ? 0.5 : 0.2 }).
+            mousedown(this.onClickCell.bind(this, i)).
+            mousemove(this.onMouseMove.bind(this, i)).
+            mouseup(this.onMouseUp.bind(this, i));
+    }
+};
+
+Automation.prototype.onClickCell = function(index, event) {
+    this.mouseDown = true;
+
+    this.setStep(index, 1 - event.offsetY / 200);
+    
+    send('automation', this.instrument.index, this.key, index, this.pattern[index]);
+
+    return false;
+};
+
+Automation.prototype.onMouseMove = function(index, event) {
+    if (this.mouseDown) {
+        this.setStep(index, 1 - event.offsetY / 200);            
+
+        send('automation', this.instrument.index, this.key, index, this.pattern[index]);
+    }
+
+    return false;
+};
+
+Automation.prototype.onMouseUp = function(index, event) {
+    this.mouseDown = false;
+
+    return false;
+};
+
+Automation.prototype.setStep = function(index, value) {
+    console.log(index);
+
+    this.pattern[index] = value;
+    this.stepPattern[index].attr('y', 200 - value * 200);
+};
+
+Automation.prototype.clock = function(index) {
+    this.clockPattern[index].
+        attr({ opacity: 1 }).
+        animate({ opacity: index % 4 == 0 ? 0.5 : 0.2 }, 400);
+};
+
+
+function Sequencer(instrument, container) {
+    this.instrument = instrument;
+    this.container = container;
     this.canvas = Raphael(this.container, 320, 200);
     this.pattern = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     this.clockPattern = [];
@@ -76,12 +143,9 @@ Sequencer.prototype.onClickCell = function(index, event) {
         this.setStep(index, this.pattern[index] + 0.5);
     }
     
-    if (this.key) {
-        send('automation', this.instrument.index, this.key, index, this.pattern[index]);                
-    }
-    else {
-        send('pattern', this.instrument.index, index, this.pattern[index]);                
-    }
+    send('pattern', this.instrument.index, index, this.pattern[index]);                
+
+    return false;
 };
 
 Sequencer.prototype.setStep = function(index, value) {
@@ -101,7 +165,7 @@ function Slider(instrument, key, max) {
     this.max = max;
     this.instrument = instrument;
     this.key = key;
-    this.container = this.instrument.container.find('.' + key);
+    this.container = this.instrument.container.find('.slider.' + key);
     this.range = this.container.find('.range');
     this.handle = this.container.find('.handle');
     this.mouseDown = false;
@@ -137,22 +201,24 @@ Slider.prototype.handleEvent = function(event) {
 };
 
 Slider.prototype.onMouseDown = function(event) {
-    event.preventDefault();
-
     this.mouseDown = true;
     this.handleEvent(event);
+
+    return false;
 };
 
 Slider.prototype.onMouseUp = function(event) {
-    event.preventDefault();
-
     this.mouseDown = false;  
+
+    return false;
 };
 
 Slider.prototype.onMouseMove = function(event) {
     if (this.mouseDown) {
         this.handleEvent(event);
     }
+
+    return false;
 };
 
 Slider.prototype.onTouchMove = function(event) {
@@ -215,6 +281,13 @@ function receive(path, callback) {
 
 
 $(function() {
+    function captureEvents(){
+        return false;
+    }
+
+    document.onselectstart = captureEvents;
+    document.onselect = captureEvents;
+
     document.body.ongesturechange = function(e) {
         e.preventDefault();
     };

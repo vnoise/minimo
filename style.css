@@ -21,6 +21,7 @@ body {
     background: #444;
     font-family: arial, sans-serif;
     font-size: 80%;
+    cursor: hand;
 }
 
 
@@ -33,9 +34,14 @@ body {
     margin-right: 10px;
 }
 
-.instrument th {
-    padding: 5px;
-    font-weight: bold;
+.sequencer {
+    width: 320px;
+    height: 200px;
+}
+
+.automation {
+    width: 320px;
+    height: 200px;
 }
 
 .slider {

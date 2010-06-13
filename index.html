@@ -30,8 +30,6 @@
         <% end %>
 
         <% for param in [:freq, :attack, :decay] %>
-          <div class="automation <%= param %>">            
-          </div>
           <div class="slider <%= param %>">
             <div class="label">
               <%= param %>
@@ -40,6 +38,8 @@
               <div class="handle">
               </div>
             </div>
+          </div>
+          <div class="automation <%= param %>">            
           </div>
         <% end %>
       </div>
