@@ -4,7 +4,7 @@ class Slider
 
   def initialize(instrument, key)
     @instrument = instrument
-    @pattern = Array.new(16) { 0 }
+    @pattern = Array.new(16) { Array.new(16) { 0 } }
     @value = 0
     @key = key
   end
@@ -20,9 +20,10 @@ class Instrument
 
   def initialize(manager)
     @manager = manager
-    @pattern = Array.new(16) { 0 }    
+    @pattern = Array.new(16) { Array.new(16) { 0 } }    
     @sliders = {}
     @automation = {}
+    @clip = 0
 
     add_slider(:volume)
     add_slider(:sinus)
@@ -31,9 +32,7 @@ class Instrument
     add_slider(:attack)
     add_slider(:decay)
 
-    add_automation(:sinus)
     add_automation(:freq)
-    add_automation(:noise)
     add_automation(:attack)
     add_automation(:decay)
   end
@@ -44,10 +43,9 @@ class Instrument
     end
   end
 
-  def set_pattern(list)
-    @pattern = list
-    @pattern.each_with_index do |value, index|
-      pattern(index, value)
+  def set_pattern(clip, list)
+    list.each_with_index do |value, index|
+      pattern(clip, index, value)
     end
   end
 
@@ -56,7 +54,7 @@ class Instrument
   end
 
   def add_automation(key)
-    @automation[key] = Array.new(16) { 0 }
+    @automation[key] = Array.new(16) { Array.new(16) { 0 } }
   end
 
   def index
@@ -67,14 +65,19 @@ class Instrument
     @sliders[key.to_sym].set_value(value)
   end
 
-  def pattern(index, value)
-    @pattern[index.to_i] = value.to_f
-    $sender.send("/pattern", "iif", self.index, index, value)
+  def clip(clip)
+    @clip = clip.to_i
+    $sender.send("/clip", "ii", self.index, @clip)
   end
 
-  def automation(key, index, value)
-    @automation[key.to_sym][index.to_i] = value.to_f
-    $sender.send("/automation", "isif", self.index, key, index, value)
+  def pattern(clip, index, value)
+    @pattern[clip.to_i][index.to_i] = value.to_f
+    $sender.send("/pattern", "iiif", self.index, clip, index, value)
+  end
+
+  def automation(clip, key, index, value)
+    @automation[key.to_sym][clip.to_i][index.to_i] = value.to_f
+    $sender.send("/automation", "isiif", self.index, key, clip, index, value)
   end
   
   def handle(sender_id, type, args)
@@ -86,8 +89,20 @@ class Instrument
     index = self.index
     messages = []
 
-    @pattern.each_with_index do |value, i|
-      messages << { :address => '/pattern', :args => [index, i, value] }
+    messages << { :address => '/clip', :args => [index, @clip] }
+
+    @pattern.each_with_index do |pattern, clip|
+      pattern.each_with_index do |value, i|
+        messages << { :address => '/pattern', :args => [index, clip, i, value] }
+      end
+    end
+
+    @automation.each do |key, clips|
+      clips.each_with_index do |pattern, clip|
+        pattern.each_with_index do |value, i|
+          messages << { :address => '/automation', :args => [index, key, clip, i, value] }
+        end
+      end
     end
 
     @sliders.each_value do |slider|
@@ -121,7 +136,7 @@ class InstrumentManager
     @instruments << instrument
 
     instrument.set_params(options)
-    instrument.set_pattern(pattern)
+    instrument.set_pattern(0, pattern)
   end
 
   def handle(sender_id, type, index, args)

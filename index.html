@@ -14,6 +14,12 @@
 
     <% for key in [:bd, :sd, :hh] %>
       <div class="<%= key %> instrument">
+        <div class="clips">
+          <% 8.times do |i| %>
+            <a href="#"><%= i %></a>
+          <% end %>
+        </div>
+
         <div class="sequencer">
         </div>
 

@@ -34,6 +34,34 @@ body {
     margin-right: 10px;
 }
 
+.instrument .clips {
+    overflow: hidden;
+}
+
+.instrument .clips a {
+    float: left;
+    text-decoration: none;
+    text-align: center;
+    padding: 8px;
+    width: 23px;
+    height: 20px;
+    margin: 0px;
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+    border-right: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+}
+
+.instrument .clips a:visited {
+    color: white;
+}
+
+.instrument .clips a.active {
+    background: white;
+    color: black;
+}
+
 .sequencer {
     width: 320px;
     height: 200px;

@@ -17,6 +17,12 @@ function Instrument(key, index) {
     this.container = $('.instrument.' + key);
     this.sequencer = new Sequencer(this, this.container.find('.sequencer').get(0));
 
+    this.clips = this.container.find('.clips a');
+
+    this.clips.each(function(index, link) {
+        $(link).click(this.onClickClip.bind(this, index, link));
+    }.bind(this));
+
     this.automation = {};
 
     $.each(['attack', 'freq', 'decay'], function(i, key) {
@@ -31,6 +37,14 @@ function Instrument(key, index) {
     this.decay  = new Slider(this, 'decay', 500);
 }
 
+Instrument.prototype.onClickClip = function(index, link, event) {
+    this.setClip(index);
+
+    send('clip', this.index, index);
+
+    return false;
+};
+
 Instrument.prototype.clock = function(index) {
     this.sequencer.clock(index);
 
@@ -39,15 +53,33 @@ Instrument.prototype.clock = function(index) {
     }
 };
 
+Instrument.prototype.setClip = function(clip) {
+    this.clips.removeClass('active');
+    $(this.clips.get(clip)).addClass('active');
+
+    this.sequencer.setClip(clip);
+
+    for (var key in this.automation) {
+        this.automation[key].setClip(clip);
+    }
+};
 
 function Automation(instrument, container, key) {
     this.instrument = instrument;
     this.container = container;
     this.key = key;
     this.canvas = Raphael(this.container, 320, 200);
-    this.pattern = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    this.pattern = [];
     this.clockPattern = [];
     this.stepPattern = [];
+    this.clip = 0;
+
+    for (var i = 0; i < 16; i++) {
+        this.pattern[i] = [];
+        for (var j = 0; j < 16; j++) {
+            this.pattern[i][j] = 0;
+        }
+    }
 
     this.draw();
 }
@@ -68,21 +100,22 @@ Automation.prototype.draw = function() {
     }
 };
 
+Automation.prototype.send = function(index) {
+    send('automation', this.instrument.index, this.clip, this.key, index, this.pattern[this.clip][index]);
+};
+
 Automation.prototype.onClickCell = function(index, event) {
     this.mouseDown = true;
-
-    this.setStep(index, 1 - event.offsetY / 200);
-    
-    send('automation', this.instrument.index, this.key, index, this.pattern[index]);
+    this.setStep(this.clip, index, 1 - event.offsetY / 200);    
+    this.send(index);
 
     return false;
 };
 
 Automation.prototype.onMouseMove = function(index, event) {
     if (this.mouseDown) {
-        this.setStep(index, 1 - event.offsetY / 200);            
-
-        send('automation', this.instrument.index, this.key, index, this.pattern[index]);
+        this.setStep(this.clip, index, 1 - event.offsetY / 200); 
+        this.send(index);
     }
 
     return false;
@@ -94,11 +127,14 @@ Automation.prototype.onMouseUp = function(index, event) {
     return false;
 };
 
-Automation.prototype.setStep = function(index, value) {
-    console.log(index);
+Automation.prototype.setStep = function(clip, index, value) {
+    if (Math.abs(this.pattern[clip][index] - value) >= 0.02) {
+        this.pattern[clip][index] = value;
 
-    this.pattern[index] = value;
-    this.stepPattern[index].attr('y', 200 - value * 200);
+        if (this.clip == clip) {
+            this.stepPattern[index].attr('y', 200 - value * 200);        
+        }        
+    }
 };
 
 Automation.prototype.clock = function(index) {
@@ -107,14 +143,30 @@ Automation.prototype.clock = function(index) {
         animate({ opacity: index % 4 == 0 ? 0.5 : 0.2 }, 400);
 };
 
+Automation.prototype.setClip = function(clip) {
+    this.clip = clip;
+
+    for (var i = 0; i < 16; i++) {
+        this.stepPattern[i].attr('y', 200 - this.pattern[this.clip][i] * 200);        
+    }
+};
+
 
 function Sequencer(instrument, container) {
     this.instrument = instrument;
     this.container = container;
     this.canvas = Raphael(this.container, 320, 200);
-    this.pattern = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    this.pattern = [];
     this.clockPattern = [];
     this.stepPattern = [];
+    this.clip = 0;
+
+    for (var i = 0; i < 16; i++) {
+        this.pattern[i] = [];
+        for (var j = 0; j < 16; j++) {
+            this.pattern[i][j] = 0;
+        }
+    }
 
     this.draw();
 }
@@ -137,22 +189,23 @@ Sequencer.prototype.draw = function() {
 
 Sequencer.prototype.onClickCell = function(index, event) {
     if (this.pattern[index] == 1) {
-        this.setStep(index, 0);
+        this.setStep(this.clip, index, 0);
     }
     else {
-        this.setStep(index, this.pattern[index] + 0.5);
+        this.setStep(this.clip, index, this.pattern[this.clip][index] + 0.5);
     }
-    
-    send('pattern', this.instrument.index, index, this.pattern[index]);                
+
+    send('pattern', this.instrument.index, this.clip, index, this.pattern[this.clip][index]);
 
     return false;
 };
 
-Sequencer.prototype.setStep = function(index, value) {
-    this.pattern[index] = value;
-    this.stepPattern[index].
-        scale(2).
-        animate({ scale: 1, opacity: value }, 400);
+Sequencer.prototype.setStep = function(clip, index, value) {
+    this.pattern[clip][index] = value;
+
+    if (clip == this.clip) {
+        this.stepPattern[index].scale(2).animate({ scale: 1, opacity: value }, 400);        
+    }
 };
 
 Sequencer.prototype.clock = function(index) {
@@ -160,6 +213,15 @@ Sequencer.prototype.clock = function(index) {
         scale(10).
         animate({ scale: 1 }, 400);
 };
+
+Sequencer.prototype.setClip = function(clip) {
+    this.clip = clip;
+
+    for (var i = 0; i < 16; i++) {
+        this.stepPattern[i].attr('opacity', this.pattern[this.clip][i]);
+    }
+};
+
 
 function Slider(instrument, key, max) {
     this.max = max;
@@ -250,8 +312,16 @@ var controller = {
         instruments[instrument][key].setValue(value);        
     },
 
-    '/pattern': function(instrument, index, value) {
-        instruments[instrument].sequencer.setStep(index, value);
+    '/pattern': function(instrument, clip, index, value) {
+        instruments[instrument].sequencer.setStep(clip, index, value);
+    },
+
+    '/automation': function(instrument, key, clip, index, value) {
+        instruments[instrument].automation[key].setStep(clip, index, value);
+    },
+
+    '/clip': function(instrument, clip) {
+        instruments[instrument].setClip(clip);
     }
 };
 

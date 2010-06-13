@@ -8,11 +8,12 @@ class Instrument {
     0::ms => dur attack;
     100::ms => dur decay;
     80 => float freq;
+    0 => int clip;
     
-    float pattern[16];
-    float automationAttack[16];
-    float automationDecay[16];
-    float automationFreq[16];
+    float pattern[16][16];
+    float automationAttack[16][16];
+    float automationDecay[16][16];
+    float automationFreq[16][16];
 
     noise => adsr;
     sinus => adsr;
@@ -23,11 +24,11 @@ class Instrument {
     adsr.set(0::ms, 100::ms, 0.0, 0::ms);
 
     public void play(int pos) {
-        pattern[pos] => float level;
+        pattern[clip][pos] => float level;
         
-        attack + automationAttack[pos] * 500::ms => adsr.attackTime;
-        decay + automationDecay[pos] * 500::ms => adsr.decayTime;
-        freq + automationFreq[pos] * freq => sinus.freq;
+        attack + automationAttack[clip][pos] * 500::ms => adsr.attackTime;
+        decay + automationDecay[clip][pos] * 500::ms => adsr.decayTime;
+        freq + automationFreq[clip][pos] * freq => sinus.freq;
 
         if (level > 0) {
             level => gain.gain;         
@@ -67,33 +68,43 @@ fun void receive(string address) {
 
             instruments[index] @=> Instrument instrument;
             
-            if (address == "/pattern,iif") {
+            if (address == "/pattern,iiif") {
+                e.getInt() => int clip;
                 e.getInt() => int pos;
                 e.getFloat() => float value;
 
-                value => instrument.pattern[pos];
+                value => instrument.pattern[clip][pos];
 
-                <<< address, index, pos, value >>>;
+                <<< address, index, clip, pos, value >>>;
+            }
+            
+            if (address == "/clip,ii") {
+                e.getInt() => int clip;
+
+                clip => instrument.clip;
+
+                <<< address, index, clip >>>;
             }
                         
-            if (address == "/automation,isif") {
+            if (address == "/automation,isiif") {
                 e.getString() => string key;
+                e.getInt() => int clip;
                 e.getInt() => int pos;
                 e.getFloat() => float value;
                 
                 if (key == "freq") {
-                    value => instrument.automationFreq[pos];
+                    value => instrument.automationFreq[clip][pos];
                 }
                 
                 if (key == "attack") {
-                    value => instrument.automationAttack[pos];
+                    value => instrument.automationAttack[clip][pos];
                 }
                 
                 if (key == "decay") {
-                    value => instrument.automationDecay[pos];
+                    value => instrument.automationDecay[clip][pos];
                 }
 
-                <<< address, index, key, pos, value >>>;
+                <<< address, index, key, clip, pos, value >>>;
             }
 
             if (address == "/parameter,isf") {
@@ -130,8 +141,9 @@ fun void receive(string address) {
     }
 }
 
-spork ~ receive("/automation,isif");
-spork ~ receive("/pattern,iif");
+spork ~ receive("/automation,isiif");
+spork ~ receive("/pattern,iiif");
+spork ~ receive("/clip,ii");
 spork ~ receive("/parameter,isf");
 
 OscSend sender;
