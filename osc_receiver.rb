@@ -13,7 +13,7 @@ class OSCReceiver
     @server = OSC::UDPServer.new
     @server.bind(@host, @port)
     @server.add_method '/*', nil do |message|
-      broadcast(message)
+      broadcast([message])
     end
 
     Thread.new do
@@ -21,21 +21,31 @@ class OSCReceiver
     end
   end
 
-  def broadcast(message, client_id = nil)
-    # puts "#{message.address} #{message.args.inspect}"
-    @queues.each do |id, queue|
-      unless id == client_id
-        queue.push({ :address => message.address, :args => message.args })
+  def broadcast(messages, sender_id = nil)
+    @queues.each_key do |client_id|
+      unless client_id == sender_id
+        send(client_id, messages)
       end
     end
+  end
+
+  def send(client_id, messages)
+    queue = @queues[client_id]
+    messages = messages.map {|message| { :address => message.address, :args => message.args } }
+    queue.push(messages)
   end
   
   def call(env)
     client_id = env['PATH_INFO'][1..-1]
+    queue = @queues[client_id]
 
-    queue = (@queues[client_id] ||= TQueue.new)
-    messages = queue.wait
-  
+    if queue.nil?
+      queue = @queues[client_id] = TQueue.new
+      messages = $manager.messages
+    else
+      messages = queue.wait
+    end
+
     [200, {'Content-Type' => 'text/html'}, messages.to_json]
   end
 end

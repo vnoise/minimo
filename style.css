@@ -18,7 +18,7 @@ address,caption,cite,code,dfn,em,strong,th,var {
 body {
     line-height: 1.5;
     font-family: Lucida Grande;
-    background:#FFFFFF url(images/bg.jpg) repeat-x scroll 0 0;
+    background: #444;
     font-family: arial, sans-serif;
     font-size: 80%;
 }
@@ -28,29 +28,9 @@ body {
     border: 1px solid #999;
     margin-top: 20px;
     width: 320px;
-    background: #ccc;
-}
-
-.instrument table {
-    width: 100%;
-}
-
-.instrument td.pattern {
-    width: 70px;
-    height: 70px;
-    background: #eee;
-}
-
-.instrument td.active {
-    background: #c00;
-}
-
-.instrument td.current {
-    background: #0c0;
-}
-
-.instrument td.current.active {
-    background: #cc0;
+    float: left;
+    overflow: hidden;
+    margin-right: 10px;
 }
 
 .instrument th {
@@ -58,26 +38,36 @@ body {
     font-weight: bold;
 }
 
-.instrument .label {
+.slider {
+    color: #fff;
+    height: 40px;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    overflow: hidden;
+}
+
+.slider .label {
     font-weight: bold;
-    float: right;
-    font-size: 20px;
-    padding: 10px;
+    float: left;
+    font-size: 16px;
+    padding: 5px;
+    color: #eee;
+    width: 80px;
+    height: 30px;
 }
 
-.instrument .slider {
-    width: 100%;
-    height: 50px;
-    border: 1px solid #ccc;
-    background: #eee;
-    -webkit-border-radius: 10px;
+.slider .range {
+    float: left;
+    width: 230px;
     cursor: hand;
 }
 
-.instrument .slider .handle {
+.slider .handle {
     cursor: hand;
-    background: #666;
-    width: 50px;
-    height: 50px;    
+    background: #c6c;
+    width: 40px;
+    height: 40px;
+    
     -webkit-border-radius: 10px;
+    -mox-border-radius: 10px;
 }

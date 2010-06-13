@@ -3,8 +3,10 @@ class TQueue
     @list = []
   end
 
-  def push(msg)
-    @list << msg
+  def push(messages)
+    messages.each do |message|
+      @list << message
+    end
     @thread.wakeup if @thread       
   end
 

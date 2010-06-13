@@ -4,21 +4,34 @@ class Instrument {
     ADSR adsr;
     Gain gain;
     Gain output;
-    float pattern[];
+
+    0::ms => dur attack;
+    100::ms => dur decay;
+    80 => float freq;
     
-    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> pattern;
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float pattern[];    
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float automationAttack[];
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float automationDecay[];
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] @=> float automationFreq[];
 
     noise => adsr;
     sinus => adsr;
     adsr => gain => output;
+    0 => noise.gain;
+    0 => sinus.gain;
 
     adsr.set(0::ms, 100::ms, 0.0, 0::ms);
 
     public void play(int pos) {
         pattern[pos] => float level;
+        
+        attack + automationAttack[pos] * attack => adsr.attackTime;
+        decay + automationDecay[pos] * decay => adsr.decayTime;
+        freq + automationFreq[pos] * freq => sinus.freq;
 
         if (level > 0) {
-            level => gain.gain;
+            level => gain.gain;         
+            
             adsr.keyOff();
             adsr.keyOn();
         }
@@ -29,25 +42,9 @@ class Instrument {
     }
 }
 
-class Bassdrum extends Instrument {
-    0 => noise.gain;
-    80 => sinus.freq;
-}
-
-class Snare extends Instrument {
-    0.5 => noise.gain;
-    160 => sinus.freq;    
-}
-
-class Hihat extends Instrument {
-    0 => sinus.gain;
-    
-    adsr.set(0::ms, 10::ms, 0.0, 0::ms);
-}
-
-Snare snare;
-Bassdrum bassdrum;
-Hihat hihat;
+Instrument snare;
+Instrument bassdrum;
+Instrument hihat;
 
 snare.connect(dac);
 bassdrum.connect(dac);
@@ -59,8 +56,8 @@ OscRecv receiver;
 3334 => receiver.port;
 receiver.listen();
 
-fun void receive(string path, string type) {
-    receiver.event(path) @=> OscEvent e;
+fun void receive(string address) {
+    receiver.event(address) @=> OscEvent e;
     
     while (true) {
         e => now;
@@ -70,46 +67,72 @@ fun void receive(string path, string type) {
 
             instruments[index] @=> Instrument instrument;
             
-            if (type == "pattern") {
+            if (address == "/pattern,iif") {
                 e.getInt() => int pos;
-                e.getFloat() => float value;                
+                e.getFloat() => float value;
+
                 value => instrument.pattern[pos];
+
+                <<< address, index, pos, value >>>;
             }
-            
-            if (type == "volume") {
-                e.getFloat() => instrument.output.gain;
+                        
+            if (address == "/automation,isif") {
+                e.getString() => string key;
+                e.getInt() => int pos;
+                e.getFloat() => float value;
+                
+                if (key == "freq") {
+                    value => instrument.automationFreq[pos];
+                }
+                
+                if (key == "attack") {
+                    value => instrument.automationAttack[pos];
+                }
+                
+                if (key == "decay") {
+                    value => instrument.automationDecay[pos];
+                }
+
+                <<< address, index, pos, value >>>;
             }
 
-            if (type == "noise") {
-                e.getFloat() => instrument.noise.gain;
-            }
+            if (address == "/parameter,isf") {
+                e.getString() => string parameter;
+                e.getFloat() => float value;
 
-            if (type == "sinus") {
-                e.getFloat() => instrument.sinus.gain;
-            }
+                if (parameter == "volume") {
+                    value => instrument.output.gain;
+                }
 
-            if (type == "freq") {
-                e.getFloat() => instrument.sinus.freq;
-            }
-            
-            if (type == "attack") {
-                e.getFloat()::ms => instrument.adsr.attackTime;
-            }
-            
-            if (type == "decay") {
-                e.getFloat()::ms => instrument.adsr.decayTime;
+                if (parameter == "noise") {
+                    value => instrument.noise.gain;
+                }
+
+                if (parameter == "sinus") {
+                    value => instrument.sinus.gain;
+                }
+
+                if (parameter == "freq") {
+                    value => instrument.freq;
+                }
+                
+                if (parameter == "attack") {
+                    value::ms => instrument.attack;
+                }
+                
+                if (parameter == "decay") {
+                    value::ms => instrument.decay;
+                }
+
+                <<< address, index, parameter, value >>>;
             }
         }
     }
 }
 
-spork ~ receive("/pattern,iif", "pattern");
-spork ~ receive("/volume,if", "volume");
-spork ~ receive("/freq,if", "freq");
-spork ~ receive("/noise,if", "noise");
-spork ~ receive("/sinus,if", "sinus");
-spork ~ receive("/attack,if", "attack");
-spork ~ receive("/decay,if", "decay");
+spork ~ receive("/automation,isif");
+spork ~ receive("/pattern,iif");
+spork ~ receive("/parameter,isf");
 
 OscSend sender;
 sender.setHost("localhost", 3335);
@@ -120,13 +143,15 @@ T - (now % T) => now;
 
 while( true )
 {
-    bassdrum.play(i);
-    snare.play(i);
-    hihat.play(i);
+    bassdrum.play(i % 16);
+    snare.play(i % 16);
+    hihat.play(i % 16);
 
-    sender.startMsg("/clock,i");
-    sender.addInt(i);    
+    if (i % 4 == 0) {
+        sender.startMsg("/clock,i");
+        sender.addInt(i);
+    }
 
     .5::T => now;
-    (i + 1) % 16 => i;
+    i + 1 => i;
 }

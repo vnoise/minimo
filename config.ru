@@ -4,19 +4,22 @@ require 'rack/reloader'
 require 'osc_sender'
 require 'osc_receiver'
 require 'erb'
+require 'manager'
 
 use Rack::Reloader
 
-receiver =  OSCReceiver.new('localhost', 3335)
+$receiver =  OSCReceiver.new('localhost', 3335)
+$sender = OSCSender.new('localhost', 3334)
+$manager = InstrumentManager.new
 
 $client_id = '1'
 
-map "/osc/receive" do
-  run receiver
+map "/receive" do
+  run $receiver
 end
 
-map "/osc/send" do
-  run OSCSender.new('localhost', 3334, receiver)
+map "/send" do
+  run $sender
 end
 
 map "/index" do
