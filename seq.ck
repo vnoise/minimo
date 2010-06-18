@@ -110,15 +110,17 @@ Dyno compressor;
 
 compressor => limiter => dac;
 
-Instrument snare;
-Instrument bassdrum;
-Instrument hihat;
+Instrument i0;
+Instrument i1;
+Instrument i2;
+Instrument i3;
 
-snare.output    => compressor;
-bassdrum.output => compressor;
-hihat.output    => compressor;
+i0.output => compressor;
+i1.output => compressor;
+i2.output => compressor;
+i3.output => compressor;
 
-[bassdrum, snare, hihat] @=> Instrument instruments[];
+[i0, i1, i2, i3] @=> Instrument instruments[];
 
 OscRecv receiver;
 3334 => receiver.port;
@@ -278,9 +280,10 @@ T - (now % T) => now;
 
 while( true )
 {
-    bassdrum.play(i % 16);
-    snare.play(i % 16);
-    hihat.play(i % 16);
+    i0.play(i % 16);
+    i1.play(i % 16);
+    i2.play(i % 16);
+    i3.play(i % 16);
 
     if (i % 4 == 0) {
         sender.startMsg("/clock,i");
