@@ -7,48 +7,18 @@
     <script type="text/javascript">
       var client_id = <%= $client_id %>;
     </script>
+    <script src="touch-tracker.js" type="text/javascript"></script>
+    <script src="controller.js" type="text/javascript"></script>
+    <script src="slider.js" type="text/javascript"></script>
+    <script src="instrument.js" type="text/javascript"></script>
+    <script src="sequencer.js" type="text/javascript"></script>
+    <script src="automation.js" type="text/javascript"></script>
     <script src="seq.js" type="text/javascript"></script>
   </head>
   <body>
-    <!-- <div id="console" style="height: 50px; border: 1px solid grey"></div> -->
-
-    <% for key in [:bd, :sd, :hh] %>
-      <div class="<%= key %> instrument">
-        <div class="clips">
-          <% 8.times do |i| %>
-            <a href="#"><%= i %></a>
-          <% end %>
-        </div>
-
-        <div class="sequencer">
-        </div>
-
-        <% for param in [:volume, :sinus, :noise] %>
-          <div class="slider <%= param %>">
-            <div class="label">
-              <%= param %>
-            </div>
-            <div class="range">
-              <div class="handle">
-              </div>
-            </div>
-          </div>
-        <% end %>
-
-        <% for param in [:freq, :attack, :decay] %>
-          <div class="slider <%= param %>">
-            <div class="label">
-              <%= param %>
-            </div>
-            <div class="range">
-              <div class="handle">
-              </div>
-            </div>
-          </div>
-          <div class="automation <%= param %>">            
-          </div>
-        <% end %>
-      </div>
-    <% end %>
+    <div>
+      <a href="#" id="console-link" style="color:white">console</a>
+      <div id="console" style="display:none;height: 200px; width:800px;color:white;overflow:auto"></div>
+    </div> 
   </body>
 </html>

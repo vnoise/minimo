@@ -30,9 +30,7 @@ class OSCReceiver
   end
 
   def send(client_id, messages)
-    queue = @queues[client_id]
-    messages = messages.map {|message| { :address => message.address, :args => message.args } }
-    queue.push(messages)
+    @queues[client_id].push(messages)
   end
   
   def call(env)
@@ -46,7 +44,9 @@ class OSCReceiver
       messages = queue.wait
     end
 
-    [200, {'Content-Type' => 'text/html'}, messages.to_json]
+    messages = messages.map { |message| [message.address, message.args] }
+
+    [200, {'Content-Type' => 'text/javascript'}, messages.to_json]
   end
 end
   

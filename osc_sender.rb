@@ -9,9 +9,13 @@ class OSCSender
     @socket = OSC::UDPSocket.new
   end
 
-  def send(address, types, *args)
-    message = OSC::Message.new(address, types, *args)
-    puts "#{address} #{types} #{args.inspect}"
+  def send(*args)
+    if Message === args.first  
+      message = args.first.to_osc
+    else
+      message = OSC::Message.new(*args)
+    end
+
     @socket.send(message, 0, @host, @port)
     message
   end

@@ -4,7 +4,7 @@ require 'rack/reloader'
 require 'osc_sender'
 require 'osc_receiver'
 require 'erb'
-require 'manager'
+require 'instrument_manager'
 
 use Rack::Reloader
 

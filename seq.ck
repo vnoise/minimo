@@ -1,55 +1,122 @@
 class Instrument {
     SinOsc sinus;
     Noise noise;
+    LPF lowpass;
     ADSR adsr;
+    Dyno comp;
+    PRCRev reverb;
+    DelayL delay;
+    Gain feedbackGain;
+    Gain echoSend;
+    Gain reverbSend;
     Gain gain;
     Gain output;
 
-    0::ms => dur attack;
-    100::ms => dur decay;
-    80 => float freq;
-    0 => int clip;
+    0::ms       => dur attack;
+    100::ms     => dur decay;
+    80          => float pitch;
+    80          => float cutoff;
+    80          => float reso;
+    0           => float reverbMix;
+    0           => float echoMix;
+    0           => float feedback;
+    0.5::second => dur echoTime;
+    0           => int clip;
+    0.5         => float sinusLevel;
+    0.5         => float noiseLevel;
+    0.5         => comp.slopeAbove;
+    1.0         => comp.slopeBelow;
+    0.5         => comp.thresh;
+    5::ms       => comp.attackTime;
+    50::ms      => comp.releaseTime;
+    0.8         => comp.gain;
     
     float pattern[16][16];
+    float automationSinus[16][16];
+    float automationNoise[16][16];
     float automationAttack[16][16];
     float automationDecay[16][16];
-    float automationFreq[16][16];
+    float automationPitch[16][16];
+    float automationCutoff[16][16];
+    float automationReso[16][16];
+    float automationReverb[16][16];
+    float automationEcho[16][16];
+    float automationFeedback[16][16];
+    float automationEchoTime[16][16];
 
-    noise => adsr;
-    sinus => adsr;
-    adsr => gain => output;
-    0 => noise.gain;
-    0 => sinus.gain;
+    noise => lowpass;
+    sinus => lowpass;
+    adsr => reverbSend => reverb => comp;
+    adsr => echoSend => delay => comp;
+    feedbackGain => delay => feedbackGain;
+    
+    lowpass => adsr => comp => gain => output;
+    
+    0.5 => noise.gain;
+    0.5 => sinus.gain;
+    
+    0.5 => lowpass.gain;
+    10000 => lowpass.freq;
+    1 => lowpass.Q;
+
+    1 => reverb.mix;
+    0 => reverbSend.gain;
+    
+    2000::ms => delay.max;    
+    1000::ms => delay.delay;
+    0 => echoSend.gain;        
 
     adsr.set(0::ms, 100::ms, 0.0, 0::ms);
-
+    
     public void play(int pos) {
         pattern[clip][pos] => float level;
         
+        sinusLevel + automationSinus[clip][pos] => sinus.gain;
+        noiseLevel + automationNoise[clip][pos] => noise.gain;
         attack + automationAttack[clip][pos] * 500::ms => adsr.attackTime;
         decay + automationDecay[clip][pos] * 500::ms => adsr.decayTime;
-        freq + automationFreq[clip][pos] * freq => sinus.freq;
+        pitch + automationPitch[clip][pos] * pitch => sinus.freq;
+        cutoff + automationCutoff[clip][pos] * 10000  => lowpass.freq;
+        reso + automationReso[clip][pos] * 10 => lowpass.Q;
+        reverbMix + automationReverb[clip][pos] => reverbSend.gain;
+        echoMix + automationEcho[clip][pos] => echoSend.gain;
+        echoTime + automationEchoTime[clip][pos] * 2000::ms => delay.delay;
+        feedback + automationFeedback[clip][pos] => feedbackGain.gain;
 
         if (level > 0) {
-            level => gain.gain;         
+            level => gain.gain;
             
             adsr.keyOff();
             adsr.keyOn();
         }
     }
-    
-    public void connect(UGen ugen) {
-        output => ugen;
-    }
 }
+
+Dyno limiter;
+Dyno compressor;
+
+0           => limiter.slopeAbove;
+1.0         => limiter.slopeBelow;
+0.95        => limiter.thresh;
+1::ms       => limiter.attackTime;
+10::ms      => limiter.releaseTime;
+
+0.5         => compressor.slopeAbove;
+1.0         => compressor.slopeBelow;
+0.5         => compressor.thresh;
+30::ms      => compressor.attackTime;
+300::ms     => compressor.releaseTime;
+1.5         => compressor.gain;
+
+compressor => limiter => dac;
 
 Instrument snare;
 Instrument bassdrum;
 Instrument hihat;
 
-snare.connect(dac);
-bassdrum.connect(dac);
-hihat.connect(dac);
+snare.output    => compressor;
+bassdrum.output => compressor;
+hihat.output    => compressor;
 
 [bassdrum, snare, hihat] @=> Instrument instruments[];
 
@@ -92,8 +159,24 @@ fun void receive(string address) {
                 e.getInt() => int pos;
                 e.getFloat() => float value;
                 
-                if (key == "freq") {
-                    value => instrument.automationFreq[clip][pos];
+                if (key == "sinus") {
+                    value => instrument.automationSinus[clip][pos];
+                }
+                
+                if (key == "noise") {
+                    value => instrument.automationNoise[clip][pos];
+                }
+                
+                if (key == "pitch") {
+                    value => instrument.automationPitch[clip][pos];
+                }
+                
+                if (key == "cutoff") {
+                    value => instrument.automationCutoff[clip][pos];
+                }
+                
+                if (key == "pitch") {
+                    value => instrument.automationPitch[clip][pos];
                 }
                 
                 if (key == "attack") {
@@ -102,6 +185,22 @@ fun void receive(string address) {
                 
                 if (key == "decay") {
                     value => instrument.automationDecay[clip][pos];
+                }
+                
+                if (key == "reverb") {
+                    value => instrument.automationReverb[clip][pos];
+                }
+                
+                if (key == "echo") {
+                    value => instrument.automationEcho[clip][pos];
+                }
+                
+                if (key == "feedback") {
+                    value => instrument.automationFeedback[clip][pos];
+                }
+                
+                if (key == "echo_time") {
+                    value => instrument.automationEchoTime[clip][pos];
                 }
 
                 <<< address, index, key, clip, pos, value >>>;
@@ -116,17 +215,25 @@ fun void receive(string address) {
                 }
 
                 if (parameter == "noise") {
-                    value => instrument.noise.gain;
+                    value => instrument.noiseLevel;
                 }
 
                 if (parameter == "sinus") {
-                    value => instrument.sinus.gain;
+                    value => instrument.sinusLevel;
                 }
 
-                if (parameter == "freq") {
-                    value => instrument.freq;
+                if (parameter == "pitch") {
+                    value => instrument.pitch;
                 }
-                
+
+                if (parameter == "cutoff") {
+                    value => instrument.cutoff;
+                }
+
+                if (parameter == "reso") {
+                    value => instrument.reso;
+                }
+ 
                 if (parameter == "attack") {
                     value::ms => instrument.attack;
                 }
@@ -135,6 +242,22 @@ fun void receive(string address) {
                     value::ms => instrument.decay;
                 }
 
+                if (parameter == "reverb") {
+                    value => instrument.reverbMix;
+                }
+
+                if (parameter == "echo") {
+                    value => instrument.echoMix;
+                }
+
+                if (parameter == "feedback") {
+                    value => instrument.feedback;
+                }
+
+                if (parameter == "echo_time") {
+                    value::ms => instrument.echoTime;
+                }
+                
                 <<< address, index, parameter, value >>>;
             }
         }
