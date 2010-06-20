@@ -19,11 +19,37 @@ body {
     line-height: 1.5;
     font-family: Lucida Grande;
     background: #444;
+    color: white;
     font-family: arial, sans-serif;
     font-size: 80%;
-    cursor: hand;
+    cursor: pointer;
 }
 
+a {
+    color: white;
+    text-decoration: none;
+}
+
+.menu {
+    overflow: hidden;
+}
+
+.menu a {
+    float: left;
+    padding: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    border: 1px solid white;
+    margin: 10px;
+}
+
+.console { 
+    display: none;
+    height: 200px; 
+    width: 800px;
+    color: white;
+    overflow: auto;
+}
 
 .instrument {
     border: 1px solid #999;
@@ -88,6 +114,9 @@ body {
     color: #eee;
     width: 80px;
     height: 30px;
+   -moz-user-select: none;
+   -khtml-user-select: none;
+   user-select: none;
 }
 
 .slider .range {

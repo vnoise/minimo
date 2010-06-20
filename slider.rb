@@ -1,12 +1,14 @@
 class Slider
-  attr_reader :key, :value, :max, :automation
+  attr_reader :key, :value, :min, :max, :step, :automation
 
-  def initialize(instrument, key, max)
+  def initialize(instrument, key, value, min, max, step)
     @instrument = instrument
     @automation = Array.new(8) { Array.new(16) { 0 } }
-    @value = 0
     @key = key
+    @value = value
+    @min = min
     @max = max
+    @step = step
   end
 
   def messages
@@ -24,7 +26,7 @@ class Slider
   end
 
   def constructor_message
-    Message.new("/slider", "isf", @instrument.index, @key, @max)
+    Message.new("/slider", "isfff", @instrument.index, @key, @min, @max, @step)
   end
 
   def parameter_message
@@ -36,7 +38,7 @@ class Slider
   end
 
   def set_value(value)
-    @value = [value.to_f, max].min
+    @value = value.to_f
     $sender.send(parameter_message)
   end
 

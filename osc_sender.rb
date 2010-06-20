@@ -21,9 +21,9 @@ class OSCSender
   end
   
   def call(env)
-    sender_id, type, index, *args = env['PATH_INFO'].split('/')[1..-1]
+    sender_id, type, *args = env['PATH_INFO'].split('/')[1..-1]
 
-    $manager.handle(sender_id, type, index, args)
+    $manager.handle(sender_id, type, *args)
 
     [200, {'Content-Type' => 'text/html'}, "OK"]
   end

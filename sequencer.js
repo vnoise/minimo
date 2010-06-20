@@ -38,17 +38,9 @@ Sequencer.prototype.draw = function() {
 };
 
 Sequencer.prototype.handleEvent = function(event, first) {
-    var index = -1;
-
-    for (var i = 0; i < 16; i++) {
-        if (this.stepPattern[i][0] == event.target) {
-            index = i;
-        }
-    }
-
-    if (index == -1) {
-        return;
-    }
+    var x = event.pageX - this.container.offset().left;
+    var y = event.pageY - this.container.offset().top;
+    var index = Math.floor(y / 50) * 4 + Math.floor(x / 80);
 
     if (first) {
         this.mouseValue = (this.pattern[this.clip][index] + 1) % 2;

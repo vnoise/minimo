@@ -6,13 +6,13 @@ function TouchTracker(component, element, callback) {
     this.onMove = this.onMove.bind(this);
     this.onUp = this.onUp.bind(this);
 
-    this.element.addEventListener('moztouchdown', this.onDown.bind(this), false);
+    this.element.addEventListener('MozTouchDown', this.onDown.bind(this), false);
     this.element.addEventListener('mousedown', this.onDown.bind(this), false);
 };
 
 TouchTracker.prototype.onDown = function(event) {
-    document.addEventListener(event.streamId ? 'moztouchmove' : 'mousemove', this.onMove, false);
-    document.addEventListener(event.streamId ? 'moztouchup' : 'mouseup', this.onUp, false);
+    document.addEventListener(event.streamId ? 'MozTouchMove' : 'mousemove', this.onMove, false);
+    document.addEventListener(event.streamId ? 'MozTouchUp' : 'mouseup', this.onUp, false);
 
     this.streamId = event.streamId;
     this.callback(event, true);
@@ -31,6 +31,14 @@ TouchTracker.prototype.onMove = function(event) {
 };
 
 TouchTracker.prototype.onUp = function(event) {
-    document.removeEventListener(event.streamId ? 'moztouchmove' : 'mousemove', this.onMove, false);
-    document.removeEventListener(event.streamId ? 'moztouchup' : 'mouseup', this.onUp, false);    
+    if (event.streamId && event.streamId != this.streamId) {
+        return;
+    }
+
+    this.streamId = null;
+
+    document.removeEventListener(event.streamId ? 'MozTouchMove' : 'mousemove', this.onMove, false);
+    document.removeEventListener(event.streamId ? 'MozTouchUp' : 'mouseup', this.onUp, false);
+
+    event.preventDefault();
 };

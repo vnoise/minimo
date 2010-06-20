@@ -1,11 +1,22 @@
+$:.unshift './rosc-0.1.3/lib'
+$:.unshift './json_pure-1.4.3/lib'
+
 require 'rack'
 require 'rack/file'
 require 'rack/reloader'
-require 'osc_sender'
-require 'osc_receiver'
-require 'erb'
-require 'instrument_manager'
 
+begin
+  require 'osc_sender'
+  require 'osc_receiver'
+  require 'erb'
+  require 'instrument_manager'
+rescue SyntaxError
+  puts $!.message
+  puts $!.backtrace
+  gets
+  exit
+end
+  
 use Rack::Reloader
 
 $receiver =  OSCReceiver.new('localhost', 3335)
@@ -22,10 +33,10 @@ map "/send" do
   run $sender
 end
 
-map "/index" do
+map "/seq" do
   run(lambda do |env|
         $client_id.succ!
-        html = ERB.new(File.read('index.html')).result(binding)
+        html = ERB.new(File.read('seq.html')).result(binding)
 
         [200, {'Content-Type' => 'text/html'}, html]
       end)

@@ -17,8 +17,8 @@ function Instrument(index, container) {
     this.sliders = {};
 }
 
-Instrument.prototype.slider = function(key, max) {
-    this.sliders[key] = new Slider(this, this.container, key, max);
+Instrument.prototype.slider = function(key, min, max, step) {
+    this.sliders[key] = new Slider(this, this.container, key, min, max, step);
 };
 
 Instrument.prototype.parameter = function(key, value) {
@@ -46,8 +46,8 @@ Instrument.prototype.clock = function(index) {
 };
 
 Instrument.prototype.setClip = function(clip) {
-    this.clips.removeClass('active');
-    $(this.clips.get(clip)).addClass('active');
+    this.clips.find('a').removeClass('active');
+    $(this.clips.find('a').get(clip)).addClass('active');
 
     this.sequencer.setClip(clip);
 

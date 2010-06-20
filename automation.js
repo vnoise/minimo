@@ -29,18 +29,15 @@ function Automation(instrument, container, key) {
 }
 
 Automation.prototype.handleEvent = function(event) {
-    var index;
-
-    for (var i = 0; i < 16; i++) {
-        if (this.clockPattern[i][0] == event.target) {
-            index = i;
-        }
-    }
-
+    var x = event.pageX - this.container.offset().left;
     var y = event.pageY - this.container.offset().top;
+    var index = Math.floor(x / 20);
+    var value = Math.max(0, Math.min(1, 1 - y / this.height)) * 2 - 1;
 
-    this.setStep(this.clip, index, 1 - y / this.height); 
-    this.send(index);
+    if (Math.abs(this.pattern[this.clip][index] - value) >= 0.02) {
+        this.setStep(this.clip, index, value); 
+        this.send(index);
+    }
 };
 
 Automation.prototype.toggle = function() {
@@ -56,7 +53,7 @@ Automation.prototype.toggle = function() {
 
 Automation.prototype.draw = function() {
     for (var x = 0, i = 0; x < this.width; x += 20, i += 1) {
-        this.stepPattern[i] = this.canvas.rect(x, 200, 20, 200).attr({
+        this.stepPattern[i] = this.canvas.rect(x, 0, 20, 0).attr({
             fill: "#faa",
             stroke: "none",
             opacity: 1
@@ -72,9 +69,24 @@ Automation.prototype.send = function(index) {
 };
 
 Automation.prototype.setStep = function(clip, index, value) {
-    if (Math.abs(this.pattern[clip][index] - value) >= 0.02) {
-        this.pattern[clip][index] = value;
-        this.stepPattern[index].attr('y', this.height - value * this.height);        
+    this.pattern[clip][index] = value;
+    this.drawStep(index, value);
+};
+
+Automation.prototype.drawStep = function(index, value) {
+    var rect = this.stepPattern[index];
+
+    if (value >= 0) {
+        rect.attr({
+            height:  value * this.height / 2,
+            y: (this.height - value * this.height) / 2
+        });
+    }
+    else {
+        rect.attr({
+            height: -value * this.height,
+            y: this.height / 2
+        });
     }
 };
 
@@ -90,7 +102,7 @@ Automation.prototype.setClip = function(clip) {
     this.clip = clip;
 
     for (var i = 0; i < 16; i++) {
-        this.stepPattern[i].attr('y', this.height - this.pattern[this.clip][i] * this.height);        
+        this.drawStep(i, this.pattern[this.clip][i]);
     }
 };
 

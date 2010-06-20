@@ -1,91 +1,131 @@
+class Parameter {
+    float min;
+    float max;
+    float range;
+    float value;
+    float pattern[16][16];
+    
+    public float read(int clip, int pos) {
+        return Math.max(min, Math.min(max, value + pattern[clip][pos] * range));
+    }
+
+};
+
+
 class Instrument {
     SinOsc sinus;
+    SawOsc saw;
+    SqrOsc square;
     Noise noise;
     LPF lowpass;
+    HPF hipass;
     ADSR adsr;
     Dyno comp;
-    PRCRev reverb;
+    Dyno limiter;
+    Dyno filterlimit;
+    NRev reverb;
     DelayL delay;
-    Gain feedbackGain;
+    Gain feedback;
     Gain echoSend;
     Gain reverbSend;
+    Gain pregain;
     Gain gain;
     Gain output;
 
-    0::ms       => dur attack;
-    100::ms     => dur decay;
-    80          => float pitch;
-    80          => float cutoff;
-    80          => float reso;
-    0           => float reverbMix;
-    0           => float echoMix;
-    0           => float feedback;
-    0.5::second => dur echoTime;
-    0           => int clip;
-    0.5         => float sinusLevel;
-    0.5         => float noiseLevel;
-    0.5         => comp.slopeAbove;
-    1.0         => comp.slopeBelow;
-    0.5         => comp.thresh;
-    5::ms       => comp.attackTime;
-    50::ms      => comp.releaseTime;
-    0.8         => comp.gain;
-    
-    float pattern[16][16];
-    float automationSinus[16][16];
-    float automationNoise[16][16];
-    float automationAttack[16][16];
-    float automationDecay[16][16];
-    float automationPitch[16][16];
-    float automationCutoff[16][16];
-    float automationReso[16][16];
-    float automationReverb[16][16];
-    float automationEcho[16][16];
-    float automationFeedback[16][16];
-    float automationEchoTime[16][16];
+    0 => int clip;
+    0 => int position;
 
-    noise => lowpass;
-    sinus => lowpass;
-    adsr => reverbSend => reverb => comp;
-    adsr => echoSend => delay => comp;
-    feedbackGain => delay => feedbackGain;
+    comp.compress();
+    limiter.limit();
+    filterlimit.limit();
+
+    0::ms => limiter.attackTime;
+    0::ms => filterlimit.attackTime;
     
-    lowpass => adsr => comp => gain => output;
+    0 => noise.gain;
+    0 => sinus.gain;
+    0 => saw.gain;
+    0 => square.gain;
+
+    1 => pregain.gain;
     
-    0.5 => noise.gain;
-    0.5 => sinus.gain;
-    
-    0.5 => lowpass.gain;
-    10000 => lowpass.freq;
-    1 => lowpass.Q;
+    20000 => lowpass.freq;
+    0     => hipass.freq;
 
     1 => reverb.mix;
     0 => reverbSend.gain;
+    0 => echoSend.gain;
     
-    2000::ms => delay.max;    
-    1000::ms => delay.delay;
-    0 => echoSend.gain;        
-
+    2000::ms => delay.max;
+    
     adsr.set(0::ms, 100::ms, 0.0, 0::ms);
+
+    noise  => pregain;
+    sinus  => pregain;
+    saw    => pregain;
+    square => pregain;
+    
+    comp => reverbSend => reverb => limiter;
+    comp => echoSend   => delay => limiter;
+    
+    feedback => delay => feedback;
+    
+    pregain => hipass => lowpass => filterlimit => adsr => comp => limiter => output;
+
+    float pattern[16][16];
+    Parameter @ parameters[16];
+
+    parameter("sinus", 0, 1, 1);
+    parameter("saw", 0, 1, 1);
+    parameter("square", 0, 1, 1);
+    parameter("noise", 0, 1, 1);
+    parameter("attack", 1, 500, 500);
+    parameter("decay", 1, 500, 500);
+    parameter("pitch", 0, 96, 12);
+    parameter("lowpass", 0.1, 1, 1);
+    parameter("hipass", 0.1, 1, 1);
+    parameter("reso", 1, 5, 5);
+    parameter("reverb", 0, 1, 1);
+    parameter("echo", 0, 1, 1);
+    parameter("echo_time", 0, 2000, 1000);
+    parameter("feedback", 0, 1, 1);
+
+    public void parameter(string key, float min, float max, float range) {
+        new Parameter @=> Parameter @ param;
+        param @=> parameters[key];
+        min => param.min;
+        max => param.max;
+        range => param.range;
+        0 => param.value;
+    }
+
+    public float read(string key) {
+        return parameters[key].read(clip, position);
+    }
     
     public void play(int pos) {
-        pattern[clip][pos] => float level;
+        pos => position;
         
-        sinusLevel + automationSinus[clip][pos] => sinus.gain;
-        noiseLevel + automationNoise[clip][pos] => noise.gain;
-        attack + automationAttack[clip][pos] * 500::ms => adsr.attackTime;
-        decay + automationDecay[clip][pos] * 500::ms => adsr.decayTime;
-        pitch + automationPitch[clip][pos] * pitch => sinus.freq;
-        cutoff + automationCutoff[clip][pos] * 10000  => lowpass.freq;
-        reso + automationReso[clip][pos] * 10 => lowpass.Q;
-        reverbMix + automationReverb[clip][pos] => reverbSend.gain;
-        echoMix + automationEcho[clip][pos] => echoSend.gain;
-        echoTime + automationEchoTime[clip][pos] * 2000::ms => delay.delay;
-        feedback + automationFeedback[clip][pos] => feedbackGain.gain;
+        read("sinus")           => sinus.gain;
+        read("saw")/3           => saw.gain;
+        read("square")/3        => square.gain;
+        read("noise")/3         => noise.gain;
+        read("attack")::ms      => adsr.attackTime;
+        read("decay")::ms       => adsr.decayTime;
+        read("reso")            => lowpass.Q => hipass.Q;
+        read("reverb")          => reverbSend.gain;
+        read("echo")            => echoSend.gain;
+        read("echo_time")::ms   => delay.delay;
+        read("feedback")        => feedback.gain;
 
-        if (level > 0) {
-            level => gain.gain;
-            
+        Std.mtof(read("pitch")) => sinus.freq;
+        Std.mtof(read("pitch")) => saw.freq;
+        Std.mtof(read("pitch")) => square.freq;
+        
+        Math.pow(read("lowpass"), 3) * 20000 => lowpass.freq;
+        Math.pow(read("hipass"), 3) * 20000  => hipass.freq;
+
+        if (pattern[clip][position] == 1) {
             adsr.keyOff();
             adsr.keyOn();
         }
@@ -98,7 +138,7 @@ Dyno compressor;
 0           => limiter.slopeAbove;
 1.0         => limiter.slopeBelow;
 0.95        => limiter.thresh;
-1::ms       => limiter.attackTime;
+0::ms       => limiter.attackTime;
 10::ms      => limiter.releaseTime;
 
 0.5         => compressor.slopeAbove;
@@ -160,107 +200,19 @@ fun void receive(string address) {
                 e.getInt() => int clip;
                 e.getInt() => int pos;
                 e.getFloat() => float value;
-                
-                if (key == "sinus") {
-                    value => instrument.automationSinus[clip][pos];
-                }
-                
-                if (key == "noise") {
-                    value => instrument.automationNoise[clip][pos];
-                }
-                
-                if (key == "pitch") {
-                    value => instrument.automationPitch[clip][pos];
-                }
-                
-                if (key == "cutoff") {
-                    value => instrument.automationCutoff[clip][pos];
-                }
-                
-                if (key == "pitch") {
-                    value => instrument.automationPitch[clip][pos];
-                }
-                
-                if (key == "attack") {
-                    value => instrument.automationAttack[clip][pos];
-                }
-                
-                if (key == "decay") {
-                    value => instrument.automationDecay[clip][pos];
-                }
-                
-                if (key == "reverb") {
-                    value => instrument.automationReverb[clip][pos];
-                }
-                
-                if (key == "echo") {
-                    value => instrument.automationEcho[clip][pos];
-                }
-                
-                if (key == "feedback") {
-                    value => instrument.automationFeedback[clip][pos];
-                }
-                
-                if (key == "echo_time") {
-                    value => instrument.automationEchoTime[clip][pos];
-                }
+
+                value => instrument.parameters[key].pattern[clip][pos];
 
                 <<< address, index, key, clip, pos, value >>>;
             }
 
             if (address == "/parameter,isf") {
-                e.getString() => string parameter;
+                e.getString() => string key;
                 e.getFloat() => float value;
-
-                if (parameter == "volume") {
-                    value => instrument.output.gain;
-                }
-
-                if (parameter == "noise") {
-                    value => instrument.noiseLevel;
-                }
-
-                if (parameter == "sinus") {
-                    value => instrument.sinusLevel;
-                }
-
-                if (parameter == "pitch") {
-                    value => instrument.pitch;
-                }
-
-                if (parameter == "cutoff") {
-                    value => instrument.cutoff;
-                }
-
-                if (parameter == "reso") {
-                    value => instrument.reso;
-                }
- 
-                if (parameter == "attack") {
-                    value::ms => instrument.attack;
-                }
                 
-                if (parameter == "decay") {
-                    value::ms => instrument.decay;
-                }
-
-                if (parameter == "reverb") {
-                    value => instrument.reverbMix;
-                }
-
-                if (parameter == "echo") {
-                    value => instrument.echoMix;
-                }
-
-                if (parameter == "feedback") {
-                    value => instrument.feedback;
-                }
-
-                if (parameter == "echo_time") {
-                    value::ms => instrument.echoTime;
-                }
+                value => instrument.parameters[key].value;
                 
-                <<< address, index, parameter, value >>>;
+                <<< address, index, key, value >>>;
             }
         }
     }

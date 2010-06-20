@@ -39,7 +39,7 @@ class OSCReceiver
 
     if queue.nil?
       queue = @queues[client_id] = TQueue.new
-      messages = $manager.messages
+      messages = $manager.constructor_messages
     else
       messages = queue.wait
     end

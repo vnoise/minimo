@@ -4,9 +4,9 @@ Function.prototype.bind = function(object) {
     return function() {
         return fn.apply(object, args.concat(Array.prototype.slice.call(arguments, 0)));
     };
-}
+};
 
-function p(s) {
+function log(s) {
     if (typeof(s) == 'object') {
         var object = s;
         s = '{ ';
@@ -15,16 +15,30 @@ function p(s) {
         }
         s += "}";
     }
-    $('#console').append(s + ", ").css("scroll-y", 100000000);
+    $('.console').prepend(s + "<br/>");
 }
 
 $(function() {
-    document.multitouchData = window.location.hash == "#moztouch";
+    document.multitouchData = true;
 
-    $('#console-link').click(function() {
-        $('#console').slideToggle();
+    var menu = $("<div class='menu'/>").appendTo(document.body);
+    var console = $("<div class='console'/>").appendTo(document.body);
+
+    $("<a href='#'>console</a>").appendTo(menu).click(function() {
+        console.slideToggle();
         return false;
     });
+
+    $("<a href='#'>save</a>").appendTo(menu).click(function() {
+        controller.send('save');
+        return false;
+    });
+
+    for (var i = 0; i < saves.length; i++) {
+        $("<a href='#'>" + saves[i] + "</a>").appendTo(menu).click(function() {
+            controller.load($(this).html());
+        });        
+    }
 
     var lastX;
     var lastY;

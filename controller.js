@@ -28,8 +28,8 @@ var controller = {
         this.instruments[instrument].sequencer.setStep(clip, index, value);
     },
 
-    '/slider': function(instrument, key, max) {
-        this.instruments[instrument].slider(key, max);
+    '/slider': function(instrument, key, min, max, step) {
+        this.instruments[instrument].slider(key, min, max, step);
     },
 
     '/automation': function(instrument, key, clip, index, value) {
@@ -38,6 +38,12 @@ var controller = {
 
     '/clip': function(instrument, clip) {
         this.instruments[instrument].setClip(clip);
+    },
+
+    load: function(file) {
+        $('.instrument').remove();
+        this.instruments = [];
+        this.send('load', file);
     },
 
     send: function (path) {
@@ -55,13 +61,13 @@ var controller = {
                 var address = message[0];
                 var args = message[1];
                 var fun = this[address];
-
+                
                 if (fun) {
                     fun.apply(this, args);
+                    // log('receive: ' + address + ' ' + args.join(','));
                 }
                 else {
-                    if (console)
-                        console.log('unsupported message:' + address);
+                    log('unsupported message:' + address);
                 }
             }
 

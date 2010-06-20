@@ -6,6 +6,7 @@
     <script src="jquery.js" type="text/javascript"></script>
     <script type="text/javascript">
       var client_id = <%= $client_id %>;
+      var saves = <%= $manager.saves.to_json %>;
     </script>
     <script src="touch-tracker.js" type="text/javascript"></script>
     <script src="controller.js" type="text/javascript"></script>
@@ -16,9 +17,5 @@
     <script src="seq.js" type="text/javascript"></script>
   </head>
   <body>
-    <div>
-      <a href="#" id="console-link" style="color:white">console</a>
-      <div id="console" style="display:none;height: 200px; width:800px;color:white;overflow:auto"></div>
-    </div> 
   </body>
 </html>
