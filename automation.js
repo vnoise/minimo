@@ -92,9 +92,8 @@ Automation.prototype.drawStep = function(index, value) {
 
 Automation.prototype.clock = function(index) {
     if (!this.hidden) {
-        this.clockPattern[index].
-            attr({ opacity: 1 }).
-            animate({ opacity: index % 4 == 0 ? 0.5 : 0.2 }, 400);        
+        this.clockPattern[index].attr({ opacity: 1 }).
+            animate({ opacity: index % 4 == 0 ? 0.5 : 0.2 }, 200);        
     }
 };
 

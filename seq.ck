@@ -9,10 +9,23 @@ class Parameter {
         return Math.max(min, Math.min(max, value + pattern[clip][pos] * range));
     }
 
+    public void init(float _min, float _max) {
+        // _min => min;
+        // _max => max;
+        
+        for (0 => int i; i < 16; i++) {
+            for (0 => int j; j < 16; j++) {
+                0 => pattern[i][j];
+            }
+        }
+    }
 };
 
 
 class Instrument {
+    0 => int clip;
+    0 => int position;
+
     SinOsc sinus;
     SawOsc saw;
     SqrOsc square;
@@ -22,7 +35,9 @@ class Instrument {
     ADSR adsr;
     Dyno comp;
     Dyno limiter;
-    Dyno filterlimit;
+    Dyno lplimit;
+    Dyno hplimit;
+    Dyno osclimit;
     NRev reverb;
     DelayL delay;
     Gain feedback;
@@ -30,47 +45,45 @@ class Instrument {
     Gain reverbSend;
     Gain pregain;
     Gain gain;
-    Gain output;
+    Gain output;    
 
-    0 => int clip;
-    0 => int position;
+    noise  => osclimit;
+    sinus  => osclimit;
+    saw    => osclimit;
+    square => osclimit;
 
     comp.compress();
     limiter.limit();
-    filterlimit.limit();
-
+    osclimit.limit();
+    lplimit.limit();
+    hplimit.limit();
+    
     0::ms => limiter.attackTime;
-    0::ms => filterlimit.attackTime;
+    0::ms => osclimit.attackTime;
+    0::ms => lplimit.attackTime;
+    0::ms => hplimit.attackTime;
     
-    0 => noise.gain;
-    0 => sinus.gain;
-    0 => saw.gain;
-    0 => square.gain;
+    0.9 => limiter. thresh;
+    0.9 => osclimit.thresh;
+    0.9 => lplimit. thresh;
+    0.9 => hplimit. thresh;
 
-    1 => pregain.gain;
-    
-    20000 => lowpass.freq;
-    0     => hipass.freq;
+    0 => limiter. slopeAbove; 
+    0 => osclimit.slopeAbove; 
+    0 => lplimit. slopeAbove; 
+    0 => hplimit. slopeAbove;
 
-    1 => reverb.mix;
-    0 => reverbSend.gain;
-    0 => echoSend.gain;
-    
-    2000::ms => delay.max;
-    
-    adsr.set(0::ms, 100::ms, 0.0, 0::ms);
+    0.8 => limiter. gain; 
+    0.8 => osclimit.gain; 
+    0.8 => lplimit. gain; 
+    0.8 => hplimit. gain;
 
-    noise  => pregain;
-    sinus  => pregain;
-    saw    => pregain;
-    square => pregain;
-    
     comp => reverbSend => reverb => limiter;
     comp => echoSend   => delay => limiter;
     
     feedback => delay => feedback;
-    
-    pregain => hipass => lowpass => filterlimit => adsr => comp => limiter => output;
+
+    osclimit => hipass => hplimit => lowpass => lplimit => adsr => comp => limiter => output;
 
     float pattern[16][16];
     Parameter @ parameters[16];
@@ -83,8 +96,8 @@ class Instrument {
     parameter("decay", 1, 500, 500);
     parameter("pitch", 0, 96, 12);
     parameter("lowpass", 0.1, 1, 1);
-    parameter("hipass", 0.1, 1, 1);
-    parameter("reso", 1, 5, 5);
+    parameter("hipass", 0, 1, 1);
+    parameter("reso", 0, 5, 5);
     parameter("reverb", 0, 1, 1);
     parameter("echo", 0, 1, 1);
     parameter("echo_time", 0, 2000, 1000);
@@ -97,6 +110,30 @@ class Instrument {
         max => param.max;
         range => param.range;
         0 => param.value;
+    }
+
+    public void init() {        
+        0 => noise.gain;
+        0 => sinus.gain;
+        0 => saw.gain;
+        0 => square.gain;
+
+        20000 => lowpass.freq;
+        0     => hipass.freq;
+
+        1 => reverb.mix;
+        0 => reverbSend.gain;
+        0 => echoSend.gain;
+        
+        2000::ms => delay.max;
+        
+        adsr.set(0::ms, 100::ms, 0.0, 0::ms);
+                
+        for (0 => int i; i < 16; i++) {
+            for (0 => int j; j < 16; j++) {
+                0 => pattern[i][j];
+            }
+        }
     }
 
     public float read(string key) {
@@ -112,18 +149,20 @@ class Instrument {
         read("noise")/3         => noise.gain;
         read("attack")::ms      => adsr.attackTime;
         read("decay")::ms       => adsr.decayTime;
-        read("reso")            => lowpass.Q => hipass.Q;
+        read("reso")            => lowpass.Q;
         read("reverb")          => reverbSend.gain;
         read("echo")            => echoSend.gain;
         read("echo_time")::ms   => delay.delay;
         read("feedback")        => feedback.gain;
 
+        Math.min(0.5, 1 / (read("sinus") + read("saw") + read("square") + read("noise"))) => osclimit.gain;
+
         Std.mtof(read("pitch")) => sinus.freq;
         Std.mtof(read("pitch")) => saw.freq;
         Std.mtof(read("pitch")) => square.freq;
         
-        Math.pow(read("lowpass"), 3) * 20000 => lowpass.freq;
-        Math.pow(read("hipass"), 3) * 20000  => hipass.freq;
+        Math.pow(read("lowpass"), 4) * 20000 => lowpass.freq;
+        Math.pow(read("hipass"), 4) * 20000  => hipass.freq;
 
         if (pattern[clip][position] == 1) {
             adsr.keyOff();
@@ -146,21 +185,17 @@ Dyno compressor;
 0.5         => compressor.thresh;
 30::ms      => compressor.attackTime;
 300::ms     => compressor.releaseTime;
-1.5         => compressor.gain;
+1           => compressor.gain;
 
 compressor => limiter => dac;
 
-Instrument i0;
-Instrument i1;
-Instrument i2;
-Instrument i3;
+Instrument instruments[4];
 
-i0.output => compressor;
-i1.output => compressor;
-i2.output => compressor;
-i3.output => compressor;
-
-[i0, i1, i2, i3] @=> Instrument instruments[];
+for (0 => int i; i < 4; i++) {
+    new Instrument @=> instruments[i];
+    instruments[i].init();
+    instruments[i].output => compressor;
+}
 
 OscRecv receiver;
 3334 => receiver.port;
@@ -186,7 +221,22 @@ fun void receive(string address) {
 
                 <<< address, index, clip, pos, value >>>;
             }
+
+            if (address == "/instument,i") {
+                instrument.init();
+            }
             
+            if (address == "/slider,isfff") {
+                e.getString() => string key;
+                e.getFloat() => float min;
+                e.getFloat() => float max;
+                e.getFloat() => float step;
+                
+                instrument.parameters[key].init(min, max);
+                
+                <<< address, index, key, min, max, step >>>;
+            }
+
             if (address == "/clip,ii") {
                 e.getInt() => int clip;
 
@@ -220,6 +270,8 @@ fun void receive(string address) {
 
 spork ~ receive("/automation,isiif");
 spork ~ receive("/pattern,iiif");
+spork ~ receive("/instrument,i");
+spork ~ receive("/slider,isfff");
 spork ~ receive("/clip,ii");
 spork ~ receive("/parameter,isf");
 
@@ -228,20 +280,19 @@ sender.setHost("localhost", 3335);
 
 .25::second => dur T;
 T - (now % T) => now;
-0 => int i;
+0 => int clock;
 
 while( true )
 {
-    i0.play(i % 16);
-    i1.play(i % 16);
-    i2.play(i % 16);
-    i3.play(i % 16);
+    for (0 => int i; i < 4; i++) {
+        instruments[i].play(clock % 16);
+    }
 
-    if (i % 4 == 0) {
+    if (clock % 4 == 0) {
         sender.startMsg("/clock,i");
-        sender.addInt(i);
+        sender.addInt(clock);
     }
 
     .5::T => now;
-    i + 1 => i;
+    clock + 1 => clock;
 }

@@ -43,12 +43,14 @@ Sequencer.prototype.handleEvent = function(event, first) {
     var index = Math.floor(y / 50) * 4 + Math.floor(x / 80);
 
     if (first) {
-        this.mouseValue = (this.pattern[this.clip][index] + 1) % 2;
+        this.draggingValue = (this.pattern[this.clip][index] + 1) % 2;
     }
-    
-    this.setStep(this.clip, index, this.mouseValue);
 
-    controller.send('pattern', this.instrument.index, this.clip, index, this.pattern[this.clip][index]);
+    if (this.draggingValue != this.pattern[this.clip][index]) {
+        this.setStep(this.clip, index, this.draggingValue);
+
+        controller.send('pattern', this.instrument.index, this.clip, index, this.pattern[this.clip][index]);        
+    }
 };
 
 
@@ -57,16 +59,16 @@ Sequencer.prototype.setStep = function(clip, index, value) {
 
     if (clip == this.clip) {
         if (value == 0) {
-            this.stepPattern[index].scale(1).animate({ scale: 0, opacity: 0 }, 300);        
+            this.stepPattern[index].scale(1).animate({ scale: 0, opacity: 0 }, 500);        
         }
         else {
-            this.stepPattern[index].scale(2).animate({ scale: 1, opacity: 1 }, 300);        
+            this.stepPattern[index].scale(2).animate({ scale: 1, opacity: 1 }, 500);        
         }
     }
 };
 
 Sequencer.prototype.clock = function(index) {
-    this.clockPattern[index].scale(10).animate({ scale: 1 }, 500);
+    this.clockPattern[index].scale(10).animate({ scale: 1 }, 300);
 };
 
 Sequencer.prototype.setClip = function(clip) {

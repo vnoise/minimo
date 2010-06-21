@@ -14,7 +14,7 @@ class Instrument
     add_slider(:noise     , 0, 0, 1, 0.01)
     add_slider(:pitch     , 36, 24, 60, 1)
     add_slider(:lowpass   , 1, 0.1, 1, 0.01)
-    add_slider(:hipass    , 0.2, 0.1, 1, 0.01)
+    add_slider(:hipass    , 0.1, 0.1, 1, 0.01)
     add_slider(:reso      , 1, 1, 5, 0.05)
     add_slider(:attack    , 0, 0, 100, 1)
     add_slider(:decay     , 100, 0, 500, 5)
@@ -30,7 +30,7 @@ class Instrument
 
     messages.each do |message|
       $sender.send(message)
-      sleep 0.001
+      sleep 0.0001
     end
   end
 
@@ -74,7 +74,7 @@ class Instrument
 
     @pattern.each_with_index do |pattern, clip|
       pattern.each_with_index do |value, index|
-        messages << pattern_message(clip, index, value)
+        messages << pattern_message(clip, index, value) unless value == 0
       end
     end
 

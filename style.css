@@ -128,8 +128,12 @@ a {
 .slider .handle {
     cursor: hand;
     background: #acc;
-    width: 40px;
-    height: 40px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    padding: 10px;
+    overflow: hidden;
+    font-weight: bold;
     
     -webkit-border-radius: 10px;
     -moz-border-radius: 10px;

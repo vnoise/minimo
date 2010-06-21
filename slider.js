@@ -16,7 +16,7 @@ function Slider(instrument, container, key, min, max, step) {
     this.range.append(this.handle);
     container.append(this.container);
 
-    this.width = this.range.width() - this.handle.width();
+    this.width = this.range.width() - this.handle.width() * 2;
 
     this.automation = new Automation(this.instrument, container, key);
 
@@ -33,6 +33,7 @@ Slider.prototype.onClickLabel = function(event) {
 Slider.prototype.setValue = function(value) {
     value = Math.max(this.min, Math.min(this.max, value));
     this.value = value;
+    this.handle.html(value);
     this.position = this.width * ((value - this.min) / (this.max - this.min));
     this.handle.css('marginLeft', this.position + 'px');     
 };

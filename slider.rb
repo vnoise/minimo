@@ -18,7 +18,7 @@ class Slider
 
     @automation.each_with_index do |pattern, clip|
       pattern.each_with_index do |value, index|
-        messages << automation_message(clip, index, value)
+        messages << automation_message(clip, index, value) unless value == 0
       end
     end
 
