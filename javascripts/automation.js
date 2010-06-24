@@ -95,7 +95,7 @@ Automation.prototype.clock = function(index) {
     if (!this.hidden) {
         this.clocks[index].setAttribute('opacity', 0.5);
 
-        this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 500);        
+        this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 200);        
     }
 };
 

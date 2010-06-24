@@ -26,7 +26,7 @@ var controller = {
     },
 
     '/parameter': function(instrument, key, value) {
-        // this.instruments[instrument].parameter(key, value);        
+        this.instruments[instrument].parameter(key, value);        
     },
 
     '/pattern': function(instrument, clip, index, value) {
@@ -38,7 +38,7 @@ var controller = {
     },
 
     '/automation': function(instrument, key, clip, index, value) {
-        // this.instruments[instrument].automation(key, clip, index, value);
+        this.instruments[instrument].automation(key, clip, index, value);
     },
 
     '/clip': function(instrument, clip) {

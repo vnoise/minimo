@@ -29,16 +29,8 @@ Sequencer.prototype.draw = function(svg) {
         for (var j = 0; j < 4; j++) {
             var x = this.stepx / 2 + j * this.stepx;
             var y = this.stepy / 2 + i * this.stepy;
-            this.steps[i * 4 + j] = svg.circle(x, y, 13, {
-                fill: "#faa",
-                stroke: "none",
-                opacity: 0
-            });
-
-            this.clocks[i * 4 + j] = svg.circle(x, y, 1, {
-                fill: "#afa",
-                stroke: "none"
-            });
+            this.steps[i * 4 + j] = svg.circle(x, y, 13, { 'class': 'step', opacity: 0 });
+            this.clocks[i * 4 + j] = svg.circle(x, y, 1, { 'class': 'clock' });
         }
     }
 
@@ -72,7 +64,7 @@ Sequencer.prototype.setStep = function(clip, index, value) {
 };
 
 Sequencer.prototype.drawStep = function(index, value) {
-    this.svg.animate.start(this.steps[index], { opacity: value * 0.8 }, 500);
+    this.svg.animate.start(this.steps[index], { opacity: value }, 300);
 };
 
 Sequencer.prototype.clock = function(index) {

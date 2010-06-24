@@ -50,29 +50,6 @@ $.extend(SVGTransformer.prototype, {
             var matrix = this.transform(element, 1).matrix;
             return [matrix.a, matrix.d];
         }
-    },
-
-    animateScale: function(element, targetx, targety, duration) {
-        var scale = this.scale(element);
-        var scalex = scale[0];
-        var scaley = scale[1];
-        var steps = duration / 50;
-        var stepx = (targetx - scalex) / steps;
-        var stepy = (targety - scaley) / steps;
-        var step = 0;
-        var interval = setInterval(function() {
-            step += 1;
-            scalex += stepx;
-            scaley += stepy;
-            this.scale(element, scalex, scaley);
-            if (step == steps) {
-                clearInterval(interval);
-            }
-        }.bind(this), 50);
-    },
-
-    animate: function(element, attributes, duration) {
-        return new Aninmation(this, element, attributes, duration);
     }
 });
 
