@@ -7,7 +7,7 @@ function TouchTracker(component, element, callback) {
     this.onUp = this.onUp.bind(this);
 
     this.element.addEventListener('MozTouchDown', this.onDown.bind(this), false);
-    this.element.addEventListener('mousedown', this.onDown.bind(this), false);
+    // this.element.addEventListener('mousedown', this.onDown.bind(this), false);
 };
 
 TouchTracker.prototype.onDown = function(event) {

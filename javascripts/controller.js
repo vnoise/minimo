@@ -3,6 +3,8 @@ var controller = {
     instruments: [],
 
     initialize: function() {
+        this.sliderSwitcher = new SliderSwitcher(this.instruments);
+        this.sliderSwitcher.render(document.body);
         this.receive();
     },
 
@@ -35,6 +37,7 @@ var controller = {
 
     '/slider': function(instrument, key, min, max, step) {
         this.instruments[instrument].slider(key, min, max, step);
+        this.sliderSwitcher.addSlider(key);
     },
 
     '/automation': function(instrument, key, clip, index, value) {

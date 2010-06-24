@@ -57,7 +57,6 @@ a {
     width: 160px;
     float: left;
     overflow: hidden;
-    margin-right: 10px;
 }
 
 .instrument .clips {
@@ -112,7 +111,7 @@ a {
 }
 
 .slider-switcher {
-    width: 100%;
+    width: 640px;
     background: #666;
     border: 1px solid #333;
     border-collapse: collapse;

@@ -42,17 +42,18 @@ $(function() {
 
     var lastX;
     var lastY;
-    var timeout;
+    var streamId;
 
     function touchDown(event) {
         if (event.target.localName == 'html') {
             lastX = event.pageX;
             lastY = event.pageY;
+            streamId = event.streamId;
         }
     }
 
     function touchMove(event) {
-        if (event.target.localName == 'html') {
+        if (event.target.localName == 'html' && event.streamId == streamId) {
             // log("" + event.clientX + " : " + event.clientY);
 
             var x = lastX - event.pageX;
@@ -66,19 +67,22 @@ $(function() {
     }
 
     function scrollBy(x, y) {
-        if (timeout) {
-            clearTimeout(timeout);
-        }
+        // if (timeout) {
+        //     clearTimeout(timeout);
+        // }
 
         window.scrollBy(Math.ceil(x), Math.ceil(y));
 
-        if (Math.abs(x) > 0.05 || Math.abs(y) > 0.05) {
-            var timeout = setTimeout(scrollBy.bind(this, x * 0.7, y * 0.7), 50);
-        }
+        // if (Math.abs(x) > 0.05 || Math.abs(y) > 0.05) {
+        //     var timeout = setTimeout(scrollBy.bind(this, x * 0.7, y * 0.7), 50);
+        // }
     }
 
     function touchUp(event) {
         if (event.target.localName == 'html') {
+            if (event.streamId == streamId) {
+                streamId = null;
+            }
         }
     }
 

@@ -2,7 +2,6 @@ function Instrument(index) {
     this.index = index;
     this.clips = new ClipSwitcher(this);
     this.sequencer = new Sequencer(this);
-    this.switcher = new SliderSwitcher(this);
     this.sliders = {};
     this.automations = {};
 }
@@ -14,7 +13,6 @@ Instrument.prototype.render = function(container) {
 
     this.clips.render(this.container);
     this.sequencer.render(this.container);
-    this.switcher.render(this.container);
 };
 
 Instrument.prototype.slider = function(key, min, max, step) {
@@ -25,8 +23,6 @@ Instrument.prototype.slider = function(key, min, max, step) {
     automation.render(this.container);
     slider.automation = automation;
     slider.hide();
-
-    this.switcher.addSlider(slider);
 };
 
 Instrument.prototype.parameter = function(key, value) {
