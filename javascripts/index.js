@@ -18,77 +18,9 @@ function log(s) {
     $('.console').prepend(s + "<br/>");
 }
 
+
 $(function() {
     document.multitouchData = true;
-
-    var menu = $("<div class='menu'/>").appendTo(document.body);
-    var console = $("<div class='console'/>").appendTo(document.body);
-
-    $("<a href='#'>console</a>").appendTo(menu).click(function() {
-        console.slideToggle();
-        return false;
-    });
-
-    $("<a href='#'>save</a>").appendTo(menu).click(function() {
-        controller.send('save');
-        return false;
-    });
-
-    for (var i = 0; i < saves.length; i++) {
-        $("<a href='#'>" + saves[i] + "</a>").appendTo(menu).click(function() {
-            controller.load($(this).html());
-        });        
-    }
-
-    var lastX;
-    var lastY;
-    var streamId;
-
-    function touchDown(event) {
-        if (event.target.localName == 'html') {
-            lastX = event.pageX;
-            lastY = event.pageY;
-            streamId = event.streamId;
-        }
-    }
-
-    function touchMove(event) {
-        if (event.target.localName == 'html' && event.streamId == streamId) {
-            // log("" + event.clientX + " : " + event.clientY);
-
-            var x = lastX - event.pageX;
-            var y = lastY - event.pageY;
-
-            scrollBy(x, y);
-
-            lastX = event.pageX;
-            lastY = event.pageY;
-        }
-    }
-
-    function scrollBy(x, y) {
-        // if (timeout) {
-        //     clearTimeout(timeout);
-        // }
-
-        window.scrollBy(Math.ceil(x), Math.ceil(y));
-
-        // if (Math.abs(x) > 0.05 || Math.abs(y) > 0.05) {
-        //     var timeout = setTimeout(scrollBy.bind(this, x * 0.7, y * 0.7), 50);
-        // }
-    }
-
-    function touchUp(event) {
-        if (event.target.localName == 'html') {
-            if (event.streamId == streamId) {
-                streamId = null;
-            }
-        }
-    }
-
-    document.addEventListener("MozTouchUp", touchUp, false);
-    document.addEventListener("MozTouchDown", touchDown, false);
-    document.addEventListener("MozTouchMove", touchMove, false);
 
     document.onselectstart = function () { return false; };
     document.onselect = function () { return false; };

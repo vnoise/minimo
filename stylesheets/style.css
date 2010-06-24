@@ -34,6 +34,15 @@ a {
     overflow: hidden;
 }
 
+.menu .bpm {  
+    float: left;
+    background: #000;
+    color: #fff;
+    width: 30px;
+    border: 1px solid #ccc;
+    margin: 15px 20px;
+}
+
 .menu a {
     float: left;
     padding: 6px;

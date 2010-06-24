@@ -201,66 +201,82 @@ OscRecv receiver;
 3334 => receiver.port;
 receiver.listen();
 
+OscSend sender;
+sender.setHost("localhost", 3335);
+
+120 => float bpm;
+60::second / bpm => dur beat;
+beat - (now % beat) => now;
+0 => int clock;
+
 fun void receive(string address) {
     receiver.event(address) @=> OscEvent e;
     
     while (true) {
         e => now;
         
-        while (e.nextMsg() != 0) {
-            e.getInt() => int index;
-
-            instruments[index] @=> Instrument instrument;
+        while (e.nextMsg() != 0) {            
+            if (address == "/bpm,f") {
+                e.getFloat() => bpm;
+                
+                <<< address, bpm >>>;
+            }
             
             if (address == "/pattern,iiif") {
+                e.getInt() => int index;
                 e.getInt() => int clip;
                 e.getInt() => int pos;
                 e.getFloat() => float value;
 
-                value => instrument.pattern[clip][pos];
+                value => instruments[index].pattern[clip][pos];
 
                 <<< address, index, clip, pos, value >>>;
             }
 
             if (address == "/instument,i") {
-                instrument.init();
+                e.getInt() => int index;
+                instruments[index].init();
             }
             
             if (address == "/slider,isfff") {
+                e.getInt() => int index;
                 e.getString() => string key;
                 e.getFloat() => float min;
                 e.getFloat() => float max;
                 e.getFloat() => float step;
                 
-                instrument.parameters[key].init(min, max);
+                instruments[index].parameters[key].init(min, max);
                 
                 <<< address, index, key, min, max, step >>>;
             }
 
             if (address == "/clip,ii") {
+                e.getInt() => int index;
                 e.getInt() => int clip;
 
-                clip => instrument.clip;
+                clip => instruments[index].clip;
 
                 <<< address, index, clip >>>;
             }
                         
             if (address == "/automation,isiif") {
+                e.getInt() => int index;
                 e.getString() => string key;
                 e.getInt() => int clip;
                 e.getInt() => int pos;
                 e.getFloat() => float value;
 
-                value => instrument.parameters[key].pattern[clip][pos];
+                value => instruments[index].parameters[key].pattern[clip][pos];
 
                 <<< address, index, key, clip, pos, value >>>;
             }
 
             if (address == "/parameter,isf") {
+                e.getInt() => int index;
                 e.getString() => string key;
                 e.getFloat() => float value;
                 
-                value => instrument.parameters[key].value;
+                value => instruments[index].parameters[key].value;
                 
                 <<< address, index, key, value >>>;
             }
@@ -270,17 +286,11 @@ fun void receive(string address) {
 
 spork ~ receive("/automation,isiif");
 spork ~ receive("/pattern,iiif");
+spork ~ receive("/bpm,f");
 spork ~ receive("/instrument,i");
 spork ~ receive("/slider,isfff");
 spork ~ receive("/clip,ii");
 spork ~ receive("/parameter,isf");
-
-OscSend sender;
-sender.setHost("localhost", 3335);
-
-.25::second => dur T;
-T - (now % T) => now;
-0 => int clock;
 
 while( true )
 {
@@ -289,10 +299,12 @@ while( true )
     }
 
     if (clock % 4 == 0) {
-        sender.startMsg("/clock,i");
+        sender.startMsg("/clock,if");
         sender.addInt(clock);
+        sender.addFloat(bpm);
     }
 
-    .5::T => now;
+    60::second / bpm / 4 => dur beat;
+    beat => now;
     clock + 1 => clock;
 }

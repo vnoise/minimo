@@ -3,9 +3,39 @@ var controller = {
     instruments: [],
 
     initialize: function() {
+        this.scrollManager = new ScrollManager();
+        this.menu = $("<div class='menu'/>").appendTo(document.body);
+        this.console = $("<div class='console'/>").appendTo(document.body);
+
+        this.bpm = $('<input type="text" class="bpm" name="bpm" />').appendTo(this.menu);
+
+        this.bpm.keydown(function() {
+            this.send('bpm', this.bpm.val());
+        }.bind(this));
+
+        $("<a href='#'>console</a>").appendTo(this.menu).click(function() {
+            console.slideToggle();
+            return false;
+        });
+
+        $("<a href='#'>save</a>").appendTo(this.menu).click(function() {
+            controller.send('save');
+            return false;
+        });
+
+        for (var i = 0; i < saves.length; i++) {
+            $("<a href='#'>" + saves[i] + "</a>").appendTo(this.menu).click(function() {
+                this.load($(this).html());
+            }.bind(this));        
+        }
+
         this.sliderSwitcher = new SliderSwitcher(this.instruments);
         this.sliderSwitcher.render(document.body);
         this.receive();
+    },
+
+    getBpm: function() {
+        return parseFloat(this.bpm.val());
     },
 
     setClock: function (clock) {
@@ -14,8 +44,13 @@ var controller = {
         });
 
         if (clock % 4 < 3) {
-            setTimeout(this.setClock.bind(this, clock + 1), 125);
+            var beat = 60000 / this.getBpm() / 4;
+            setTimeout(this.setClock.bind(this, clock + 1), beat);
         }
+    },
+    
+    '/bpm': function(bpm) {
+        this.bpm.val(bpm);
     },
 
     '/clock': function(index) {
