@@ -54,7 +54,7 @@ a {
 .instrument {
     border: 1px solid #999;
     margin-top: 20px;
-    width: 320px;
+    width: 160px;
     float: left;
     overflow: hidden;
     margin-right: 10px;
@@ -68,11 +68,10 @@ a {
     float: left;
     text-decoration: none;
     text-align: center;
-    padding: 4px 6px;
-    width: 27px;
-    height: 23px;
+    padding: 5px 10px;
     margin: 0px;
-    font-size: 16px;
+    width: 19px;
+    font-size: 12px;
     color: white;
     font-weight: bold;
     border-right: 1px solid #aaa;
@@ -89,52 +88,18 @@ a {
 }
 
 .sequencer {
-    width: 320px;
-    height: 200px;
+    width: 160px;
+    height: 160px;
 }
 
 .automation {
-    width: 320px;
-    height: 75px;
+    width: 160px;
+    height: 80px;
+    border-top: 1px solid #ccc;
 }
 
 .slider {
-    color: #fff;
+    width: 160px;
     height: 40px;
     border-top: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
-    overflow: hidden;
-}
-
-.slider .label {
-    font-weight: bold;
-    float: left;
-    font-size: 16px;
-    padding: 5px;
-    color: #eee;
-    width: 80px;
-    height: 30px;
-   -moz-user-select: none;
-   -khtml-user-select: none;
-   user-select: none;
-}
-
-.slider .range {
-    float: left;
-    width: 230px;
-    background: #666;
-}
-
-.slider .handle {
-    cursor: hand;
-    background: #acc;
-    width: 20px;
-    height: 20px;
-    text-align: center;
-    padding: 10px;
-    overflow: hidden;
-    font-weight: bold;
-    
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
 }

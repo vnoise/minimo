@@ -1,22 +1,12 @@
-
-function Automation(instrument, container, key) {
+function Automation(instrument, key) {
     this.instrument = instrument;    
-    this.container = $('<div class="automation"/>');
     this.key = key;
+    this.stepx = 10;
 
-    container.append(this.container);
-
-    this.width = this.container.width();
-    this.height = this.container.height();
-    this.canvas = Raphael(this.container.get(0), this.width, this.height);
     this.pattern = [];
-    this.clockPattern = [];
-    this.stepPattern = [];
+    this.clocks = [];
+    this.steps = [];
     this.clip = 0;
-
-    this.container.hide();
-    this.hidden = true;
-    this.tracker = new TouchTracker(this, this.canvas.canvas, this.handleEvent.bind(this));
 
     for (var i = 0; i < 8; i++) {
         this.pattern[i] = [];
@@ -24,14 +14,42 @@ function Automation(instrument, container, key) {
             this.pattern[i][j] = 0;
         }
     }
-
-    this.draw();
 }
+
+Automation.prototype.render = function(container) {
+    this.container = $('<div class="automation"/>');
+
+    $(container).append(this.container);
+
+    this.width = this.container.width();
+    this.height = this.container.height();
+
+    this.container.svg({ onLoad: this.draw.bind(this) });
+};
+
+Automation.prototype.draw = function(svg) {
+    this.svg = svg;
+
+    for (var i = 0; i < 16; i++) {
+        this.steps[i] = svg.rect(i * this.stepx, 0, this.stepx, 0, {
+            fill: "#faa",
+            stroke: "none",
+            opacity: 1
+        });
+
+        this.clocks[i] = svg.rect(i * this.stepx, 0, this.stepx, this.height, {
+            fill: '#999', 
+            opacity: i % 4 == 0 ? 0.2 : 0
+        });
+    }
+
+    this.tracker = new TouchTracker(this, this.svg.root(), this.handleEvent.bind(this));
+};
 
 Automation.prototype.handleEvent = function(event) {
     var x = event.pageX - this.container.offset().left;
     var y = event.pageY - this.container.offset().top;
-    var index = Math.floor(x / 20);
+    var index = Math.floor(x / this.stepx);
     var value = Math.max(0, Math.min(1, 1 - y / this.height)) * 2 - 1;
 
     if (Math.abs(this.pattern[this.clip][index] - value) >= 0.02) {
@@ -51,19 +69,6 @@ Automation.prototype.toggle = function() {
     }
 };
 
-Automation.prototype.draw = function() {
-    for (var x = 0, i = 0; x < this.width; x += 20, i += 1) {
-        this.stepPattern[i] = this.canvas.rect(x, 0, 20, 0).attr({
-            fill: "#faa",
-            stroke: "none",
-            opacity: 1
-        });
-
-        this.clockPattern[i] = this.canvas.rect(x, 0, 20, this.height).
-            attr({ fill: '#999', opacity: i % 4 == 0 ? 0.5 : 0.2 });
-    }
-};
-
 Automation.prototype.send = function(index) {
     controller.send('automation', this.instrument.index, this.clip, this.key, index, this.pattern[this.clip][index]);
 };
@@ -74,26 +79,23 @@ Automation.prototype.setStep = function(clip, index, value) {
 };
 
 Automation.prototype.drawStep = function(index, value) {
-    var rect = this.stepPattern[index];
+    var rect = this.steps[index];
 
     if (value >= 0) {
-        rect.attr({
-            height:  value * this.height / 2,
-            y: (this.height - value * this.height) / 2
-        });
+        rect.setAttribute('height', value * this.height / 2);
+        rect.setAttribute('y', (this.height - value * this.height) / 2);
     }
     else {
-        rect.attr({
-            height: -value * this.height,
-            y: this.height / 2
-        });
+        rect.setAttribute('height', -value * this.height);
+        rect.setAttribute('y', this.height / 2);
     }
 };
 
 Automation.prototype.clock = function(index) {
     if (!this.hidden) {
-        this.clockPattern[index].attr({ opacity: 1 }).
-            animate({ opacity: index % 4 == 0 ? 0.5 : 0.2 }, 200);        
+        this.clocks[index].setAttribute('opacity', 0.5);
+
+        this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 500);        
     }
 };
 

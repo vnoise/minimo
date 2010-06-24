@@ -2,6 +2,10 @@ var controller = {
     clock: 0,
     instruments: [],
 
+    initialize: function() {
+        this.receive();
+    },
+
     setClock: function (clock) {
         $.each(this.instruments, function() {
             this.clock(clock % 16); 
@@ -17,11 +21,12 @@ var controller = {
     },
 
     '/instrument': function(index) {
-        this.instruments[index] = new Instrument(index, $(document.body));  
+        var instrument = this.instruments[index] = new Instrument(index);
+        instrument.render(document.body);
     },
 
     '/parameter': function(instrument, key, value) {
-        this.instruments[instrument].parameter(key, value);        
+        // this.instruments[instrument].parameter(key, value);        
     },
 
     '/pattern': function(instrument, clip, index, value) {
@@ -33,7 +38,7 @@ var controller = {
     },
 
     '/automation': function(instrument, key, clip, index, value) {
-        this.instruments[instrument].automation(key, clip, index, value);
+        // this.instruments[instrument].automation(key, clip, index, value);
     },
 
     '/clip': function(instrument, clip) {

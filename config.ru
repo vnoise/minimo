@@ -1,5 +1,6 @@
-$:.unshift './rosc-0.1.3/lib'
-$:.unshift './json_pure-1.4.3/lib'
+$:.unshift './lib'
+$:.unshift './vendor/rosc-0.1.3/lib'
+$:.unshift './vendor/json_pure-1.4.3/lib'
 
 require 'rack'
 require 'rack/file'
@@ -33,15 +34,19 @@ map "/send" do
   run $sender
 end
 
-map "/seq" do
+map "/" do
   run(lambda do |env|
         $client_id.succ!
-        html = ERB.new(File.read('seq.html')).result(binding)
+        html = ERB.new(File.read('index.html')).result(binding)
 
         [200, {'Content-Type' => 'text/html'}, html]
       end)
 end
 
-map '/' do
-  run Rack::File.new('.')
+map '/javascripts' do
+  run Rack::File.new('./javascripts')
+end
+
+map '/stylesheets' do
+  run Rack::File.new('./stylesheets')
 end

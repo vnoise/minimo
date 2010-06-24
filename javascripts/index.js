@@ -42,6 +42,7 @@ $(function() {
 
     var lastX;
     var lastY;
+    var timeout;
 
     function touchDown(event) {
         if (event.target.localName == 'html') {
@@ -52,13 +53,36 @@ $(function() {
 
     function touchMove(event) {
         if (event.target.localName == 'html') {
-            // p("" + event.clientX + " : " + event.clientY);
-            window.scrollBy(lastX - event.pageX, lastY - event.pageY);
+            // log("" + event.clientX + " : " + event.clientY);
+
+            var x = lastX - event.pageX;
+            var y = lastY - event.pageY;
+
+            scrollBy(x, y);
+
             lastX = event.pageX;
             lastY = event.pageY;
         }
     }
-    
+
+    function scrollBy(x, y) {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+
+        window.scrollBy(Math.ceil(x), Math.ceil(y));
+
+        if (Math.abs(x) > 0.05 || Math.abs(y) > 0.05) {
+            var timeout = setTimeout(scrollBy.bind(this, x * 0.7, y * 0.7), 50);
+        }
+    }
+
+    function touchUp(event) {
+        if (event.target.localName == 'html') {
+        }
+    }
+
+    document.addEventListener("MozTouchUp", touchUp, false);
     document.addEventListener("MozTouchDown", touchDown, false);
     document.addEventListener("MozTouchMove", touchMove, false);
 
@@ -68,5 +92,5 @@ $(function() {
     document.ongesturechange = function(e) { e.preventDefault(); };
     document.ongesturestart = function(e) { e.preventDefault(); };
 
-    controller.receive();
+    controller.initialize();
 });

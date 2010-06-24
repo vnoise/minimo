@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/SVG/DTD/svg10.dtd">
+<svg viewBox="-2361 0 4625 2336" id="cont"
+     xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
+    <script type="text/javascript">
+      var client_id = <%= $client_id %>;
+      var saves = <%= $manager.saves.to_json %>;
+    </script>
+    <script src="/javascripts/jquery.js" type="text/javascript"></script>
+    <script src="/javascripts/touch-tracker.js" type="text/javascript"></script>
+    <script src="/javascripts/controller.js" type="text/javascript"></script>
+    <script src="/javascripts/slider.js" type="text/javascript"></script>
+    <script src="/javascripts/instrument.js" type="text/javascript"></script>
+    <script src="/javascripts/sequencer.js" type="text/javascript"></script>
+    <script src="/javascripts/automation.js" type="text/javascript"></script>
+    <script src="/javascripts/seq.js" type="text/javascript"></script>
+</svg>
