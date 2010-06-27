@@ -18,7 +18,7 @@ Slider.prototype.draw = function(svg) {
 
     svg.rect(0, 0, this.container.width(), this.container.height(), { opacity: 0 });
 
-    this.text = svg.text(10, 24, this.key, { 'class': 'label' });
+    this.text = svg.text(10, 15, this.key, { 'class': 'label' });
     this.handle = svg.rect(0, 0, 40, this.container.height(), 10, 10, { 'class': 'handle' });
 
     this.tracker = new TouchTracker(this, this.svg.root(), this.handleEvent.bind(this));

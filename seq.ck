@@ -155,7 +155,7 @@ class Instrument {
         read("echo_time")::ms   => delay.delay;
         read("feedback")        => feedback.gain;
 
-        Math.min(0.5, 1 / (read("sinus") + read("saw") + read("square") + read("noise"))) => osclimit.gain;
+        Math.min(0.8, 1 / (read("sinus") + read("saw") + read("square") + read("noise"))) => osclimit.gain;
 
         Std.mtof(read("pitch")) => sinus.freq;
         Std.mtof(read("pitch")) => saw.freq;

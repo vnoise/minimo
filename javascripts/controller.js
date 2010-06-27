@@ -3,7 +3,7 @@ var controller = {
     instruments: [],
 
     initialize: function() {
-        this.scrollManager = new ScrollManager();
+        // this.scrollManager = new ScrollManager();
         this.menu = $("<div class='menu'/>").appendTo(document.body);
         this.console = $("<div class='console'/>").appendTo(document.body);
 
@@ -24,9 +24,10 @@ var controller = {
         });
 
         for (var i = 0; i < saves.length; i++) {
-            $("<a href='#'>" + saves[i] + "</a>").appendTo(this.menu).click(function() {
-                this.load($(this).html());
-            }.bind(this));        
+            var file = saves[i];
+            $("<a href='#'>" + file + "</a>").appendTo(this.menu).click(function() {
+                this.load(file);
+            }.bind(this));     
         }
 
         this.sliderSwitcher = new SliderSwitcher(this.instruments);

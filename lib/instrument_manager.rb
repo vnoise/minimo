@@ -37,7 +37,7 @@ class InstrumentManager
       $receiver.broadcast([bpm_message], sender_id)
       
     when 'load'
-      open("saves/#{args.first}.yml", "rb") do |io|
+      open("saves/#{args.first}", "rb") do |io|
         @instruments = Marshal.load(io.read)
       end
 
@@ -47,7 +47,7 @@ class InstrumentManager
 
     when 'save'
       index = (saves.max || '0').succ
-      open("saves/#{index}.yml", "wb") {|io| io << Marshal.dump(@instruments) }
+      open("saves/#{index}", "wb") {|io| io << Marshal.dump(@instruments) }
 
     else
       @instruments[args.first.to_i].handle(sender_id, type, args[1..-1])

@@ -50,7 +50,7 @@ Automation.prototype.handleEvent = function(event) {
     var x = event.pageX - this.container.offset().left;
     var y = event.pageY - this.container.offset().top;
     var index = Math.floor(x / this.stepx);
-    var value = Math.max(0, Math.min(1, 1 - y / this.height)) * 2 - 1;
+    var value = Math.max(0, Math.min(1, 1 - y / this.height));
 
     if (Math.abs(this.pattern[this.clip][index] - value) >= 0.02) {
         this.setStep(this.clip, index, value); 
@@ -81,14 +81,17 @@ Automation.prototype.setStep = function(clip, index, value) {
 Automation.prototype.drawStep = function(index, value) {
     var rect = this.steps[index];
 
-    if (value >= 0) {
-        rect.setAttribute('height', value * this.height / 2);
-        rect.setAttribute('y', (this.height - value * this.height) / 2);
-    }
-    else {
-        rect.setAttribute('height', -value * this.height);
-        rect.setAttribute('y', this.height / 2);
-    }
+    rect.setAttribute('height', value * this.height);
+    rect.setAttribute('y', this.height - value * this.height);
+
+    // if (value >= 0) {
+    //     rect.setAttribute('height', value * this.height / 2);
+    //     rect.setAttribute('y', (this.height - value * this.height) / 2);
+    // }
+    // else {
+    //     rect.setAttribute('height', -value * this.height);
+    //     rect.setAttribute('y', this.height / 2);
+    // }
 };
 
 Automation.prototype.clock = function(index) {
