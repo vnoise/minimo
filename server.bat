@@ -1,2 +1,2 @@
-rackup -s webrick
+@"ruby.exe" "C:/Ruby/bin/rackup"
 pause

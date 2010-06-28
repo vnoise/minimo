@@ -25,26 +25,30 @@ class Slider
     messages
   end
 
+  def message(*args)
+    @instrument.message(*args)
+  end
+
   def constructor_message
-    Message.new("/slider", "isfff", @instrument.index, @key, @min, @max, @step)
+    message("/slider", "sfff", @key, @min, @max, @step)
   end
 
   def parameter_message
-    Message.new("/parameter", "isf", @instrument.index, @key, @value)
+    message("/parameter", "sf", @key, @value)
   end
 
   def automation_message(clip, index, value)
-    Message.new("/automation", "isiif", @instrument.index, @key, clip, index, value)
+    message("/automation", "siif", @key, clip, index, value)
   end
 
   def set_value(value)
     @value = value.to_f
-    $sender.send(parameter_message)
+    @instrument.send(parameter_message)
   end
 
   def automation(clip, index, value)
     @automation[clip.to_i][index.to_i] = value.to_f
-    $sender.send(automation_message(clip, index, value))
+    @instrument.send(automation_message(clip, index, value))
   end
   
 end

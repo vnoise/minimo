@@ -23,23 +23,35 @@ class Parameter {
 
 
 class Instrument {
-    0 => int clip;
-    0 => int position;
+    OscRecv receiver;
+    OscSend sender;
+    
+    int clip;
+    int position;    
+    float bpm;
+    int clock;
+    dur beat;
+    0 => int port;
 
     SinOsc sinus;
     SawOsc saw;
     SqrOsc square;
     Noise noise;
+    
     LPF lowpass;
     HPF hipass;
+    
     ADSR adsr;
+    
     Dyno comp;
     Dyno limiter;
     Dyno lplimit;
     Dyno hplimit;
     Dyno osclimit;
+    
     NRev reverb;
     DelayL delay;
+    
     Gain feedback;
     Gain echoSend;
     Gain reverbSend;
@@ -83,7 +95,7 @@ class Instrument {
     
     feedback => delay => feedback;
 
-    osclimit => hipass => hplimit => lowpass => lplimit => adsr => comp => limiter => output;
+    osclimit => hipass => hplimit => lowpass => lplimit => adsr => comp => limiter => output => dac;
 
     float pattern[16][16];
     Parameter @ parameters[16];
@@ -102,6 +114,8 @@ class Instrument {
     parameter("echo", 0, 1, 1);
     parameter("echo_time", 0, 2000, 1000);
     parameter("feedback", 0, 1, 1);
+    
+    sender.setHost("localhost", 9999);
 
     public void parameter(string key, float min, float max, float range) {
         new Parameter @=> Parameter @ param;
@@ -112,7 +126,13 @@ class Instrument {
         0 => param.value;
     }
 
-    public void init() {        
+    public void init() {
+        0 => clip;
+        0 => position;
+        120 => bpm;
+        60::second / bpm => beat;
+        0 => clock;
+
         0 => noise.gain;
         0 => sinus.gain;
         0 => saw.gain;
@@ -169,142 +189,128 @@ class Instrument {
             adsr.keyOn();
         }
     }
-}
 
-Dyno limiter;
-Dyno compressor;
-
-0           => limiter.slopeAbove;
-1.0         => limiter.slopeBelow;
-0.95        => limiter.thresh;
-0::ms       => limiter.attackTime;
-10::ms      => limiter.releaseTime;
-
-0.5         => compressor.slopeAbove;
-1.0         => compressor.slopeBelow;
-0.5         => compressor.thresh;
-30::ms      => compressor.attackTime;
-300::ms     => compressor.releaseTime;
-1           => compressor.gain;
-
-compressor => limiter => dac;
-
-Instrument instruments[4];
-
-for (0 => int i; i < 4; i++) {
-    new Instrument @=> instruments[i];
-    instruments[i].init();
-    instruments[i].output => compressor;
-}
-
-OscRecv receiver;
-3334 => receiver.port;
-receiver.listen();
-
-OscSend sender;
-sender.setHost("localhost", 3335);
-
-120 => float bpm;
-60::second / bpm => dur beat;
-beat - (now % beat) => now;
-0 => int clock;
-
-fun void receive(string address) {
-    receiver.event(address) @=> OscEvent e;
-    
-    while (true) {
-        e => now;
+    public void receive(string address) {
+        receiver.event(address) @=> OscEvent e;
         
-        while (e.nextMsg() != 0) {            
-            if (address == "/bpm,f") {
-                e.getFloat() => bpm;
-                
-                <<< address, bpm >>>;
-            }
+        while (true) {
+            e => now;
             
-            if (address == "/pattern,iiif") {
-                e.getInt() => int index;
-                e.getInt() => int clip;
-                e.getInt() => int pos;
-                e.getFloat() => float value;
+            while (e.nextMsg() != 0) {
+                if (address == "/instrument") {
+                    init();
+                    <<< address >>>;
+                }
 
-                value => instruments[index].pattern[clip][pos];
-
-                <<< address, index, clip, pos, value >>>;
-            }
-
-            if (address == "/instument,i") {
-                e.getInt() => int index;
-                instruments[index].init();
-            }
-            
-            if (address == "/slider,isfff") {
-                e.getInt() => int index;
-                e.getString() => string key;
-                e.getFloat() => float min;
-                e.getFloat() => float max;
-                e.getFloat() => float step;
+                if (address == "/bpm,f") {
+                    e.getFloat() => bpm;
+                    
+                    <<< address, bpm >>>;
+                }
                 
-                instruments[index].parameters[key].init(min, max);
+                if (address == "/pattern,iif") {
+                    e.getInt() => int i;
+                    e.getInt() => int j;
+                    e.getFloat() => float value;
+
+                    value => pattern[i][j];
+
+                    <<< address, i, j, value >>>;
+                }
                 
-                <<< address, index, key, min, max, step >>>;
-            }
+                if (address == "/slider,sfff") {
+                    e.getString() => string key;
+                    e.getFloat() => float min;
+                    e.getFloat() => float max;
+                    e.getFloat() => float step;
+                    
+                    parameters[key].init(min, max);
+                    
+                    <<< address, key, min, max, step >>>;
+                }
 
-            if (address == "/clip,ii") {
-                e.getInt() => int index;
-                e.getInt() => int clip;
+                if (address == "/clip,i") {
+                    e.getInt() => clip;
 
-                clip => instruments[index].clip;
-
-                <<< address, index, clip >>>;
-            }
-                        
-            if (address == "/automation,isiif") {
-                e.getInt() => int index;
-                e.getString() => string key;
-                e.getInt() => int clip;
-                e.getInt() => int pos;
-                e.getFloat() => float value;
-
-                value => instruments[index].parameters[key].pattern[clip][pos];
-
-                <<< address, index, key, clip, pos, value >>>;
-            }
-
-            if (address == "/parameter,isf") {
-                e.getInt() => int index;
-                e.getString() => string key;
-                e.getFloat() => float value;
+                    <<< address, clip >>>;
+                }
                 
-                value => instruments[index].parameters[key].value;
-                
-                <<< address, index, key, value >>>;
+                if (address == "/automation,siif") {
+                    e.getString() => string key;
+                    e.getInt() => int clip;
+                    e.getInt() => int pos;
+                    e.getFloat() => float value;
+
+                    value => parameters[key].pattern[clip][pos];
+
+                    <<< address, key, clip, pos, value >>>;
+                }
+
+                if (address == "/parameter,sf") {
+                    e.getString() => string key;
+                    e.getFloat() => float value;
+                    
+                    value => parameters[key].value;
+                    
+                    <<< address, key, value >>>;
+                }
             }
         }
     }
-}
 
-spork ~ receive("/automation,isiif");
-spork ~ receive("/pattern,iiif");
-spork ~ receive("/bpm,f");
-spork ~ receive("/instrument,i");
-spork ~ receive("/slider,isfff");
-spork ~ receive("/clip,ii");
-spork ~ receive("/parameter,isf");
+    public void listen() {     
+        port => receiver.port;
+        receiver.listen();
 
-while( true )
-{
-    for (0 => int i; i < 4; i++) {
-        instruments[i].play(clock % 16);
+        spork ~ receive("/bpm,f");
+        spork ~ receive("/instrument");
+        spork ~ receive("/slider,sfff");
+        spork ~ receive("/clip,i");
+        spork ~ receive("/parameter,sf");
+        spork ~ receive("/automation,siif");
+        spork ~ receive("/pattern,iif");
+
+        <<< "Listening on port", port >>>;
     }
 
-    if (clock % 4 == 0) {
-        sender.startMsg("/clock,if");
-        sender.addInt(clock);
-        sender.addFloat(bpm);
+    public void loop() {        
+        (beat * 4) - (now % (beat * 4)) => now;
+
+        <<< "Starting loop on", now >>>;
+
+        while( true )
+        {
+            play(clock % 16);
+
+            if (port == 10000 && clock % 4 == 0) {
+                sender.startMsg("/clock,if");
+                sender.addInt(clock);
+                sender.addFloat(bpm);
+            }
+
+            60::second / bpm / 4 => dur beat;
+            beat => now;
+            clock + 1 => clock;
+        }
     }
 
-    60::second / bpm / 4 => dur beat;
-    beat => now;
-    clock + 1 => clock;
 }
+
+OscRecv portReceiver;
+9998 => portReceiver.port;
+portReceiver.listen();
+
+Instrument instrument;
+instrument.init();
+
+portReceiver.event("/port,i") @=> OscEvent e;
+
+while (true) {
+    e => now;    
+    while (e.nextMsg() != 0) {
+        e.getInt() => instrument.port;
+        instrument.listen();
+        instrument.loop();
+    }
+}
+

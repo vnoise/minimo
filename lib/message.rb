@@ -1,21 +1,25 @@
 class Message
 
-  attr_accessor :address, :types, :args
+  attr_accessor :address, :types, :args, :instrument
 
-  def initialize(address, types, *args)
-    @address, @types, @args = address, types, args
+  def initialize(instrument, address, types, *args)
+    @instrument, @address, @types, @args = instrument, address, types, args
 
     if types and types.size != args.size
       raise "arity mismatch: #{address} #{types} #{args.inspect}"
     end
   end
 
-  def to_osc
+  def osc_message
     OSC::Message.new(@address, @types, *@args)
   end
 
-  def to_ary
-    [@address, @types, @args]
+  def json_message
+    [@address, [@instrument.index] + @args]
+  end
+
+  def inspect
+    "<osc #{address} #{types} #{ args.join(' ') }>"
   end
 
 end

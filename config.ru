@@ -6,32 +6,23 @@ require 'rack'
 require 'rack/file'
 require 'rack/reloader'
 
-begin
-  require 'osc_sender'
-  require 'osc_receiver'
-  require 'erb'
-  require 'instrument_manager'
-rescue SyntaxError
-  puts $!.message
-  puts $!.backtrace
-  gets
-  exit
-end
+require 'erb'
+require 'osc_manager'
+require 'instrument_manager'
   
 use Rack::Reloader
 
-$receiver =  OSCReceiver.new('localhost', 3335)
-$sender = OSCSender.new('localhost', 3334)
+$osc =  OSCManager.new
 $manager = InstrumentManager.new
 
 $client_id = '1'
 
 map "/receive" do
-  run $receiver
+  run $osc
 end
 
 map "/send" do
-  run $sender
+  run $manager
 end
 
 map "/" do

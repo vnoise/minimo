@@ -1,12 +1,15 @@
 class Instrument  
-
-  attr_reader :index, :pattern, :sliders, :clip
+  attr_reader :index
 
   def initialize(index)
     @index = index
     @pattern = Array.new(8) { Array.new(16) { 0 } }    
     @sliders = []
     @clip = 0
+    @bpm = 120
+    @socket = OSC::UDPSocket.new
+    @host = 'localhost'
+    @port = 10000 + @index
 
     add_slider(:sinus     , 1, 0, 1, 0.01)
     add_slider(:saw       , 0, 0, 1, 0.01)
@@ -22,20 +25,35 @@ class Instrument
     add_slider(:echo      , 0, 0, 1, 0.01)
     add_slider(:echo_time , 125, 0, 500, 5)
     add_slider(:feedback  , 0.5, 0, 1, 0.01)
+
+    system("chuck + seq.ck")
+
+    sleep 0.1
+
+    @socket.send(OSC::Message.new("/port", "i", @port), 0, @host, 9998)
+  end
+
+  def send(message)
+    @socket.send(message.osc_message, 0, @host, @port)
   end
 
   def send_updates
     messages = constructor_messages
-    $receiver.broadcast(messages)
+    broadcast(messages)
 
     messages.each do |message|
-      $sender.send(message)
+      send(message)
       sleep 0.0001
     end
   end
 
   def add_slider(*args)
     @sliders << Slider.new(self, *args)
+  end
+
+  def bpm(value)
+    @bpm = value.to_f
+    send(bpm_message)
   end
 
   def slider(key)
@@ -49,24 +67,32 @@ class Instrument
 
   def clip(clip)
     @clip = clip.to_i
-    $sender.send(clip_message)
+    send(clip_message)
   end
 
   def pattern(clip, index, value)
     @pattern[clip.to_i][index.to_i] = value.to_f
-    $sender.send(pattern_message(clip, index, value))
+    send(pattern_message(clip, index, value))
+  end
+
+  def message(*args)
+    Message.new(self, *args)
+  end
+
+  def bpm_message
+    message('/bpm', 'f', @bpm.to_f)
   end
 
   def constructor_message
-    Message.new('/instrument', 'i', @index)
+    message('/instrument', '')
   end
 
   def clip_message
-    Message.new("/clip", 'ii', @index, @clip)
+    message("/clip", 'i', @clip)
   end
 
   def pattern_message(clip, index, value)
-    Message.new("/pattern", "iiif", @index, clip, index, value)
+    message("/pattern", "iif", clip, index, value)
   end
 
   def pattern_messages    
@@ -86,13 +112,18 @@ class Instrument
   end
 
   def handle(sender_id, type, args)
-    message = send(type, *args)
-    $receiver.broadcast([message], sender_id)
+    message = __send__(type, *args)
+    broadcast([message], sender_id)
+  end
+
+  def broadcast(messages, sender_id = nil)
+    $osc.broadcast(messages, sender_id)
   end
 
   def constructor_messages
     messages = []
     messages << constructor_message
+    messages << bpm_message
     messages << clip_message
     messages += pattern_messages
 

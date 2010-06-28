@@ -49,13 +49,13 @@ var controller = {
             setTimeout(this.setClock.bind(this, clock + 1), beat);
         }
     },
-    
-    '/bpm': function(bpm) {
-        this.bpm.val(bpm);
-    },
 
     '/clock': function(index) {
         this.setClock(index);
+    },
+    
+    '/bpm': function(instrument, bpm) {
+        this.bpm.val(bpm);
     },
 
     '/instrument': function(index) {

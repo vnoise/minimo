@@ -3,17 +3,23 @@ require 'thread'
 require 'json'
 require 'queue'
 
-class OSCReceiver
+class OSCManager
 
-  def initialize(host, port)
-    @host = host
-    @port = port
+  def initialize
+    @host = 'localhost'
+    @port = 9999
     @queues = {}
 
     @server = OSC::UDPServer.new
     @server.bind(@host, @port)
-    @server.add_method '/*', nil do |message|
-      broadcast([message])
+    @server.add_method('/*', nil) do |osc|
+      begin
+        # p osc
+        broadcast([osc])
+      rescue 
+        puts $!.message
+        puts $!.backtrace
+      end
     end
 
     Thread.new do
@@ -22,15 +28,11 @@ class OSCReceiver
   end
 
   def broadcast(messages, sender_id = nil)
-    @queues.each_key do |client_id|
+    @queues.each do |client_id, queue|
       unless client_id == sender_id
-        send(client_id, messages)
+        queue.push(messages)
       end
     end
-  end
-
-  def send(client_id, messages)
-    @queues[client_id].push(messages)
   end
   
   def call(env)
@@ -39,12 +41,10 @@ class OSCReceiver
 
     if queue.nil?
       queue = @queues[client_id] = TQueue.new
-      messages = $manager.constructor_messages
+      messages = $manager.constructor_messages.map { |message| message.json_message }
     else
-      messages = queue.wait
+      messages = queue.wait.map {|osc| [osc.address, osc.args] }
     end
-
-    messages = messages.map { |message| [message.address, message.args] }
 
     [200, {'Content-Type' => 'text/javascript'}, messages.to_json]
   end

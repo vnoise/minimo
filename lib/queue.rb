@@ -4,6 +4,7 @@ class TQueue
   end
 
   def push(messages)
+    # puts "Thread #{Thread.current.id} is pushing"
     messages.each do |message|
       @list << message
     end
@@ -11,6 +12,7 @@ class TQueue
   end
 
   def wait
+    # puts "Thread #{Thread.current.id} is waiting"
     @thread = Thread.current
     Thread.stop
     @thread = nil

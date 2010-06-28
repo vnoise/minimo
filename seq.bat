@@ -1,2 +1,2 @@
-chuck seq.ck
+chuck --loop
 pause
