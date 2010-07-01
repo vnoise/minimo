@@ -8,6 +8,8 @@ function TouchTracker(component, element, callback) {
 
     this.element.addEventListener('MozTouchDown', this.onDown.bind(this), false);
     // this.element.addEventListener('mousedown', this.onDown.bind(this), false);
+
+    this.element.addEventListener('mousedown', function(e) { e.preventDefault(); }, false);
 };
 
 TouchTracker.prototype.onDown = function(event) {
@@ -18,6 +20,7 @@ TouchTracker.prototype.onDown = function(event) {
     this.callback(event, true);
 
     event.preventDefault();
+    return false;
 };
 
 TouchTracker.prototype.onMove = function(event) {
@@ -28,6 +31,7 @@ TouchTracker.prototype.onMove = function(event) {
     this.callback(event, false);
 
     event.preventDefault();
+    return false;
 };
 
 TouchTracker.prototype.onUp = function(event) {

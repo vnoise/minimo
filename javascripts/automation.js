@@ -1,12 +1,15 @@
-function Automation(instrument, key) {
+function Automation(instrument, key, min, max, step) {
     this.instrument = instrument;    
     this.key = key;
-    this.stepx = 10;
 
     this.pattern = [];
     this.clocks = [];
     this.steps = [];
     this.clip = 0;
+    this.step = step / (max - min);
+
+    this.visible = true;
+    this.active = false;
 
     for (var i = 0; i < 8; i++) {
         this.pattern[i] = [];
@@ -29,6 +32,9 @@ Automation.prototype.render = function(container) {
 
 Automation.prototype.draw = function(svg) {
     this.svg = svg;
+    this.stepx = this.container.width() / 16;
+
+    this.text = svg.text(5, this.container.height() / 2, this.key, { 'class': 'label' });
 
     for (var i = 0; i < 16; i++) {
         this.steps[i] = svg.rect(i * this.stepx, 0, this.stepx, 0, {
@@ -52,21 +58,27 @@ Automation.prototype.handleEvent = function(event) {
     var index = Math.floor(x / this.stepx);
     var value = Math.max(0, Math.min(1, 1 - y / this.height));
 
-    if (Math.abs(this.pattern[this.clip][index] - value) >= 0.02) {
+    value = Math.floor(value / this.step) * this.step;
+
+    if (this.pattern[this.clip][index] != value) {
+
         this.setStep(this.clip, index, value); 
         this.send(index);
     }
 };
 
-Automation.prototype.toggle = function() {
-    if (this.hidden) {
-        this.hidden = false;
-        this.container.slideDown();
+Automation.prototype.show = function() {
+    this.visible = true;
+
+    if (this.active && this.instrument.showAutomations) {
+        this.container.slideDown();        
     }
-    else {
-        this.hidden = true;
-        this.container.slideUp();
-    }
+};
+
+Automation.prototype.hide = function() {
+    this.visible = false;
+
+    this.container.slideUp();
 };
 
 Automation.prototype.send = function(index) {
@@ -83,19 +95,10 @@ Automation.prototype.drawStep = function(index, value) {
 
     rect.setAttribute('height', value * this.height);
     rect.setAttribute('y', this.height - value * this.height);
-
-    // if (value >= 0) {
-    //     rect.setAttribute('height', value * this.height / 2);
-    //     rect.setAttribute('y', (this.height - value * this.height) / 2);
-    // }
-    // else {
-    //     rect.setAttribute('height', -value * this.height);
-    //     rect.setAttribute('y', this.height / 2);
-    // }
 };
 
 Automation.prototype.clock = function(index) {
-    if (!this.hidden) {
+    if (this.visible) {
         this.clocks[index].setAttribute('opacity', 0.5);
 
         this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 200);        

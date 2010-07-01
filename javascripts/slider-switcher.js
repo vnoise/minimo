@@ -5,10 +5,7 @@ function SliderSwitcher(instruments) {
 };
 
 SliderSwitcher.prototype.render = function(container) {
-    this.container = $('<table class="slider-switcher"></table>');
-
-    this.tr = $('<tr/>');
-    this.container.append(this.tr);
+    this.container = $('<div class="slider-switcher"></div>');
 
     $(container).append(this.container);
 };
@@ -20,27 +17,25 @@ SliderSwitcher.prototype.addSlider = function(key) {
 
     this.keys[key] = true;
 
-    if (this.links.length % 16 == 0) {
-        this.tr = $('<tr/>');
-        this.container.append(this.tr);
-    }
-
-    var td = $('<td/>');
     var link = $('<a href="#">' + key + '</a>');
 
-    this.links.push(link);
-    td.append(link);
-    this.tr.append(td);
+    this.container.append(link);
     link.click(this.onClick.bind(this, key, link));
 };
 
 
 SliderSwitcher.prototype.onClick = function(key, link, event) {
+    link.toggleClass('active');
+
     for (var i in this.instruments) {
-        this.instruments[i].sliders[key].toggle();
+        if (link.hasClass('active')) {
+            this.instruments[i].activate(key);
+        }
+        else {
+            this.instruments[i].deactivate(key);
+        }
     }
 
-    link.toggleClass('active');
 
     return false;
 };

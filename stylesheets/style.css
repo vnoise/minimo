@@ -52,6 +52,12 @@ a {
     margin: 10px;
 }
 
+.menu a.active {
+    background: white;
+    color: black;
+}
+
+
 .console { 
     display: none;
     height: 200px; 
@@ -62,10 +68,14 @@ a {
 
 .instrument {
     border: 1px solid #999;
-    margin-top: 20px;
     width: 160px;
     float: left;
     overflow: hidden;
+}
+
+.instrument .mode-select {
+    width: 100%;
+    display: block;
 }
 
 .instrument .clips {
@@ -74,7 +84,7 @@ a {
     border-spacing: 1px;
 }
 
-.instrument td {
+.instrument .clips td {
     background: #666;
     border: 1px solid #333;
 }
@@ -100,7 +110,7 @@ a {
 
 .sequencer {
     width: 160px;
-    height: 160px;
+    height: 80px;
 }
 
 .sequencer .step {
@@ -119,17 +129,18 @@ a {
     border-top: 1px solid #ccc;
 }
 
+.automation .label { 
+    font-size: 12px;
+    stroke: none;
+    fill: #ccc;
+}
+
 .slider-switcher {
-    width: 640px;
+    float: left;
+    width: 80px;
     background: #666;
     border: 1px solid #333;
     border-collapse: collapse;
-}
-
-.slider-switcher td {
-    background: #666;
-    border: 1px solid #333;
-    cell-spacing: 0px;
 }
 
 .slider-switcher a {

@@ -1,8 +1,6 @@
 function Sequencer(instrument) {
     this.instrument = instrument;
     this.container = $('<div class="sequencer"/>');
-    this.stepx = 40;
-    this.stepy = 40;
 
     this.pattern = [];
     this.clocks = [];
@@ -25,11 +23,15 @@ Sequencer.prototype.render = function(container) {
 Sequencer.prototype.draw = function(svg) {
     this.svg = svg;
 
+    this.stepx = this.container.width() / 4;
+    this.stepy = this.container.height() / 4;
+    this.radius = (this.stepx + this.stepy) / 8;
+
     for (var i = 0; i < 4; i++) {
         for (var j = 0; j < 4; j++) {
             var x = this.stepx / 2 + j * this.stepx;
             var y = this.stepy / 2 + i * this.stepy;
-            this.steps[i * 4 + j] = svg.circle(x, y, 13, { 'class': 'step', opacity: 0 });
+            this.steps[i * 4 + j] = svg.circle(x, y, this.radius, { 'class': 'step', opacity: 0 });
             this.clocks[i * 4 + j] = svg.circle(x, y, 1, { 'class': 'clock' });
         }
     }

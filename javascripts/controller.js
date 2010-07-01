@@ -14,9 +14,13 @@ var controller = {
         }.bind(this));
 
         $("<a href='#'>console</a>").appendTo(this.menu).click(function() {
-            console.slideToggle();
+            this.console.slideToggle();
             return false;
-        });
+        }.bind(this));
+
+        $("<a href='#'>automation</a>").appendTo(this.menu).click(this.toggleAutomation.bind(this));
+
+        $("<a href='#'>slider</a>").appendTo(this.menu).click(this.toggleSlider.bind(this));
 
         $("<a href='#'>save</a>").appendTo(this.menu).click(function() {
             controller.send('save');
@@ -33,6 +37,38 @@ var controller = {
         this.sliderSwitcher = new SliderSwitcher(this.instruments);
         this.sliderSwitcher.render(document.body);
         this.receive();
+    },
+
+    toggleAutomation: function(event) {
+        var link = $(event.target);
+        link.toggleClass('active');
+        
+        for (var i in this.instruments) {
+            if (link.hasClass('active')) {
+                this.instruments[i].showAutomation();
+            }
+            else {
+                this.instruments[i].hideAutomation();
+            }
+        }
+
+        return false;
+    },
+
+    toggleSlider: function(event) {
+        var link = $(event.target);
+        link.toggleClass('active');
+        
+        for (var i in this.instruments) {
+            if (link.hasClass('active')) {
+                this.instruments[i].showSlider();
+            }
+            else {
+                this.instruments[i].hideSlider();
+            }
+        }
+
+        return false;
     },
 
     getBpm: function() {

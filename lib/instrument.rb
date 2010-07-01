@@ -7,15 +7,16 @@ class Instrument
     @sliders = []
     @clip = 0
     @bpm = 120
+    @mode = "chromatic"
     @socket = OSC::UDPSocket.new
     @host = 'localhost'
-    @port = 10000 + @index
+    @port = 10000 + @index    
 
-    add_slider(:sinus     , 1, 0, 1, 0.01)
+    add_slider(:sinus     , 0, 0, 1, 0.01)
     add_slider(:saw       , 0, 0, 1, 0.01)
     add_slider(:square    , 0, 0, 1, 0.01)
     add_slider(:noise     , 0, 0, 1, 0.01)
-    add_slider(:pitch     , 36, 24, 60, 1)
+    add_slider(:pitch     , 0, 0, 7, 1)
     add_slider(:lowpass   , 1, 0.1, 1, 0.01)
     add_slider(:hipass    , 0.1, 0.1, 1, 0.01)
     add_slider(:reso      , 1, 1, 5, 0.05)
@@ -56,6 +57,11 @@ class Instrument
     send(bpm_message)
   end
 
+  def mode(value)
+    @mode = value
+    send(mode_message)
+  end
+
   def slider(key)
     key = key.to_sym
     @sliders.find {|slider| slider.key == key }
@@ -89,6 +95,10 @@ class Instrument
 
   def clip_message
     message("/clip", 'i', @clip)
+  end
+
+  def mode_message
+    message("/mode", 's', @mode)
   end
 
   def pattern_message(clip, index, value)

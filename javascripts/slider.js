@@ -4,6 +4,7 @@ function Slider(instrument, key, min, max, step) {
     this.min = min;
     this.max = max;
     this.step = step;
+    this.active = false;
 }
 
 Slider.prototype.render = function(container) {
@@ -18,20 +19,20 @@ Slider.prototype.draw = function(svg) {
 
     svg.rect(0, 0, this.container.width(), this.container.height(), { opacity: 0 });
 
-    this.text = svg.text(10, 15, this.key, { 'class': 'label' });
+    this.text = svg.text(5, this.container.height() / 2, this.key, { 'class': 'label' });
     this.handle = svg.rect(0, 0, 40, this.container.height(), 10, 10, { 'class': 'handle' });
 
     this.tracker = new TouchTracker(this, this.svg.root(), this.handleEvent.bind(this));
 };
 
-Slider.prototype.toggle = function() {
-    this.container.slideToggle();
-    this.automation.container.slideToggle();
+Slider.prototype.show = function() {
+    if (this.active && this.instrument.showSliders) {
+        this.container.slideDown();        
+    }
 };
 
 Slider.prototype.hide = function() {
-    this.container.hide();
-    this.automation.container.hide();
+    this.container.slideUp();        
 };
 
 Slider.prototype.width = function(event) {
