@@ -73,9 +73,20 @@ a {
     overflow: hidden;
 }
 
+.instrument .type-select {
+    width: 100%;
+    display: block;
+    border: 1px solid #ccc;
+    background: #333;
+    color: white;
+}
+
 .instrument .mode-select {
     width: 100%;
     display: block;
+    border: 1px solid #ccc;
+    background: #333;
+    color: white;
 }
 
 .instrument .clips {

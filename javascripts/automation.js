@@ -93,8 +93,10 @@ Automation.prototype.setStep = function(clip, index, value) {
 Automation.prototype.drawStep = function(index, value) {
     var rect = this.steps[index];
 
-    rect.setAttribute('height', value * this.height);
-    rect.setAttribute('y', this.height - value * this.height);
+    if (rect) {
+        rect.setAttribute('height', value * this.height);
+        rect.setAttribute('y', this.height - value * this.height);        
+    }
 };
 
 Automation.prototype.clock = function(index) {

@@ -120,6 +120,14 @@ var controller = {
         this.instruments[instrument].setClip(clip);
     },
 
+    '/mode': function(instrument, mode) {
+        this.instruments[instrument].setMode(mode);
+    },
+
+    '/type': function(instrument, type) {
+        this.instruments[instrument].setType(type);
+    },
+
     load: function(file) {
         $('.instrument').remove();
         this.instruments = [];

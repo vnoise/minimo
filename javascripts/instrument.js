@@ -7,6 +7,13 @@ function Instrument(index) {
     this.showSliders = false;
     this.showAutomations = false;
 
+    this.types = [
+        "sinus",
+        "saw",
+        "square",
+        "noise"
+    ];
+
     this.modes = [
         "chromatic",
         "lydian",
@@ -26,26 +33,45 @@ function Instrument(index) {
     ];
 }
 
+Instrument.prototype.onSelectType = function() {
+    controller.send('type', this.index, this.typeSelect.val());
+};
+
 Instrument.prototype.onSelectMode = function() {
     controller.send('mode', this.index, this.modeSelect.val());
 };
 
+Instrument.prototype.setType = function(type) {
+    this.typeSelect.val(type);
+};
+
+Instrument.prototype.setMode = function(mode) {
+    this.modeSelect.val(mode);
+};
+
 Instrument.prototype.render = function(container) {
     this.container = $('<div class="instrument"/>');
+    this.typeSelect =  $('<select class="type-select"/>');
     this.modeSelect =  $('<select class="mode-select"/>');
 
     $(container).append(this.container);
 
-    for (var i in this.modes) {
-        var option = $('<option/>');
-        option.html(this.modes[i]);
-        this.modeSelect.append(option);
+    var i;
+
+    for (i in this.types) {
+        this.typeSelect.append($('<option>' + this.types[i] + '</option>'));
     }
 
+    for (i in this.modes) {
+        this.modeSelect.append($('<option>' + this.modes[i] + '</option>'));
+    }
+
+    this.typeSelect.change(this.onSelectType.bind(this));
     this.modeSelect.change(this.onSelectMode.bind(this));
 
     this.clips.render(this.container);
     this.sequencer.render(this.container);
+    this.container.append(this.typeSelect);
     this.container.append(this.modeSelect);
 };
 

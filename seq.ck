@@ -261,7 +261,9 @@ class Instrument {
     OscSend sender;
     
     int clip;
-    int position;    
+    int pitch;
+    int octave;
+    int position;
     float bpm;
     int clock;
     dur beat;
@@ -301,12 +303,10 @@ class Instrument {
     float pattern[16][16];
     Parameter @ parameters[16];
 
-    parameter("sinus", 0, 1, 1);
-    parameter("saw", 0, 1, 1);
-    parameter("square", 0, 1, 1);
-    parameter("noise", 0, 1, 1);
+    parameter("volume", 0, 1, 1);
     parameter("attack", 1, 500, 500);
     parameter("decay", 1, 500, 500);
+    parameter("octave", 0, 6, 1);
     parameter("pitch", 0, 96, 12);
     parameter("lowpass", 0.1, 1, 1);
     parameter("hipass", 0, 1, 1);
@@ -331,14 +331,14 @@ class Instrument {
         0 => clip;
         0 => position;
         120 => bpm;
-        60::second / bpm => beat;
+        minute / bpm / 4 => beat;
         0 => clock;
 
         0 => noise.gain;
         0 => sinus.gain;
         0 => saw.gain;
         0 => square.gain;
-        0.5 => output.gain;
+        0 => output.gain;
 
         20000 => lowpass.freq;
         0     => hipass.freq;
@@ -368,10 +368,7 @@ class Instrument {
     public void play(int pos) {
         pos => position;
         
-        read("sinus")           => sinus.gain;
-        read("saw")/3           => saw.gain;
-        read("square")/3        => square.gain;
-        read("noise")/3         => noise.gain;
+        read("volume")          => output.gain;
         read("attack")::ms      => adsr.attackTime;
         read("decay")::ms       => adsr.decayTime;
         read("reso")            => lowpass.Q;
@@ -379,12 +376,11 @@ class Instrument {
         read("echo")            => echoSend.gain;
         read("echo_time")::ms   => delay.delay;
         read("feedback")        => feedback.gain;
+        read("pitch") $ int     => pitch;
+        read("octave") $ int    => octave;        
+        read("volume")          => output.gain;
 
-        Math.min(0.5, 1 / (read("sinus") + read("saw") + read("square") + read("noise"))) => gain.gain;
-
-        Std.mtof(mode.note(read("pitch") $ int) + 36) => sinus.freq;
-        Std.mtof(mode.note(read("pitch") $ int) + 36) => saw.freq;
-        Std.mtof(mode.note(read("pitch") $ int) + 36) => square.freq;
+        Std.mtof(mode.note(pitch) + 36 + octave * 12) => sinus.freq => saw.freq => square.freq;
         
         Math.pow(read("lowpass"), 4) * 20000 => lowpass.freq;
         Math.pow(read("hipass"), 4) * 20000  => hipass.freq;
@@ -393,6 +389,15 @@ class Instrument {
             adsr.keyOff();
             adsr.keyOn();
         }
+    }
+
+    public void setType(string type) {              
+        0 => sinus.gain => saw.gain => square.gain => noise.gain;
+
+        if (type == "sinus" ) 1 => sinus.gain;
+        if (type == "saw"   ) 1 => saw.gain;
+        if (type == "square") 1 => square.gain;
+        if (type == "noise" ) 1 => noise.gain;
     }
 
     public void receive(string address) {
@@ -409,7 +414,8 @@ class Instrument {
 
                 if (address == "/bpm,f") {
                     e.getFloat() => bpm;
-                    
+                    minute / bpm / 4 => beat;
+
                     <<< address, bpm >>>;
                 }
                 
@@ -427,6 +433,14 @@ class Instrument {
                     e.getString() => string key;
                     
                     mode.set(key);
+                    
+                    <<< address, key >>>;
+                }
+                
+                if (address == "/type,s") {
+                    e.getString() => string key;
+                    
+                    setType(key);
                     
                     <<< address, key >>>;
                 }
@@ -478,6 +492,7 @@ class Instrument {
         spork ~ receive("/bpm,f");
         spork ~ receive("/instrument");
         spork ~ receive("/mode,s");
+        spork ~ receive("/type,s");
         spork ~ receive("/slider,sfff");
         spork ~ receive("/clip,i");
         spork ~ receive("/parameter,sf");
@@ -488,12 +503,15 @@ class Instrument {
     }
 
     public void loop() {        
-        (beat * 4) - (now % (beat * 4)) => now;
+        (beat * 16) - (now % (beat * 16)) => now;
+        (now / beat) $ int => clock;
 
-        <<< "Starting loop on", now >>>;
+        <<< "Starting loop on", clock >>>;
 
         while( true )
         {
+            (now / beat) $ int => clock;
+            
             play(clock % 16);
 
             if (port == 10000 && clock % 4 == 0) {
@@ -502,9 +520,7 @@ class Instrument {
                 sender.addFloat(bpm);
             }
 
-            60::second / bpm / 4 => dur beat;
             beat => now;
-            clock + 1 => clock;
         }
     }
 
