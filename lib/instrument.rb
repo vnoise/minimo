@@ -15,7 +15,7 @@ class Instrument
 
     add_slider(:volume    , 0, 0, 1, 0.01)
     add_slider(:octave    , 0, 0, 6, 1)
-    add_slider(:pitch     , 0, 0, 7, 1)
+    add_slider(:pitch     , 0, 0, 12, 1)
     add_slider(:lowpass   , 1, 0.1, 1, 0.01)
     add_slider(:hipass    , 0.1, 0.1, 1, 0.01)
     add_slider(:reso      , 1, 1, 5, 0.05)
@@ -23,7 +23,7 @@ class Instrument
     add_slider(:decay     , 100, 0, 500, 5)
     add_slider(:reverb    , 0, 0, 0.5, 0.005)
     add_slider(:echo      , 0, 0, 1, 0.01)
-    add_slider(:echo_time , 125, 0, 500, 5)
+    add_slider(:echo_time , 4, 0, 8, 1)
     add_slider(:feedback  , 0.5, 0, 1, 0.01)
 
     system("chuck + seq.ck")

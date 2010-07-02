@@ -60,7 +60,7 @@ a {
 
 .console { 
     display: none;
-    height: 200px; 
+    height: 100px; 
     width: 800px;
     color: white;
     overflow: auto;
@@ -120,7 +120,7 @@ a {
 }
 
 .sequencer {
-    width: 160px;
+    width: 100%;
     height: 80px;
 }
 
@@ -135,7 +135,7 @@ a {
 }
 
 .automation {
-    width: 160px;
+    width: 100%;
     height: 40px;
     border-top: 1px solid #ccc;
 }
@@ -174,7 +174,7 @@ a {
 }
 
 .slider {
-    width: 160px;
+    width: 100%;
     height: 30px;
     border-top: 1px solid #ccc;
 }

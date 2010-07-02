@@ -22,6 +22,8 @@ var controller = {
 
         $("<a href='#'>slider</a>").appendTo(this.menu).click(this.toggleSlider.bind(this));
 
+        $("<a href='#'>zoom</a>").appendTo(this.menu).click(this.toggleZoom.bind(this));
+
         $("<a href='#'>save</a>").appendTo(this.menu).click(function() {
             controller.send('save');
             return false;
@@ -65,6 +67,28 @@ var controller = {
             }
             else {
                 this.instruments[i].hideSlider();
+            }
+        }
+
+        return false;
+    },
+
+    toggleZoom: function(event) {
+        var link = $(event.target);
+        link.toggleClass('active');
+        
+        for (var i in this.instruments) {
+            if (link.hasClass('active')) {
+                var instrument = this.instruments[i];
+                for (var key in instrument.automations) {
+                    instrument.automations[key].setSize(160, 160);
+                }
+            }
+            else {
+                var instrument = this.instruments[i];
+                for (var key in instrument.automations) {
+                    instrument.automations[key].setSize(160, 40);
+                }
             }
         }
 

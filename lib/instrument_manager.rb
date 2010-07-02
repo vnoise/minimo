@@ -7,6 +7,10 @@ class InstrumentManager
   attr_reader :instruments
 
   def initialize
+    system "chuck + Parameter.ck"
+    system "chuck + Mode.ck"
+    system "chuck + Instrument.ck"
+
     @instruments = []
 
     4.times do |index| 

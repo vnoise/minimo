@@ -24,29 +24,59 @@ Automation.prototype.render = function(container) {
 
     $(container).append(this.container);
 
-    this.width = this.container.width();
-    this.height = this.container.height();
-
     this.container.svg({ onLoad: this.draw.bind(this) });
 };
 
-Automation.prototype.draw = function(svg) {
-    this.svg = svg;
-    this.stepx = this.container.width() / 16;
+Automation.prototype.clear = function(svg) {
+    $(this.text).remove();
 
-    this.text = svg.text(5, this.container.height() / 2, this.key, { 'class': 'label' });
+    for (var i = 0; i < this.steps.length; i++) {
+        $(this.steps[i]).remove();
+        $(this.clocks[i]).remove();
+    }
+};
+
+Automation.prototype.setSize = function(width, height) {
+    this.container.css({
+        width: width,
+        height: height
+    });
+
+    this.draw();
+};
+
+Automation.prototype.draw = function(svg) {
+    if (svg) {
+        this.svg = svg;        
+    }
+
+    this.clear();
+    
+    this.width = this.container.width();
+    this.height = this.container.height();
+
+    $(this.svg.root()).attr({
+        width: this.width,
+        height: this.height
+    });
+
+    this.stepx = this.width / 16;
+
+    this.text = this.svg.text(5, this.container.height() / 2, this.key, { 'class': 'label' });
 
     for (var i = 0; i < 16; i++) {
-        this.steps[i] = svg.rect(i * this.stepx, 0, this.stepx, 0, {
+        this.steps[i] = this.svg.rect(i * this.stepx, 0, this.stepx, 0, {
             fill: "#faa",
             stroke: "none",
             opacity: 1
         });
 
-        this.clocks[i] = svg.rect(i * this.stepx, 0, this.stepx, this.height, {
+        this.clocks[i] = this.svg.rect(i * this.stepx, 0, this.stepx, this.height, {
             fill: '#999', 
             opacity: i % 4 == 0 ? 0.2 : 0
         });
+
+        this.drawStep(i, this.pattern[this.clip][i]);
     }
 
     this.tracker = new TouchTracker(this, this.svg.root(), this.handleEvent.bind(this));
