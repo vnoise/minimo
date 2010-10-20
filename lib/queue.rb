@@ -4,10 +4,13 @@ class TQueue
   end
 
   def push(messages)
+    messages = [messages] unless Array === messages
+
     # puts "Thread #{Thread.current.id} is pushing"
     messages.each do |message|
       @list << message
     end
+
     @thread.wakeup if @thread       
   end
 

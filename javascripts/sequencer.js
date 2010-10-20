@@ -43,6 +43,7 @@ Sequencer.prototype.handleEvent = function(event, first) {
     var offset = $(this.svg.root()).offset();
     var x = event.pageX - offset.left;
     var y = event.pageY - offset.top;
+
     var index = Math.floor(y / this.stepy) * 4 + Math.floor(x / this.stepx);
 
     if (first) {

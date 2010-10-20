@@ -22,11 +22,11 @@ function log(s) {
 $(function() {
     document.multitouchData = true;
 
-    document.onselectstart = function () { return false; };
-    document.onselect = function () { return false; };
+    // document.onselectstart = function () { return false; };
+    // document.onselect = function () { return false; };
 
-    document.ongesturechange = function(e) { e.preventDefault(); };
-    document.ongesturestart = function(e) { e.preventDefault(); };
+    // document.ongesturechange = function(e) { e.preventDefault(); };
+    // document.ongesturestart = function(e) { e.preventDefault(); };
 
     controller.initialize();
 });

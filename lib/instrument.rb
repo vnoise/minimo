@@ -1,17 +1,16 @@
 class Instrument  
-  attr_reader :index
+  attr_reader :index, :port
 
   def initialize(index)
     @index = index
-    @pattern = Array.new(8) { Array.new(16) { 0 } }    
+    @pattern = Array.new(4) { Array.new(16) { 0 } }    
     @sliders = []
     @clip = 0
     @bpm = 120
     @mode = "chromatic"
     @type = "sinus"
-    @socket = OSC::UDPSocket.new
-    @host = 'localhost'
-    @port = 10000 + @index    
+    @sample = ""
+    @port = 10000 + index
 
     add_slider(:volume    , 0, 0, 1, 0.01)
     add_slider(:octave    , 0, 0, 6, 1)
@@ -25,16 +24,16 @@ class Instrument
     add_slider(:echo      , 0, 0, 1, 0.01)
     add_slider(:echo_time , 4, 0, 8, 1)
     add_slider(:feedback  , 0.5, 0, 1, 0.01)
+  end
 
+  def create
     system("chuck + seq.ck")
-
     sleep 0.1
-
-    @socket.send(OSC::Message.new("/port", "i", @port), 0, @host, 9998)
+    $osc.send(OSC::Message.new("/port", "i", port), 9998)
   end
 
   def send(message)
-    @socket.send(message.osc_message, 0, @host, @port)
+    $osc.send(message.osc_message, port)
   end
 
   def send_updates
@@ -66,6 +65,11 @@ class Instrument
     send(type_message)
   end
 
+  def sample(value)
+    @sample = value
+    send(sample_message)
+  end
+
   def slider(key)
     key = key.to_sym
     @sliders.find {|slider| slider.key == key }
@@ -77,6 +81,7 @@ class Instrument
 
   def clip(clip)
     @clip = clip.to_i
+
     send(clip_message)
   end
 
@@ -86,7 +91,7 @@ class Instrument
   end
 
   def message(*args)
-    Message.new(self, *args)
+    Message.new(@index, *args)
   end
 
   def bpm_message
@@ -94,7 +99,7 @@ class Instrument
   end
 
   def constructor_message
-    message('/instrument', '')
+    Message.new(nil, '/instrument', 'i', index)
   end
 
   def clip_message
@@ -103,6 +108,10 @@ class Instrument
 
   def mode_message
     message("/mode", 's', @mode)
+  end
+
+  def sample_message
+    message("/sample", 's', @sample)
   end
 
   def type_message
@@ -143,6 +152,7 @@ class Instrument
                 bpm_message,
                 clip_message,
                 mode_message,
+                sample_message,
                 type_message]
 
     messages += pattern_messages

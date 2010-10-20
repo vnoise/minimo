@@ -1,21 +1,22 @@
-
 public class Instrument {
     OscRecv receiver;
     OscSend sender;
-    
+
+    int index;
     int clip;
     int pitch;
     int position;
     float bpm;
     int clock;
     dur beat;
-    0 => int port;
 
     Mode mode;
     SinOsc sinus;
     SawOsc saw;
     SqrOsc square;
     Noise noise;    
+    SndBuf sample;
+
     LPF lowpass;
     HPF hipass;    
     ADSR adsr;    
@@ -39,6 +40,7 @@ public class Instrument {
     sinus  => gain;
     saw    => gain;
     square => gain;
+    sample => gain;
     
     gain => hipass => lowpass => adsr => output => dac;
     
@@ -79,6 +81,7 @@ public class Instrument {
         0 => sinus.gain;
         0 => saw.gain;
         0 => square.gain;
+        0 => sample.gain;
         0 => output.gain;
 
         20000 => lowpass.freq;
@@ -129,6 +132,7 @@ public class Instrument {
         if (pattern[clip][position] == 1) {
             adsr.keyOff();
             adsr.keyOn();
+            0 => sample.pos;
         }
     }
 
@@ -139,6 +143,7 @@ public class Instrument {
         if (type == "saw"   ) 0.3 => saw.gain;
         if (type == "square") 0.3 => square.gain;
         if (type == "noise" ) 0.3 => noise.gain;
+        if (type == "sample") 1 => sample.gain;
     }
 
     public void receive(string address) {
@@ -148,9 +153,11 @@ public class Instrument {
             e => now;
             
             while (e.nextMsg() != 0) {
-                if (address == "/instrument") {
+                if (address == "/instrument,i") {
+                    e.getInt() => index;                    
                     init();
-                    <<< address >>>;
+                    
+                    <<< address, index >>>;
                 }
 
                 if (address == "/bpm,f") {
@@ -184,6 +191,14 @@ public class Instrument {
                     setType(key);
                     
                     <<< address, key >>>;
+                }
+                
+                if (address == "/sample,s") {
+                    e.getString() => string file;
+                    
+                    sample.read("./samples/" + file + ".wav");
+                    
+                    <<< address, file >>>;
                 }
                 
                 if (address == "/slider,sfff") {
@@ -226,14 +241,15 @@ public class Instrument {
         }
     }
 
-    public void listen() {     
+    public void listen(int port) {  
         port => receiver.port;
         receiver.listen();
 
         spork ~ receive("/bpm,f");
-        spork ~ receive("/instrument");
+        spork ~ receive("/instrument,i");
         spork ~ receive("/mode,s");
         spork ~ receive("/type,s");
+        spork ~ receive("/sample,s");
         spork ~ receive("/slider,sfff");
         spork ~ receive("/clip,i");
         spork ~ receive("/parameter,sf");
@@ -255,7 +271,7 @@ public class Instrument {
             
             play(clock % 16);
 
-            if (port == 10000 && clock % 4 == 0) {
+            if (index == 0 && clock % 4 == 0) {
                 sender.startMsg("/clock,if");
                 sender.addInt(clock);
                 sender.addFloat(bpm);

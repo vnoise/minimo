@@ -4,40 +4,40 @@ var controller = {
 
     initialize: function() {
         // this.scrollManager = new ScrollManager();
-        this.menu = $("<div class='menu'/>").appendTo(document.body);
-        this.console = $("<div class='console'/>").appendTo(document.body);
+        // this.menu = $("<div class='menu'/>").appendTo(document.body);
+        // this.console = $("<div class='console'/>").appendTo(document.body);
 
-        this.bpm = $('<input type="text" class="bpm" name="bpm" />').appendTo(this.menu);
+        // this.bpm = $('<input type="text" class="bpm" name="bpm" />').appendTo(this.menu);
 
-        this.bpm.keydown(function() {
-            this.send('bpm', this.bpm.val());
-        }.bind(this));
+        // this.bpm.keydown(function() {
+        //     this.send('bpm', this.bpm.val());
+        // }.bind(this));
 
-        $("<a href='#'>console</a>").appendTo(this.menu).click(function() {
-            this.console.slideToggle();
-            return false;
-        }.bind(this));
+        // $("<a href='#'>console</a>").appendTo(this.menu).click(function() {
+        //     this.console.slideToggle();
+        //     return false;
+        // }.bind(this));
 
-        $("<a href='#'>automation</a>").appendTo(this.menu).click(this.toggleAutomation.bind(this));
+        // $("<a href='#'>automation</a>").appendTo(this.menu).click(this.toggleAutomation.bind(this));
 
-        $("<a href='#'>slider</a>").appendTo(this.menu).click(this.toggleSlider.bind(this));
+        // $("<a href='#'>slider</a>").appendTo(this.menu).click(this.toggleSlider.bind(this));
 
-        $("<a href='#'>zoom</a>").appendTo(this.menu).click(this.toggleZoom.bind(this));
+        // $("<a href='#'>zoom</a>").appendTo(this.menu).click(this.toggleZoom.bind(this));
 
-        $("<a href='#'>save</a>").appendTo(this.menu).click(function() {
-            controller.send('save');
-            return false;
-        });
+        // $("<a href='#'>save</a>").appendTo(this.menu).click(function() {
+        //     controller.send('save');
+        //     return false;
+        // });
 
-        for (var i = 0; i < saves.length; i++) {
-            var file = saves[i];
-            $("<a href='#'>" + file + "</a>").appendTo(this.menu).click(function() {
-                this.load(file);
-            }.bind(this));     
-        }
+        // for (var i = 0; i < saves.length; i++) {
+        //     var file = saves[i];
+        //     $("<a href='#'>" + file + "</a>").appendTo(this.menu).click(function() {
+        //         this.load(file);
+        //     }.bind(this));     
+        // }
 
-        this.sliderSwitcher = new SliderSwitcher(this.instruments);
-        this.sliderSwitcher.render(document.body);
+        // this.sliderSwitcher = new SliderSwitcher(this.instruments);
+        // this.sliderSwitcher.render(document.body);
         this.receive();
     },
 
@@ -96,7 +96,8 @@ var controller = {
     },
 
     getBpm: function() {
-        return parseFloat(this.bpm.val());
+        // return parseFloat(this.bpm.val());
+        return 120;
     },
 
     setClock: function (clock) {
@@ -115,7 +116,7 @@ var controller = {
     },
     
     '/bpm': function(instrument, bpm) {
-        this.bpm.val(bpm);
+        // this.bpm.val(bpm);
     },
 
     '/instrument': function(index) {
@@ -124,32 +125,36 @@ var controller = {
     },
 
     '/parameter': function(instrument, key, value) {
-        this.instruments[instrument].parameter(key, value);        
+        instrument.parameter(key, value);        
     },
 
     '/pattern': function(instrument, clip, index, value) {
-        this.instruments[instrument].sequencer.setStep(clip, index, value);
+        instrument.sequencer.setStep(clip, index, value);
     },
 
     '/slider': function(instrument, key, min, max, step) {
-        this.instruments[instrument].slider(key, min, max, step);
-        this.sliderSwitcher.addSlider(key);
+        instrument.slider(key, min, max, step);
+        // this.sliderSwitcher.addSlider(key);
     },
 
     '/automation': function(instrument, key, clip, index, value) {
-        this.instruments[instrument].automation(key, clip, index, value);
+        instrument.automation(key, clip, index, value);
     },
 
     '/clip': function(instrument, clip) {
-        this.instruments[instrument].setClip(clip);
+        instrument.setClip(clip);
     },
 
     '/mode': function(instrument, mode) {
-        this.instruments[instrument].setMode(mode);
+        instrument.setMode(mode);
+    },
+
+    '/sample': function(instrument, sample) {
+        instrument.setSample(sample);
     },
 
     '/type': function(instrument, type) {
-        this.instruments[instrument].setType(type);
+        instrument.setType(type);
     },
 
     load: function(file) {
@@ -165,22 +170,30 @@ var controller = {
     },
     
     receive: function() {
-        $.get('/receive/' + client_id, null, function(messages) {            
-            messages = eval('(' + messages + ')');
+        $.get('/receive/' + client_id, null, function(messages) {
+            if (messages.length > 0) {
+                messages = eval('(' + messages + ')');
 
-            for (var i = 0; i < messages.length; i++) {
-                var message = messages[i];
-                var address = message[0];
-                var args = message[1];
-                var fun = this[address];
-                
-                if (fun) {
-                    fun.apply(this, args);
-                    // log('receive: ' + address + ' ' + args.join(','));
-                }
-                else {
-                    log('unsupported message:' + address);
-                }
+                for (var i = 0; i < messages.length; i++) {
+                    var message = messages[i];
+                    var address = message[0];
+                    var args = message[1];
+                    var index = message[2];
+                    var fun = this[address];
+
+                    // if (address != '/clock')
+                    //     log(address + ' ' + args.join(',') + ' ' + index);
+
+                    if (index === null) {
+                        fun.apply(this, args);
+                    }
+                    else {
+                        var instrument = this.instruments[index];
+                        if (instrument) {
+                            fun.apply(this, [instrument].concat(args));
+                        }
+                    }
+                }                
             }
 
             this.receive();

@@ -15,11 +15,11 @@ class Message
   end
 
   def json_message
-    [@address, [@instrument.index] + @args]
+    [@address, @args, @instrument]
   end
 
   def inspect
-    "<osc #{address} #{types} #{ args.join(' ') }>"
+    "<Message #{address} #{@instrument} #{types} #{ args.join(' ') }>"
   end
 
 end

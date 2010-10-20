@@ -11,7 +11,8 @@ function Instrument(index) {
         "sinus",
         "saw",
         "square",
-        "noise"
+        "noise",
+        "sample"
     ];
 
     this.modes = [
@@ -37,12 +38,20 @@ Instrument.prototype.onSelectType = function() {
     controller.send('type', this.index, this.typeSelect.val());
 };
 
+Instrument.prototype.onSelectSample = function() {
+    controller.send('sample', this.index, this.sampleSelect.val());
+};
+
 Instrument.prototype.onSelectMode = function() {
     controller.send('mode', this.index, this.modeSelect.val());
 };
 
 Instrument.prototype.setType = function(type) {
     this.typeSelect.val(type);
+};
+
+Instrument.prototype.setSample = function(sample) {
+    this.sampleSelect.val(sample);
 };
 
 Instrument.prototype.setMode = function(mode) {
@@ -52,6 +61,7 @@ Instrument.prototype.setMode = function(mode) {
 Instrument.prototype.render = function(container) {
     this.container = $('<div class="instrument"/>');
     this.typeSelect =  $('<select class="type-select"/>');
+    this.sampleSelect =  $('<select class="sample-select"/>');
     this.modeSelect =  $('<select class="mode-select"/>');
 
     $(container).append(this.container);
@@ -62,16 +72,22 @@ Instrument.prototype.render = function(container) {
         this.typeSelect.append($('<option>' + this.types[i] + '</option>'));
     }
 
+    for (i in window.samples) {
+        this.sampleSelect.append($('<option>' + samples[i] + '</option>'));
+    }
+
     for (i in this.modes) {
         this.modeSelect.append($('<option>' + this.modes[i] + '</option>'));
     }
 
     this.typeSelect.change(this.onSelectType.bind(this));
+    this.sampleSelect.change(this.onSelectSample.bind(this));
     this.modeSelect.change(this.onSelectMode.bind(this));
 
     this.clips.render(this.container);
     this.sequencer.render(this.container);
     this.container.append(this.typeSelect);
+    this.container.append(this.sampleSelect);
     this.container.append(this.modeSelect);
 };
 
@@ -123,9 +139,6 @@ Instrument.prototype.slider = function(key, min, max, step) {
 
     slider.render(this.container);
     automation.render(this.container);
-
-    slider.hide();
-    automation.hide();
 };
 
 Instrument.prototype.parameter = function(key, value) {

@@ -12,20 +12,45 @@ class InstrumentManager
     system "chuck + Instrument.ck"
 
     @instruments = []
+  end
 
-    4.times do |index| 
+  def create
+    1.times do |index| 
       @instruments << Instrument.new(index)
     end
 
-    sleep 0.5
+    @instruments.each do |instrument|
+      instrument.create
+      sleep 0.5
+      instrument.send_updates
+    end
+  end
+
+  def constructor_messages
+    @instruments.inject([]) {|list, i| list + i.constructor_messages }
+  end
+
+  def saves
+    (Dir.entries('saves') - ['.', '..']).map {|file| file.chomp('.yml') }
+  end
+
+  def samples
+    (Dir.entries('samples') - ['.', '..']).map {|file| file.chomp('.wav') }
+  end
+
+  def load(file)
+    open("saves/#{file}", "rb") do |io|
+      @instruments = Marshal.load(io.read)
+    end
 
     @instruments.each do |instrument|
       instrument.send_updates
     end
   end
 
-  def saves
-    (Dir.entries('saves') - ['.', '..']).map {|file| file.chomp('.yml') }
+  def save
+    index = (saves.max || '0').succ
+    open("saves/#{index}", "wb") {|io| io << Marshal.dump(@instruments) }
   end
 
   def call(env)
@@ -38,25 +63,10 @@ class InstrumentManager
 
   def handle(sender_id, type, *args)
     case type      
-    when 'load'
-      open("saves/#{args.first}", "rb") do |io|
-        @instruments = Marshal.load(io.read)
-      end
-
-      @instruments.each do |instrument|
-        instrument.send_updates
-      end
-
-    when 'save'
-      index = (saves.max || '0').succ
-      open("saves/#{index}", "wb") {|io| io << Marshal.dump(@instruments) }
-
+    when 'load' then load(*args)
+    when 'save' then save
     else
       @instruments[args.first.to_i].handle(sender_id, type, args[1..-1])
     end
-  end
-
-  def constructor_messages
-    @instruments.inject([]) {|list, i| list + i.constructor_messages }
   end
 end

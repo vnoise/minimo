@@ -9,7 +9,7 @@ function Automation(instrument, key, min, max, step) {
     this.step = step / (max - min);
 
     this.visible = true;
-    this.active = false;
+    this.active = true;
 
     for (var i = 0; i < 8; i++) {
         this.pattern[i] = [];
@@ -20,7 +20,7 @@ function Automation(instrument, key, min, max, step) {
 }
 
 Automation.prototype.render = function(container) {
-    this.container = $('<div class="automation"/>');
+    this.container = $('<div class="automation" />');
 
     $(container).append(this.container);
 
@@ -80,6 +80,8 @@ Automation.prototype.draw = function(svg) {
     }
 
     this.tracker = new TouchTracker(this, this.svg.root(), this.handleEvent.bind(this));
+
+    // this.container.hide();
 };
 
 Automation.prototype.handleEvent = function(event) {
@@ -131,9 +133,8 @@ Automation.prototype.drawStep = function(index, value) {
 
 Automation.prototype.clock = function(index) {
     if (this.visible) {
-        this.clocks[index].setAttribute('opacity', 0.5);
-
-        this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 200);        
+        // this.clocks[index].setAttribute('opacity', 0.5);
+        // this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 200);        
     }
 };
 

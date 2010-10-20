@@ -4,11 +4,11 @@ function Slider(instrument, key, min, max, step) {
     this.min = min;
     this.max = max;
     this.step = step;
-    this.active = false;
+    this.active = true;
 }
 
 Slider.prototype.render = function(container) {
-    this.container = $('<div class="slider"/>');
+    this.container = $('<div class="slider" />');
     $(container).append(this.container);
 
     this.container.svg({ onLoad: this.draw.bind(this) });
@@ -23,6 +23,7 @@ Slider.prototype.draw = function(svg) {
     this.handle = svg.rect(0, 0, 40, this.container.height(), 10, 10, { 'class': 'handle' });
 
     this.tracker = new TouchTracker(this, this.svg.root(), this.handleEvent.bind(this));
+    // this.container.hide();
 };
 
 Slider.prototype.show = function() {

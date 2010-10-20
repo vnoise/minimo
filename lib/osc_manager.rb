@@ -9,13 +9,13 @@ class OSCManager
     @host = 'localhost'
     @port = 9999
     @queues = {}
+    @socket = OSC::UDPSocket.new
 
     @server = OSC::UDPServer.new
     @server.bind(@host, @port)
     @server.add_method('/*', nil) do |osc|
       begin
-        # p osc
-        broadcast([osc])
+        broadcast Message.new(nil, osc.address, osc.types, *osc.args)
       rescue 
         puts $!.message
         puts $!.backtrace
@@ -25,6 +25,10 @@ class OSCManager
     Thread.new do
       @server.serve
     end
+  end
+
+  def send(message, port)
+    @socket.send(message, 0, @host, port)
   end
 
   def broadcast(messages, sender_id = nil)
@@ -43,7 +47,7 @@ class OSCManager
       queue = @queues[client_id] = TQueue.new
       messages = $manager.constructor_messages.map { |message| message.json_message }
     else
-      messages = queue.wait.map {|osc| [osc.address, osc.args] }
+      messages = queue.wait.map {|message| message.json_message }
     end
 
     [200, {'Content-Type' => 'text/javascript'}, messages.to_json]

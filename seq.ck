@@ -10,8 +10,7 @@ portReceiver.event("/port,i") @=> OscEvent e;
 while (true) {
     e => now;    
     while (e.nextMsg() != 0) {
-        e.getInt() => instrument.port;
-        instrument.listen();
+        instrument.listen(e.getInt());
         instrument.loop();
     }
 }

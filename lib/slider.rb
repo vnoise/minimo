@@ -3,7 +3,7 @@ class Slider
 
   def initialize(instrument, key, value, min, max, step)
     @instrument = instrument
-    @automation = Array.new(8) { Array.new(16) { 0 } }
+    @automation = Array.new(4) { Array.new(16) { 0 } }
     @key = key
     @value = value
     @min = min

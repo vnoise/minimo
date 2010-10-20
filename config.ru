@@ -12,8 +12,9 @@ require 'instrument_manager'
   
 use Rack::Reloader
 
-$osc =  OSCManager.new
+$osc = OSCManager.new
 $manager = InstrumentManager.new
+$manager.create
 
 $client_id = '1'
 
