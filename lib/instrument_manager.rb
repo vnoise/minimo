@@ -15,7 +15,7 @@ class InstrumentManager
   end
 
   def create
-    1.times do |index| 
+    4.times do |index| 
       @instruments << Instrument.new(index)
     end
 
@@ -24,10 +24,6 @@ class InstrumentManager
       sleep 0.5
       instrument.send_updates
     end
-  end
-
-  def constructor_messages
-    @instruments.inject([]) {|list, i| list + i.constructor_messages }
   end
 
   def saves

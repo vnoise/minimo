@@ -123,6 +123,8 @@ public class Instrument {
         read("volume")          => output.gain;
 
         Std.mtof(mode.note(pitch) + 36 + read("octave") * 12) => sinus.freq => saw.freq => square.freq;
+
+        pitch / 12 + read("octave") => sample.rate;
         
         Math.pow(read("lowpass"), 4) * 20000 => lowpass.freq;
         Math.pow(read("hipass"), 4) * 20000  => hipass.freq;
@@ -137,7 +139,7 @@ public class Instrument {
     }
 
     public void setType(string type) {              
-        0 => sinus.gain => saw.gain => square.gain => noise.gain;
+        0 => sinus.gain => saw.gain => square.gain => sample.gain => noise.gain;
 
         if (type == "sinus" ) 1 => sinus.gain;
         if (type == "saw"   ) 0.3 => saw.gain;

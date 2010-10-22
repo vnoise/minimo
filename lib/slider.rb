@@ -12,16 +12,16 @@ class Slider
   end
 
   def messages
-    messages = []
-    messages << constructor_message
-    messages << parameter_message
+    [constructor_message, parameter_message]
+  end
 
+  def automation_messages
+    messages = []
     @automation.each_with_index do |pattern, clip|
       pattern.each_with_index do |value, index|
         messages << automation_message(clip, index, value) unless value == 0
       end
     end
-
     messages
   end
 

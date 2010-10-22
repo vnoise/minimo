@@ -1,202 +1,96 @@
-html,body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,form,fieldset,input,p,blockquote,th,td {
-    margin:0;
-    padding:0;
-    font-weight: inherit;
-    font-style: inherit;
-    font-family: inherit;
-}
-
-img, body, html {
-    border:0;
-}
-
-address,caption,cite,code,dfn,em,strong,th,var {
-    font-style:normal;
-    font-weight:normal;
-}
 
 body {
-    line-height: 1.5;
-    font-family: Lucida Grande;
     background: #444;
-    color: white;
-    font-family: arial, sans-serif;
-    font-size: 80%;
-    cursor: pointer;
+    font-family: helvetica;
+    font-size: 10px;
+    cursor: hand;
 }
 
-a {
-    color: white;
-    text-decoration: none;
+.clipswitcher {
+    fill: #333;
+    stroke: #aaa;
 }
 
-.menu {
-    overflow: hidden;
+.clipswitcher-button {
+    fill: #666;
+    stroke: #aaa;
 }
 
-.menu .bpm {  
-    float: left;
-    background: #000;
-    color: #fff;
-    width: 30px;
-    border: 1px solid #ccc;
-    margin: 15px 20px;
-}
-
-.menu a {
-    float: left;
-    padding: 6px;
-    font-size: 12px;
-    font-weight: bold;
-    border: 1px solid white;
-    margin: 10px;
-}
-
-.menu a.active {
-    background: white;
-    color: black;
-}
-
-
-.console { 
-    display: none;
-    height: 100px; 
-    width: 800px;
-    color: white;
-    overflow: auto;
-}
-
-.instrument {
-    border: 1px solid #999;
-    width: 280px;
-    float: left;
-    overflow: hidden;
-}
-
-.instrument .type-select {
-    width: 100%;
-    height: 60px;
-    display: block;
-    border: 1px solid #ccc;
-    background: #333;
-    color: white;
-}
-
-.instrument .sample-select {
-    width: 100%;
-    height: 60px;
-    display: block;
-    border: 1px solid #ccc;
-    background: #333;
-    color: white;
-}
-
-.instrument .mode-select {
-    width: 100%;
-    display: block;
-    border: 1px solid #ccc;
-    background: #333;
-    color: white;
-}
-
-.instrument .clips {
-    width: 100%;
-    border-collapse: collapse;
-    border-spacing: 1px;
-}
-
-.instrument .clips td {
-    background: #666;
-    border: 1px solid #333;
-}
-
-.instrument .clips a {
-    display:block;
-    text-decoration: none;
-    text-align: center;
-    padding: 5px 10px;
-    font-size: 12px;
-    color: white;
-    font-weight: bold;
-}
-
-.instrument .clips a:visited {
-    color: white;
-}
-
-.instrument .clips a.active {
-    background: white;
-    color: black;
+.clipswitcher-label {
+    stroke: none;
+    fill: #aaa;
 }
 
 .sequencer {
-    width: 100%;
-    height: 160px;
+    fill: #333;
+    stroke: #aaa;
 }
 
-.sequencer .step {
-    fill: #d99;
+.sequencer-step {
+    fill: #faa;
     stroke: none;
 }
 
-.sequencer .clock {
+.sequencer-clock {
     fill: #afa;
     stroke: none;
 }
 
 .automation {
-    width: 100%;
-    height: 100px;
-    border-top: 1px solid #ccc;
+    fill: #333;
+    stroke: #aaa;
 }
 
-.automation .label { 
-    font-size: 12px;
+.automation-label { 
     stroke: none;
-    fill: #ccc;
+    fill: #aaa;
 }
 
-.slider-switcher {
-    float: left;
-    width: 80px;
-    background: #666;
-    border: 1px solid #333;
-    border-collapse: collapse;
-}
-
-.slider-switcher a {
-    display: block;
-    text-decoration: none;
-    text-align: center;
-    padding: 5px 10px;
-    font-size: 10px;
-    color: white;
-    font-weight: bold;
-}
-
-.slider-switcher a:visited {
-    color: white;
-}
-
-.slider-switcher a.active {
-    background: white;
-    color: black;
-}
-
-.slider {
-    width: 100%;
-    height: 60px;
-    border-top: 1px solid #ccc;
-}
-
-.slider .label { 
-    font-size: 12px;
+.automation-step { 
+    fill: #faa;
     stroke: none;
-    fill: #ccc;
+    opacity: 1;
 }
 
-.slider .handle { 
+.automation-clock { 
+    fill: #999;
     stroke: none;
-    fill: #ccc;
+}
+
+.slider { 
+    fill: #333;
+    stroke: #aaa;
+}
+
+.slider-label { 
+    stroke: none;
+    fill: #aaa;
+}
+
+.slider-handle { 
+    stroke: none;
+    fill: #aaa;
     opacity: 0.5;
+}
+
+
+.menu { 
+    fill: #333;
+    stroke: #aaa;
+}
+
+.menu-label { 
+    stroke: none;
+    fill: #aaa;
+}
+
+.menu-button { 
+    stroke: #aaa;
+    fill: #333;    
+}
+
+.menu-button-label { 
+    stroke: none;
+    fill: #aaa;    
+    font-size: 10px;
 }

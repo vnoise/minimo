@@ -13,14 +13,14 @@ class OSCManager
 
     @server = OSC::UDPServer.new
     @server.bind(@host, @port)
-    @server.add_method('/*', nil) do |osc|
-      begin
-        broadcast Message.new(nil, osc.address, osc.types, *osc.args)
-      rescue 
-        puts $!.message
-        puts $!.backtrace
-      end
-    end
+    # @server.add_method('/*', nil) do |osc|
+    #   begin
+    #     broadcast Message.new(nil, osc.address, osc.types, *osc.args)
+    #   rescue 
+    #     puts $!.message
+    #     puts $!.backtrace
+    #   end
+    # end
 
     Thread.new do
       @server.serve
@@ -40,12 +40,15 @@ class OSCManager
   end
   
   def call(env)
-    client_id = env['PATH_INFO'][1..-1]
+    client_id, instrument_id, = env['PATH_INFO'].split('/')[1..-1]
     queue = @queues[client_id]
+    # queue = pool[instrument_id]
+    instrument_id = instrument_id.to_i
 
     if queue.nil?
-      queue = @queues[client_id] = TQueue.new
-      messages = $manager.constructor_messages.map { |message| message.json_message }
+      @queues[client_id] = TQueue.new(instrument_id)
+      instrument = $manager.instruments[instrument_id]
+      messages = instrument.constructor_messages.map { |message| message.json_message }
     else
       messages = queue.wait.map {|message| message.json_message }
     end

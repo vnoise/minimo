@@ -1,15 +1,21 @@
 class TQueue
-  def initialize
+  attr_reader :instrument
+
+  def initialize(instrument)
     @list = []
+    @instrument = instrument
   end
 
   def push(messages)
     messages = [messages] unless Array === messages
+    return if messages.first.address == '/clock' 
 
-    # puts "Thread #{Thread.current.id} is pushing"
+    # puts "Thread #{Thread.current.object_id} is pushing"
+
     messages.each do |message|
-      @list << message
+      @list << message if message.instrument == @instrument
     end
+    # p messages
 
     @thread.wakeup if @thread       
   end

@@ -88,6 +88,7 @@ SVGAnimate.prototype.start = function(element, attributes, duration) {
         else {
             for (name in attributes) {
                 value = (values[name] += step[name]);
+                value = Math.max(0, value);
                 element.setAttribute(name, value);
             }            
         }

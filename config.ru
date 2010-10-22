@@ -29,6 +29,8 @@ end
 map "/" do
   run(lambda do |env|
         $client_id.succ!
+        instrument_id, = env['PATH_INFO'].split('/')[1..-1]
+
         html = ERB.new(File.read('index.html')).result(binding)
 
         [200, {'Content-Type' => 'text/html'}, html]

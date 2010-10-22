@@ -34,6 +34,7 @@ class Instrument
 
   def send(message)
     $osc.send(message.osc_message, port)
+    message
   end
 
   def send_updates
@@ -77,6 +78,7 @@ class Instrument
 
   def parameter(key, value)
     slider(key).set_value(value)
+    slider(key).parameter_message
   end
 
   def clip(clip)
@@ -87,7 +89,7 @@ class Instrument
 
   def pattern(clip, index, value)
     @pattern[clip.to_i][index.to_i] = value.to_f
-    send(pattern_message(clip, index, value))
+    send(pattern_message(clip, index, value))    
   end
 
   def message(*args)
@@ -100,6 +102,10 @@ class Instrument
 
   def constructor_message
     Message.new(nil, '/instrument', 'i', index)
+  end
+
+  def draw_message
+    Message.new(nil, '/instrument_draw', 'i', index)
   end
 
   def clip_message
@@ -139,8 +145,9 @@ class Instrument
   end
 
   def handle(sender_id, type, args)
-    message = __send__(type, *args)
-    broadcast([message], sender_id)
+    if message = __send__(type, *args) 
+      broadcast([message], sender_id)
+    end
   end
 
   def broadcast(messages, sender_id = nil)
@@ -160,6 +167,12 @@ class Instrument
     @sliders.each do |slider|
       messages += slider.messages
     end
+
+    @sliders.each do |slider|
+      messages += slider.automation_messages
+    end
+
+    messages += [draw_message]
 
     messages
   end

@@ -1,15 +1,11 @@
-function Automation(instrument, key, min, max, step) {
+function Automation(svg, instrument, options) {
+    this.svg = svg;
     this.instrument = instrument;    
-    this.key = key;
 
     this.pattern = [];
     this.clocks = [];
     this.steps = [];
     this.clip = 0;
-    this.step = step / (max - min);
-
-    this.visible = true;
-    this.active = true;
 
     for (var i = 0; i < 8; i++) {
         this.pattern[i] = [];
@@ -17,14 +13,14 @@ function Automation(instrument, key, min, max, step) {
             this.pattern[i][j] = 0;
         }
     }
+
+    this.set(options);
 }
 
-Automation.prototype.render = function(container) {
-    this.container = $('<div class="automation" />');
-
-    $(container).append(this.container);
-
-    this.container.svg({ onLoad: this.draw.bind(this) });
+Automation.prototype.set = function(options) {
+    for (var name in options) {
+        this[name] = options[name];
+    }
 };
 
 Automation.prototype.clear = function(svg) {
@@ -45,72 +41,42 @@ Automation.prototype.setSize = function(width, height) {
     this.draw();
 };
 
-Automation.prototype.draw = function(svg) {
-    if (svg) {
-        this.svg = svg;        
-    }
-
-    this.clear();
-    
-    this.width = this.container.width();
-    this.height = this.container.height();
-
-    $(this.svg.root()).attr({
-        width: this.width,
-        height: this.height
-    });
+Automation.prototype.draw = function() {
+    this.svg.rect(this.x, this.y, this.width, this.height, 0, 0, { 'class': 'automation' });
+    this.clear();   
 
     this.stepx = this.width / 16;
 
-    this.text = this.svg.text(5, this.container.height() / 2, this.key, { 'class': 'label' });
+    this.text = this.svg.text(this.x + 5, this.y + this.height / 2, this.key, { 'class': 'automation-label' });
 
     for (var i = 0; i < 16; i++) {
-        this.steps[i] = this.svg.rect(i * this.stepx, 0, this.stepx, 0, {
-            fill: "#faa",
-            stroke: "none",
-            opacity: 1
+        this.steps[i] = this.svg.rect(this.x + i * this.stepx, this.y, this.stepx, 0, {
+            'class': 'automation-step'
         });
 
-        this.clocks[i] = this.svg.rect(i * this.stepx, 0, this.stepx, this.height, {
-            fill: '#999', 
+        this.clocks[i] = this.svg.rect(this.x + i * this.stepx, this.y, this.stepx, this.height, {
             opacity: i % 4 == 0 ? 0.2 : 0
         });
-
-        this.drawStep(i, this.pattern[this.clip][i]);
     }
 
-    this.tracker = new TouchTracker(this, this.svg.root(), this.handleEvent.bind(this));
+    this.drawSteps();
 
-    // this.container.hide();
+    TouchTracker.add(this);
 };
 
 Automation.prototype.handleEvent = function(event) {
-    var x = event.pageX - this.container.offset().left;
-    var y = event.pageY - this.container.offset().top;
-    var index = Math.floor(x / this.stepx);
-    var value = Math.max(0, Math.min(1, 1 - y / this.height));
+    var index = Math.floor(event.localX / this.stepx);
+    var value = Math.max(0, Math.min(1, 1 - event.localY / this.height));
+    var step = this.step / (this.max - this.min);
 
-    value = Math.floor(value / this.step) * this.step;
+    value = Math.floor(value / step) * step;
 
     if (this.pattern[this.clip][index] != value) {
-
         this.setStep(this.clip, index, value); 
         this.send(index);
     }
-};
 
-Automation.prototype.show = function() {
-    this.visible = true;
-
-    if (this.active && this.instrument.showAutomations) {
-        this.container.slideDown();        
-    }
-};
-
-Automation.prototype.hide = function() {
-    this.visible = false;
-
-    this.container.slideUp();
+    return true;
 };
 
 Automation.prototype.send = function(index) {
@@ -127,22 +93,23 @@ Automation.prototype.drawStep = function(index, value) {
 
     if (rect) {
         rect.setAttribute('height', value * this.height);
-        rect.setAttribute('y', this.height - value * this.height);        
+        rect.setAttribute('y', this.y + this.height - value * this.height);        
+    }
+};
+
+Automation.prototype.drawSteps = function(clip) {
+    for (var i = 0; i < 16; i++) {
+        this.drawStep(i, this.pattern[this.clip][i]);
     }
 };
 
 Automation.prototype.clock = function(index) {
-    if (this.visible) {
-        // this.clocks[index].setAttribute('opacity', 0.5);
-        // this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 200);        
-    }
+    // this.clocks[index].setAttribute('opacity', 0.5);
+    // this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 200);    
 };
 
 Automation.prototype.setClip = function(clip) {
     this.clip = clip;
-
-    for (var i = 0; i < 16; i++) {
-        this.drawStep(i, this.pattern[this.clip][i]);
-    }
+    this.drawSteps();
 };
 

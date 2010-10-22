@@ -38,61 +38,16 @@ var controller = {
 
         // this.sliderSwitcher = new SliderSwitcher(this.instruments);
         // this.sliderSwitcher.render(document.body);
-        this.receive();
-    },
 
-    toggleAutomation: function(event) {
-        var link = $(event.target);
-        link.toggleClass('active');
-        
-        for (var i in this.instruments) {
-            if (link.hasClass('active')) {
-                this.instruments[i].showAutomation();
-            }
-            else {
-                this.instruments[i].hideAutomation();
-            }
-        }
-
-        return false;
-    },
-
-    toggleSlider: function(event) {
-        var link = $(event.target);
-        link.toggleClass('active');
-        
-        for (var i in this.instruments) {
-            if (link.hasClass('active')) {
-                this.instruments[i].showSlider();
-            }
-            else {
-                this.instruments[i].hideSlider();
-            }
-        }
-
-        return false;
-    },
-
-    toggleZoom: function(event) {
-        var link = $(event.target);
-        link.toggleClass('active');
-        
-        for (var i in this.instruments) {
-            if (link.hasClass('active')) {
-                var instrument = this.instruments[i];
-                for (var key in instrument.automations) {
-                    instrument.automations[key].setSize(160, 160);
-                }
-            }
-            else {
-                var instrument = this.instruments[i];
-                for (var key in instrument.automations) {
-                    instrument.automations[key].setSize(160, 40);
-                }
-            }
-        }
-
-        return false;
+        $(document.body).svg({
+            width: 320,
+            height: 800,
+            onLoad: function(svg) {
+                this.svg = svg;
+                TouchTracker.init(svg);
+                this.receive();
+            }.bind(this)
+        });
     },
 
     getBpm: function() {
@@ -120,8 +75,18 @@ var controller = {
     },
 
     '/instrument': function(index) {
-        var instrument = this.instruments[index] = new Instrument(index);
-        instrument.render(document.body);
+        var instrument = new Instrument(this.svg, index, { 
+            x: 0,
+            y: 0,
+            width: 320, 
+            height: 1600
+        });
+
+        this.instruments[index] = instrument;
+    },
+
+    '/instrument_draw': function(index) {
+        this.instruments[index].draw();
     },
 
     '/parameter': function(instrument, key, value) {
@@ -166,11 +131,13 @@ var controller = {
     send: function (path) {
         var args = Array.prototype.slice.call(arguments, 0);
 
-        $.post('/send/' + client_id + '/' + args.join('/'));
+        setTimeout(function() {
+            $.post('/send/' + client_id + '/' + args.join('/'));
+        }, 10);
     },
     
     receive: function() {
-        $.get('/receive/' + client_id, null, function(messages) {
+        $.get('/receive/' + client_id + '/' + instrument_id, null, function(messages) {
             if (messages.length > 0) {
                 messages = eval('(' + messages + ')');
 

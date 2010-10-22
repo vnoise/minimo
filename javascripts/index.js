@@ -20,13 +20,15 @@ function log(s) {
 
 
 $(function() {
+    document.documentElement.style.webkitTapHighlightColor = "rgba(0,0,0,0)";
+    document.documentElement.style.webkitTouchCallout = "none";
     document.multitouchData = true;
 
-    // document.onselectstart = function () { return false; };
-    // document.onselect = function () { return false; };
+    document.onselectstart = function () { return false; };
+    document.onselect = function () { return false; };
 
-    // document.ongesturechange = function(e) { e.preventDefault(); };
-    // document.ongesturestart = function(e) { e.preventDefault(); };
+    document.ongesturechange = function(e) { e.preventDefault(); };
+    document.ongesturestart = function(e) { e.preventDefault(); };
 
     controller.initialize();
 });
