@@ -9,30 +9,23 @@ require 'rack/reloader'
 require 'erb'
 require 'osc_manager'
 require 'instrument_manager'
-  
+
 use Rack::Reloader
 
-$osc = OSCManager.new
-$manager = InstrumentManager.new
-$manager.create
-
-$client_id = '1'
-
 map "/receive" do
-  run $osc
+  run OSCServer.new
 end
 
 map "/send" do
-  run $manager
+  run OSCClient.new
 end
 
 map "/" do
   run(lambda do |env|
-        $client_id.succ!
-        instrument_id, = env['PATH_INFO'].split('/')[1..-1]
-
+        samples = (Dir.entries('samples') - ['.', '..']).map {|file| file.chomp('.wav') }
+        
         html = ERB.new(File.read('index.html')).result(binding)
-
+        
         [200, {'Content-Type' => 'text/html'}, html]
       end)
 end

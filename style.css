@@ -1,9 +1,9 @@
-
 body {
     background: #444;
     font-family: helvetica;
     font-size: 10px;
     cursor: hand;
+    margin: 10px;
 }
 
 .clipswitcher {
@@ -11,12 +11,12 @@ body {
     stroke: #aaa;
 }
 
-.clipswitcher-button {
+.clipswitcher .button {
     fill: #666;
     stroke: #aaa;
 }
 
-.clipswitcher-label {
+.clipswitcher .label {
     stroke: none;
     fill: #aaa;
 }
@@ -26,12 +26,12 @@ body {
     stroke: #aaa;
 }
 
-.sequencer-step {
+.sequencer .step {
     fill: #faa;
     stroke: none;
 }
 
-.sequencer-clock {
+.sequencer .clock {
     fill: #afa;
     stroke: none;
 }
@@ -41,18 +41,18 @@ body {
     stroke: #aaa;
 }
 
-.automation-label { 
+.automation .label { 
     stroke: none;
     fill: #aaa;
 }
 
-.automation-step { 
+.automation .step { 
     fill: #faa;
     stroke: none;
     opacity: 1;
 }
 
-.automation-clock { 
+.automation .clock { 
     fill: #999;
     stroke: none;
 }
@@ -62,12 +62,12 @@ body {
     stroke: #aaa;
 }
 
-.slider-label { 
+.slider .label { 
     stroke: none;
     fill: #aaa;
 }
 
-.slider-handle { 
+.slider .handle { 
     stroke: none;
     fill: #aaa;
     opacity: 0.5;
@@ -79,17 +79,17 @@ body {
     stroke: #aaa;
 }
 
-.menu-label { 
+.menu .label { 
     stroke: none;
     fill: #aaa;
 }
 
-.menu-button { 
+.menu .button { 
     stroke: #aaa;
     fill: #333;    
 }
 
-.menu-button-label { 
+.menu .button .label { 
     stroke: none;
     fill: #aaa;    
     font-size: 10px;

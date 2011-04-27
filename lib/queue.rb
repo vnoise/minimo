@@ -1,30 +1,40 @@
 class TQueue
-  attr_reader :instrument
+  attr_reader :thread
 
-  def initialize(instrument)
+  def initialize(port)
+    @host = 'localhost'
+    @port = port
+    @server = OSC::UDPServer.new
+    @server.bind(@host, @port)
+    @server.add_method('/*', nil) do |message|
+      begin
+        puts "#{message.address} #{message.args.inspect}"
+        push message
+      rescue 
+        puts $!.message
+        puts $!.backtrace
+      end
+    end
+
+    Thread.new do
+      @server.serve
+    end
+
     @list = []
-    @instrument = instrument
   end
 
-  def push(messages)
-    messages = [messages] unless Array === messages
-    return if messages.first.address == '/clock' 
-
-    # puts "Thread #{Thread.current.object_id} is pushing"
-
-    messages.each do |message|
-      @list << message if message.instrument == @instrument
-    end
-    # p messages
-
+  def push(message)
+    @list << message
     @thread.wakeup if @thread       
   end
 
-  def wait
-    # puts "Thread #{Thread.current.id} is waiting"
-    @thread = Thread.current
-    Thread.stop
-    @thread = nil
+  def messages
+    if @list.empty?
+      @thread = Thread.current
+      Thread.stop
+      @thread = nil
+    end
+
     result = @list.dup
     @list.clear
     result

@@ -1,169 +1,56 @@
 var controller = {
-    clock: 0,
     instruments: [],
 
     initialize: function() {
-        // this.scrollManager = new ScrollManager();
-        // this.menu = $("<div class='menu'/>").appendTo(document.body);
-        // this.console = $("<div class='console'/>").appendTo(document.body);
-
-        // this.bpm = $('<input type="text" class="bpm" name="bpm" />').appendTo(this.menu);
-
-        // this.bpm.keydown(function() {
-        //     this.send('bpm', this.bpm.val());
-        // }.bind(this));
-
-        // $("<a href='#'>console</a>").appendTo(this.menu).click(function() {
-        //     this.console.slideToggle();
-        //     return false;
-        // }.bind(this));
-
-        // $("<a href='#'>automation</a>").appendTo(this.menu).click(this.toggleAutomation.bind(this));
-
-        // $("<a href='#'>slider</a>").appendTo(this.menu).click(this.toggleSlider.bind(this));
-
-        // $("<a href='#'>zoom</a>").appendTo(this.menu).click(this.toggleZoom.bind(this));
-
-        // $("<a href='#'>save</a>").appendTo(this.menu).click(function() {
-        //     controller.send('save');
-        //     return false;
-        // });
-
-        // for (var i = 0; i < saves.length; i++) {
-        //     var file = saves[i];
-        //     $("<a href='#'>" + file + "</a>").appendTo(this.menu).click(function() {
-        //         this.load(file);
-        //     }.bind(this));     
-        // }
-
-        // this.sliderSwitcher = new SliderSwitcher(this.instruments);
-        // this.sliderSwitcher.render(document.body);
-
         $(document.body).svg({
-            width: 320,
-            height: 800,
-            onLoad: function(svg) {
-                this.svg = svg;
-                TouchTracker.init(svg);
-                this.receive();
-            }.bind(this)
-        });
+            width: 1600,
+            height: 1000,
+            onLoad: this.onLoad.bind(this)
+        });        
     },
 
-    getBpm: function() {
-        // return parseFloat(this.bpm.val());
-        return 120;
-    },
-
-    setClock: function (clock) {
-        $.each(this.instruments, function() {
-            this.clock(clock % 16); 
-        });
-
-        if (clock % 4 < 3) {
-            var beat = 60000 / this.getBpm() / 4;
-            setTimeout(this.setClock.bind(this, clock + 1), beat);
-        }
-    },
-
-    '/clock': function(index) {
-        this.setClock(index);
-    },
-    
-    '/bpm': function(instrument, bpm) {
-        // this.bpm.val(bpm);
-    },
-
-    '/instrument': function(index) {
-        var instrument = new Instrument(this.svg, index, { 
-            x: 0,
-            y: 0,
-            width: 320, 
-            height: 1600
-        });
-
-        this.instruments[index] = instrument;
-    },
-
-    '/instrument_draw': function(index) {
-        this.instruments[index].draw();
-    },
-
-    '/parameter': function(instrument, key, value) {
-        instrument.parameter(key, value);        
-    },
-
-    '/pattern': function(instrument, clip, index, value) {
-        instrument.sequencer.setStep(clip, index, value);
-    },
-
-    '/slider': function(instrument, key, min, max, step) {
-        instrument.slider(key, min, max, step);
-        // this.sliderSwitcher.addSlider(key);
-    },
-
-    '/automation': function(instrument, key, clip, index, value) {
-        instrument.automation(key, clip, index, value);
-    },
-
-    '/clip': function(instrument, clip) {
-        instrument.setClip(clip);
-    },
-
-    '/mode': function(instrument, mode) {
-        instrument.setMode(mode);
-    },
-
-    '/sample': function(instrument, sample) {
-        instrument.setSample(sample);
-    },
-
-    '/type': function(instrument, type) {
-        instrument.setType(type);
-    },
-
-    load: function(file) {
-        $('.instrument').remove();
-        this.instruments = [];
-        this.send('load', file);
-    },
-
-    send: function (path) {
+    send: function () {
         var args = Array.prototype.slice.call(arguments, 0);
 
-        setTimeout(function() {
-            $.post('/send/' + client_id + '/' + args.join('/'));
-        }, 10);
+        this.socket.send({ message: args });
     },
-    
-    receive: function() {
-        $.get('/receive/' + client_id + '/' + instrument_id, null, function(messages) {
-            if (messages.length > 0) {
-                messages = eval('(' + messages + ')');
 
-                for (var i = 0; i < messages.length; i++) {
-                    var message = messages[i];
-                    var address = message[0];
-                    var args = message[1];
-                    var index = message[2];
-                    var fun = this[address];
+    onMessage: function(message) {
+        this.instruments[0].receive(message.message);
+    },
 
-                    // if (address != '/clock')
-                    //     log(address + ' ' + args.join(',') + ' ' + index);
+    onLoad: function(svg) {
+        this.svg = svg;
+        this.svg.root().setAttribute('width', 1600);
+        this.svg.root().setAttribute('height', 1000);
+        this.create(0);
+    },
 
-                    if (index === null) {
-                        fun.apply(this, args);
-                    }
-                    else {
-                        var instrument = this.instruments[index];
-                        if (instrument) {
-                            fun.apply(this, [instrument].concat(args));
-                        }
-                    }
-                }                
-            }
-
-            this.receive();
+    create: function(index) {
+        this.socket = new io.Socket('localhost'); 
+        this.socket.connect();
+        this.socket.on('connect', function() {
+            console.log('connect');
+            this.instruments[index].send('/update');
         }.bind(this));
+
+        this.socket.on('message', this.onMessage.bind(this));
+ 
+        this.socket.on('disconnect', function() {
+            console.log('disconnect');
+        });
+
+        this.instruments[index] = new Instrument({
+            controller: this,
+            svg: this.svg,
+            container: this.svg.root(),
+            index: index,
+            x: 320 * index,
+            y: 0,
+            width: 320,
+            height: 1000
+        });
+
+        this.instruments[index].draw();
     }
 };

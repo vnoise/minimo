@@ -2,13 +2,15 @@ public class Instrument {
     OscRecv receiver;
     OscSend sender;
 
-    int index;
     int clip;
     int pitch;
     int position;
     float bpm;
     int clock;
     dur beat;
+    string modeName;
+    string sampleName;
+    string type;
 
     Mode mode;
     SinOsc sinus;
@@ -44,30 +46,43 @@ public class Instrument {
     
     gain => hipass => lowpass => adsr => output => dac;
     
-    float pattern[16][16];
+    float pattern[8][16];
     Parameter @ parameters[16];
-
-    parameter("volume", 0, 1);
-    parameter("attack", 1, 500);
-    parameter("decay", 1, 500);
-    parameter("octave", 0, 6);
-    parameter("pitch", 0, 12);
-    parameter("lowpass", 0.1, 1);
-    parameter("hipass", 0, 1);
-    parameter("reso", 0, 5);
-    parameter("reverb", 0, 1);
-    parameter("echo", 0, 1);
-    parameter("echo_time", 0, 8);
-    parameter("feedback", 0, 1);
     
-    sender.setHost("localhost", 9999);
+    ["volume", "attack", "decay", "octave",
+    "pitch", "lowpass", "hipass", "reso", "reverb", "echo",
+    "echo_time", "feedback"] @=> string parameterNames[];
 
-    public void parameter(string key, float min, float max) {
+    parameter("volume", 0, 1, 1);
+    parameter("attack", 1, 500, 1);
+    parameter("decay", 1, 500, 200);
+    parameter("octave", 0, 6, 2);
+    parameter("pitch", 0, 12, 0);
+    parameter("lowpass", 0.1, 1, 1);
+    parameter("hipass", 0, 1, 0);
+    parameter("reso", 0, 5, 0);
+    parameter("reverb", 0, 1, 0);
+    parameter("echo", 0, 1, 0);
+    parameter("echo_time", 0, 8, 2);
+    parameter("feedback", 0, 1, 0.5);
+
+    receiver.event("/bpm,f")           @=> OscEvent bpmEvent;
+    receiver.event("/mode,s")          @=> OscEvent modeEvent;
+    receiver.event("/type,s")          @=> OscEvent typeEvent;
+    receiver.event("/sample,s")        @=> OscEvent sampleEvent;
+    receiver.event("/clip,i")          @=> OscEvent clipEvent;
+    receiver.event("/parameter,sf")    @=> OscEvent parameterEvent;
+    receiver.event("/automation,sif")  @=> OscEvent automationEvent;
+    receiver.event("/pattern,iif")     @=> OscEvent patternEvent;
+    receiver.event("/update")          @=> OscEvent updateEvent;
+    
+    public void parameter(string key, float min, float max, float value) {
         new Parameter @=> Parameter @ param;
         param @=> parameters[key];
         min => param.min;
         max => param.max;
-        0 => param.value;
+        value => param.value;
+        param.init();
     }
 
     public void init() {
@@ -97,8 +112,10 @@ public class Instrument {
         adsr.set(0::ms, 100::ms, 0.0, 0::ms);
 
         mode.set("chromatic");
+        "chromatic" => modeName;
+        "" => sampleName;
                 
-        for (0 => int i; i < 16; i++) {
+        for (0 => int i; i < 8; i++) {
             for (0 => int j; j < 16; j++) {
                 0 => pattern[i][j];
             }
@@ -106,7 +123,7 @@ public class Instrument {
     }
 
     public float read(string key) {
-        return parameters[key].read(clip, position);
+        return parameters[key].read(position);
     }
     
     public void play(int pos) {
@@ -138,127 +155,188 @@ public class Instrument {
         }
     }
 
-    public void setType(string type) {              
+    public void setType(string _type) {
+        _type => type;
+        
         0 => sinus.gain => saw.gain => square.gain => sample.gain => noise.gain;
 
-        if (type == "sinus" ) 1 => sinus.gain;
-        if (type == "saw"   ) 0.3 => saw.gain;
-        if (type == "square") 0.3 => square.gain;
-        if (type == "noise" ) 0.3 => noise.gain;
-        if (type == "sample") 1 => sample.gain;
+        if (_type == "sinus" ) 1 => sinus.gain;
+        if (_type == "saw"   ) 0.3 => saw.gain;
+        if (_type == "square") 0.3 => square.gain;
+        if (_type == "noise" ) 0.3 => noise.gain;
+        if (_type == "sample") 1 => sample.gain;
     }
 
-    public void receive(string address) {
-        receiver.event(address) @=> OscEvent e;
-        
+    public void receiveUpdate() {        
         while (true) {
-            e => now;
-            
-            while (e.nextMsg() != 0) {
-                if (address == "/instrument,i") {
-                    e.getInt() => index;                    
-                    init();
-                    
-                    <<< address, index >>>;
-                }
+            updateEvent => now;            
+            while (updateEvent.nextMsg() != 0) {              
+                sendUpdates();                    
+                <<< "update" >>>;
+            }                   
+        }
+    }
 
-                if (address == "/bpm,f") {
-                    e.getFloat() => bpm;
-                    minute / bpm / 4 => beat;
-
-                    <<< address, bpm >>>;
+    public void receiveBpm() {        
+        while (true) {
+            bpmEvent => now;            
+            while (bpmEvent.nextMsg() != 0) {              
+                bpmEvent.getFloat() => bpm;
+                minute / bpm / 4 => beat;
+                <<< "bpm", bpm >>>;
+            }
+        }
+    }
+    
+    public void receivePattern() {
+        while (true) {
+            patternEvent => now;            
+            while (patternEvent.nextMsg() != 0) {              
+                patternEvent.getInt() => int clip;
+                patternEvent.getInt() => int pos;
+                patternEvent.getFloat() => float value;
+                if (clip >= 0 && clip < 8 && pos >= 0 && pos < 16) {
+                    value => pattern[clip][pos];
                 }
+                <<< "pattern", clip, pos, value >>>;
+            }
+        }
+    }
                 
-                if (address == "/pattern,iif") {
-                    e.getInt() => int i;
-                    e.getInt() => int j;
-                    e.getFloat() => float value;
-
-                    value => pattern[i][j];
-
-                    <<< address, i, j, value >>>;
-                }
+    public void receiveMode() {
+        while (true) {
+            modeEvent => now;            
+            while (modeEvent.nextMsg() != 0) {              
+                modeEvent.getString() => string key;
+                key => modeName;
+                mode.set(key);                    
+                <<< "mode", key >>>;
+            }
+        }
+    }
                 
-                if (address == "/mode,s") {
-                    e.getString() => string key;
-                    
-                    mode.set(key);
-                    
-                    <<< address, key >>>;
-                }
+    public void receiveType() {
+        while (true) {
+            typeEvent => now;            
+            while (typeEvent.nextMsg() != 0) {
+                typeEvent.getString() => string key;                    
+                setType(key);                    
+                <<< "type", key >>>;
+            }
+        }
+    }
                 
-                if (address == "/type,s") {
-                    e.getString() => string key;
-                    
-                    setType(key);
-                    
-                    <<< address, key >>>;
-                }
+    public void receiveSample() {
+        while (true) {
+            sampleEvent => now;            
+            while (sampleEvent.nextMsg() != 0) {
+                sampleEvent.getString() => sampleName;                    
+                sample.read("./samples/" + sampleName + ".wav");                    
+                <<< "sample", sampleName >>>;
+            }
+        }
+    }   
+
+    public void receiveClip() {
+        while (true) {
+            clipEvent => now;            
+            while (clipEvent.nextMsg() != 0) {
+                clipEvent.getInt() => clip;                
+                <<< "clip", clip >>>;
+            }
+        }
+    }
                 
-                if (address == "/sample,s") {
-                    e.getString() => string file;
-                    
-                    sample.read("./samples/" + file + ".wav");
-                    
-                    <<< address, file >>>;
+    public void receiveAutomation() {
+        while (true) {
+            automationEvent => now;            
+            while (automationEvent.nextMsg() != 0) {
+                automationEvent.getString() => string key;
+                automationEvent.getInt() => int pos;
+                automationEvent.getFloat() => float value;
+                if (pos >= 0 && pos < 16) {
+                    value => parameters[key].pattern[pos];
                 }
-                
-                if (address == "/slider,sfff") {
-                    e.getString() => string key;
-                    e.getFloat() => float min;
-                    e.getFloat() => float max;
-                    e.getFloat() => float step;
-                    
-                    parameters[key].init(min, max);
-                    
-                    <<< address, key, min, max, step >>>;
-                }
-
-                if (address == "/clip,i") {
-                    e.getInt() => clip;
-
-                    <<< address, clip >>>;
-                }
-                
-                if (address == "/automation,siif") {
-                    e.getString() => string key;
-                    e.getInt() => int clip;
-                    e.getInt() => int pos;
-                    e.getFloat() => float value;
-
-                    value => parameters[key].pattern[clip][pos];
-
-                    <<< address, key, clip, pos, value >>>;
-                }
-
-                if (address == "/parameter,sf") {
-                    e.getString() => string key;
-                    e.getFloat() => float value;
-                    
-                    value => parameters[key].value;
-                    
-                    <<< address, key, value >>>;
-                }
+                <<< "automation", key, clip, pos, value >>>;
             }
         }
     }
 
-    public void listen(int port) {  
+    public void receiveParameter() {
+        while (true) {
+            parameterEvent => now;            
+            while (parameterEvent.nextMsg() != 0) {
+                parameterEvent.getString() => string key;
+                parameterEvent.getFloat() => float value;                    
+                value => parameters[key].value;                    
+                <<< "parameter", key, value >>>;
+            }
+        }
+    }
+
+
+    public void setPort(int port) {
+        sender.setHost("localhost", port);        
+        <<< "Sending on port", port >>>;
+    }
+
+    public void listen(int port) {
         port => receiver.port;
         receiver.listen();
 
-        spork ~ receive("/bpm,f");
-        spork ~ receive("/instrument,i");
-        spork ~ receive("/mode,s");
-        spork ~ receive("/type,s");
-        spork ~ receive("/sample,s");
-        spork ~ receive("/slider,sfff");
-        spork ~ receive("/clip,i");
-        spork ~ receive("/parameter,sf");
-        spork ~ receive("/automation,siif");
-        spork ~ receive("/pattern,iif");
+        spork ~ receiveBpm();
+        spork ~ receiveMode();
+        spork ~ receiveType();
+        spork ~ receiveSample();
+        spork ~ receiveClip();
+        spork ~ receiveParameter();
+        spork ~ receiveAutomation();
+        spork ~ receivePattern();
+        spork ~ receiveUpdate();
 
         <<< "Listening on port", port >>>;
+    }
+
+    public void sendUpdates() {
+        for (0 => int clip; clip < 8; clip++) {
+            for (0 => int pos; pos < 16; pos++) {
+                sender.startMsg("/pattern,iif");
+                sender.addInt(clip);
+                sender.addInt(pos);
+                sender.addFloat(pattern[clip][pos]);
+            }
+        }
+
+        for (0 => int i; i < parameterNames.cap(); i++) {
+            parameterNames[i] => string key;
+            parameters[key].value => float value;
+            sender.startMsg("/parameter,sf");
+            sender.addString(key);
+            sender.addFloat(value);
+        }
+
+        for (0 => int i; i < parameterNames.cap(); i++) {
+            parameterNames[i] => string key;
+            for (0 => int pos; pos < 16; pos++) {
+                parameters[key].pattern[pos] => float value;
+                sender.startMsg("/automation,sif");
+                sender.addString(key);
+                sender.addInt(pos);
+                sender.addFloat(value);
+            }
+        }
+                
+        sender.startMsg("/mode,s");
+        sender.addString(modeName);
+                
+        sender.startMsg("/type,s");
+        sender.addString(type);
+
+        sender.startMsg("/sample,s");
+        sender.addString(sampleName);
+
+        sender.startMsg("/clip,i");
+        sender.addInt(clip);
     }
 
     public void loop() {        
@@ -273,7 +351,7 @@ public class Instrument {
             
             play(clock % 16);
 
-            if (index == 0 && clock % 4 == 0) {
+            if (clock % 16 == 0) {
                 sender.startMsg("/clock,if");
                 sender.addInt(clock);
                 sender.addFloat(bpm);

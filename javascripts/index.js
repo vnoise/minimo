@@ -6,16 +6,10 @@ Function.prototype.bind = function(object) {
     };
 };
 
-function log(s) {
-    if (typeof(s) == 'object') {
-        var object = s;
-        s = '{ ';
-        for (var i in object) {
-            s += i + ': ' + object[i] + ', ';
-        }
-        s += "}";
-    }
-    $('.console').prepend(s + "<br/>");
+function object(o) {
+    function F() {}
+    F.prototype = o;
+    return new F();
 }
 
 
@@ -27,8 +21,8 @@ $(function() {
     document.onselectstart = function () { return false; };
     document.onselect = function () { return false; };
 
-    document.ongesturechange = function(e) { e.preventDefault(); };
-    document.ongesturestart = function(e) { e.preventDefault(); };
+    // document.ongesturechange = function(e) { e.preventDefault(); };
+    // document.ongesturestart = function(e) { e.preventDefault(); };
 
     controller.initialize();
 });

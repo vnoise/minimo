@@ -1,11 +1,13 @@
-function Instrument(svg, index, options) {
-    this.svg = svg;
-    this.index = index;
+function Instrument(options) {
+    Widget.call(this, options);
 
-    this.clipswitcher = new ClipSwitcher(this.svg, this);
-    this.sequencer = new Sequencer(this.svg, this, {});
-    this.sliders = [];
-    this.automations = [];
+    this.clipswitcher   = this.add({ type: ClipSwitcher, instrument: this });
+    this.sequencer      = this.add({ type: Sequencer, instrument: this });
+    this.sliders        = this.add({ type: SliderPanel, instrument: this });
+    this.automations    = [];
+    this.sendPort       = 10000 + this.index;
+    this.recvPort       = 20000 + this.index;
+    this.bpm            = 120;
 
     this.types = [
         "sinus",
@@ -33,222 +35,230 @@ function Instrument(svg, index, options) {
         // "half-whole"
     ];
 
-    this.typeMenu = new Menu(this.svg, this, {
+    this.typeMenu = this.add({
+        type: Menu,
         options: this.types,
         callback: this.onSelectType.bind(this)
     });
 
-    this.modeMenu = new Menu(this.svg, this, {
+    this.modeMenu = this.add({
+        type: Menu,
         options: this.modes,
         callback: this.onSelectMode.bind(this)
     });
 
-    this.sampleMenu = new Menu(this.svg, this, {
-        options: window.samples,
-        callback: this.onSelectSample.bind(this)
-    });
+    // this.sampleMenu = this.add({
+    //     type: Menu,
+    //     options: window.samples,
+    //     callback: this.onSelectSample.bind(this)
+    // });
 
-    this.set(options);
+
+    this.addSlider('volume'    , 0, 0, 1, 0.01);
+    this.addSlider('octave'    , 0, 0, 6, 1);
+    this.addSlider('pitch'     , 0, 0, 12, 1);
+    this.addSlider('lowpass'   , 1, 0.1, 1, 0.01);
+    this.addSlider('hipass'    , 0.1, 0.1, 1, 0.01);
+    this.addSlider('reso'      , 1, 1, 5, 0.05);
+    this.addSlider('attack'    , 0, 0, 100, 1);
+    this.addSlider('decay'     , 100, 0, 500, 5);
+    this.addSlider('reverb'    , 0, 0, 0.5, 0.005);
+    this.addSlider('echo'      , 0, 0, 1, 0.01);
+    // this.addSlider('echo_time' , 4, 0, 8, 1);
+    // this.addSlider('feedback'  , 0.5, 0, 1, 0.01);
 };
 
-Instrument.prototype.set = function(options) {
-    for (var name in options) {
-        this[name] = options[name];
-    }
-};
+$.extend(Instrument.prototype, {
+    __proto__: Widget.prototype,
 
-Instrument.prototype.draw = function() {
-    var x = this.x;
-    var y = this.y;
-    var width = this.width;
+    draw: function() {
+        var x = 0;
+        var y = 0;
+        var width = this.width();
 
-    var buttonheight = 20;
-    var buttonwidth = 60
+        this.drawMenus(x, y);
 
-    this.typeMenu.set({
-        x: x,
-        y: y,
-        width: buttonwidth,
-        height: buttonheight
-    });
+        y += this.typeMenu.height() + 10;
 
-    this.typeMenu.draw();
+        this.clipswitcher.extent(x, y, width, 20).draw();
 
-    x += buttonwidth + 10;
+        y += this.clipswitcher.height() + 10;
 
-    this.modeMenu.set({
-        x: x,
-        y: y,
-        width: buttonwidth,
-        height: buttonheight
-    });
+        this.sequencer.extent(x, y, width, 100).draw();
 
-    this.modeMenu.draw();
+        y += this.sequencer.height() + 10;
 
-    x += buttonwidth + 10;
+        this.sliders.extent(x, y, width, 100).draw();
 
-    this.sampleMenu.set({
-        x: x,
-        y: y,
-        width: buttonwidth,
-        height: buttonheight
-    });
-
-    this.sampleMenu.draw();
-
-    x = this.x;
-    y += buttonheight + 10;
-
-    this.clipswitcher.set({
-        x: x,
-        y: y,
-        width: width, 
-        height: 20
-    });
-
-    this.clipswitcher.draw();
-
-    x = this.x;
-    y += this.clipswitcher.height + 10;
-
-    this.sequencer.set({
-        x: x,
-        y: y,
-        width: width,
-        height: 80
-    });
-
-    this.sequencer.draw();
-
-    x = this.x;
-    y += this.sequencer.height + 10;
-
-    var slidergap = 5;
-    var sliderwidth = this.width / 10;
-    var sliderheight = 80;
-
-    for (var i = 0; i < this.sliders.length; i++) {
-        this.sliders[i].set({
-            x: x,
-            y: y,
-            width: sliderwidth,
-            height: sliderheight
-        });
-
-        this.sliders[i].draw();
-
-        x += sliderwidth;
-    }
-
-    x = this.x;
-    y += sliderheight + 10;
-
-    var automationheight = 50;
-
-    for (var i = 0; i < this.automations.length; i++, y += automationheight) {
-        this.automations[i].set({
-            x: x,
-            y: y,
-            width: this.width,
-            height: automationheight
-        });
-
-        this.automations[i].draw();
-    }
-    
-};
-
-Instrument.prototype.getSlider = function(key) {
-    for (var i = 0; i < this.sliders.length; i++) {
-        if (this.sliders[i].key == key) {
-            return this.sliders[i];
-        }    
-    }
-    return null;
-};
-
-Instrument.prototype.getAutomation = function(key) {
-    for (var i = 0; i < this.automations.length; i++) {
-        if (this.automations[i].key == key) {
-            return this.automations[i];
-        }    
-    }
-    return null;
-};
-
-Instrument.prototype.onSelectType = function(type) {
-    controller.send('type', this.index, type);
-};
-
-Instrument.prototype.onSelectSample = function(sample) {
-    controller.send('sample', this.index, sample);
-};
-
-Instrument.prototype.onSelectMode = function(mode) {
-    controller.send('mode', this.index, mode);
-};
-
-Instrument.prototype.setType = function(type) {
-    this.typeMenu.setLabel(type);
-};
-
-Instrument.prototype.setSample = function(sample) {
-    this.sampleMenu.setLabel(sample);
-};
-
-Instrument.prototype.setMode = function(mode) {
-    this.modeMenu.setLabel(mode);
-};
-
-Instrument.prototype.slider = function(key, min, max, step) {
-    if (this.sliders.length >= 10) {
-        return;
-    }
-
-    var slider = new Slider(this.svg, this, {
-        key: key, 
-        min: min, 
-        max: max, 
-        step: step
-    });
-
-    this.sliders.push(slider);
-
-    var automation = new Automation(this.svg, this, {
-        key: key, 
-        min: min, 
-        max: max, 
-        step: step
-    });
-
-    this.automations.push(automation);
-};
-
-Instrument.prototype.parameter = function(key, value) {
-    var slider = this.getSlider(key);
-
-    if (slider) slider.setValue(value);
-};
-
-Instrument.prototype.automation = function(key, clip, index, value) {
-    var automation = this.getAutomation(key);
+        y += this.sliders.height() + 10;
         
-    if (automation) automation.setStep(clip, index, value);
-};
+        this.drawAutomations(x, y, width, 50);
+    },
 
-Instrument.prototype.clock = function(index) {
-    this.sequencer.clock(index);
+    drawMenus: function(x, y) {
+        var w = 60;
+        var h = 20;
 
-    for (var i = 0; i < this.automations.length; i++) {
-        this.automations[i].clock(index);
+        this.typeMenu.extent(x, y, w, h).draw();
+
+        x += w + 10;
+
+        this.modeMenu.extent(x, y, w, h).draw();
+
+        x += w + 10;
+
+        // this.sampleMenu.extent(x, y, w, h).draw();
+    },
+
+    drawAutomations: function(x, y, w, h) {
+        for (var i = 0; i < this.automations.length; i++, y += h) {
+            this.automations[i].extent(x, y, w, h).draw();
+        }        
+    },
+
+    getSlider: function(key) {
+        return this.sliders.child(key);
+    },
+
+    getAutomation: function(key) {
+        for (var i = 0; i < this.automations.length; i++) {
+            if (this.automations[i].key == key) {
+                return this.automations[i];
+            }    
+        }
+        return null;
+    },
+
+    onSelectType: function(type) {
+        this.send('/type', 's', type);
+    },
+
+    onSelectSample: function(sample) {
+        this.send('/sample', 's', sample);
+    },
+
+    onSelectMode: function(mode) {
+        this.send('/mode', 's', mode);
+    },
+
+    type: function(type) {
+        this.typeMenu.setLabel(type);
+    },
+
+    sample: function(sample) {
+        // this.sampleMenu.setLabel(sample);
+    },
+
+    mode: function(mode) {
+        this.modeMenu.setLabel(mode);
+    },
+
+    addSlider: function(key, value, min, max, step) {
+        this.sliders.add({
+            type: Slider,
+            instrument: this,
+            key: key,
+            value: value,
+            min: min,
+            max: max,
+            step: step
+        });
+
+        var automation = new Automation({
+            parent: this,
+            instrument: this,
+            key: key, 
+            min: min, 
+            max: max, 
+            step: step
+        });
+
+        this.automations.push(automation);
+    },
+
+    slider: function(key, min, max, step) {
+        this.sliders.add({
+            type: Slider,
+            key: key, 
+            min: min, 
+            max: max, 
+            step: step
+        });
+
+        var automation = new Automation({
+            parent: this,
+            instrument: this,
+            key: key, 
+            min: min, 
+            max: max, 
+            step: step
+        });
+
+        this.automations.push(automation);
+    },
+    
+    pattern: function(clip, index, value) {
+        this.sequencer.setStep(clip, index, value);
+    },
+
+    parameter: function(key, value) {
+        var slider = this.getSlider(key);
+
+        if (slider) slider.setValue(value);
+    },
+
+    automation: function(key, index, value) {
+        var automation = this.getAutomation(key);
+        
+        if (automation) automation.setStep(index, value);
+    },
+
+    _clock: function(clock) {
+        if (clock === undefined) {
+            this.clockCount += 1;
+        }
+        else {
+            this.clockCount = clock;
+        }
+
+        this.sequencer.clock(this.clockCount);
+
+        for (var i = 0; i < this.automations.length; i++) {
+            this.automations[i].clock(this.clockCount);
+        }
+    },
+
+    clock: function(clock, bpm) {
+        this._clock(clock);
+
+        clearInterval(this.interval);
+
+        this.interval = setInterval(this._clock.bind(this), 60000 / this.bpm / 4);
+    },
+
+    clip: function(clip) {
+        this.sequencer.setClip(clip);
+        this.clipswitcher.setClip(clip);
+    },
+
+    send: function () {
+        var args = Array.prototype.slice.call(arguments, 0);
+        this.controller.send.apply(this.controller, args);
+    },
+
+    receive: function(message) {
+        var action = message[0].slice(1);
+        var args = message.slice(1);
+        var fun = this[action];
+
+        // console.log(action, args);
+
+        if (fun) {
+            fun.apply(this, args);
+        }
+        else {
+            console.log('action not found: ' + action);
+        }
     }
-};
+});
 
-Instrument.prototype.setClip = function(clip) {
-    this.sequencer.setClip(clip);
-    this.clipswitcher.setClip(clip);
-
-    for (var i = 0; i < this.automations.length; i++) {
-        this.automations[i].setClip(clip);
-    }
-};

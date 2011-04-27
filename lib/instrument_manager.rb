@@ -15,15 +15,15 @@ class InstrumentManager
   end
 
   def create
-    4.times do |index| 
-      @instruments << Instrument.new(index)
-    end
+    # 4.times do |index| 
+    #   @instruments << Instrument.new(index)
+    # end
 
-    @instruments.each do |instrument|
-      instrument.create
-      sleep 0.5
-      instrument.send_updates
-    end
+    # @instruments.each do |instrument|
+    #   instrument.create
+    #   sleep 0.5
+    #   instrument.send_updates
+    # end
   end
 
   def saves

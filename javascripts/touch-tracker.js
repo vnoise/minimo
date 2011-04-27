@@ -1,27 +1,30 @@
 var TouchTracker = {
     active: null,
     onDown: null,
-    components: [],
+    widgets: [],
     active: [],
 
     init: function(svg) {
         this.svg = svg;
         this.offset = $(this.svg.root()).offset();
 
-        this.svg.root().addEventListener('mousedown', this.onDown.bind(this), false);
+        // this.svg.root().addEventListener('mousedown', this.onDown.bind(this), false);
         // this.svg.root().addEventListener('MozTouchDown', this.onDown.bind(this), false);
-        this.svg.root().ontouchstart = this.onDown.bind(this);        
+        // this.svg.root().ontouchstart = this.onDown.bind(this);
+        // this.svg.root().addEventListener('mousedown', function(e) { e.preventDefault(); }, false);
     },
 
-    add: function(component) {
-        this.components.push(component);
-        this.active = this.components;
+    add: function(widget) {
+        this.widgets.push(widget);
+        this.active = this.widgets;
+
+        widget.canvas.addEventListener('mousedown', this.onTouchDown.bind(this, widget), false);
     },
 
-    createEvent :function(component, event) {
+    createEvent :function(widget, event) {
         return {
-            localX: event.pageX - this.offset.left - component.x,
-            localY: event.pageY - this.offset.top - component.y
+            localX: event.pageX - this.offset.left - widget.pageX(),
+            localY: event.pageY - this.offset.top - widget.pageY()
         };
     },
 
@@ -33,40 +36,40 @@ var TouchTracker = {
         }
     },
 
-    eventInside: function(component, event) {
+    eventInside: function(widget, event) {
         return event.localX >= 0 && 
-            event.localX <= component.width &&
+            event.localX <= widget.width() &&
             event.localY >= 0 && 
-            event.localY <= component.height;
+            event.localY <= widget.height();
     },
 
-    handleEvent: function(component, originalEvent, first) {
-        var event = this.createEvent(component, originalEvent);
+    handleEvent: function(widget, originalEvent, first) {
+        var event = this.createEvent(widget, originalEvent);
 
-        if (this.eventInside(component, event)) {
-            return (component.handleEvent(event, first));
+        if (this.eventInside(widget, event)) {
+            return (widget.handleEvent(event, first));
         }
         else {
             return false;
         }
     },
 
-    processDown: function(component, event) {
+    processDown: function(widget, event) {
         if (event.targetTouches) {
             for (var i = 0; i < event.targetTouches.length; i++) {
-                if (!this.handleEvent(component, event.targetTouches[i], true)) {
+                if (!this.handleEvent(widget, event.targetTouches[i], true)) {
                     return false;
                 }
             }
         }
         else {
-            if (!this.handleEvent(component, event, true)) {
+            if (!this.handleEvent(widget, event, true)) {
                 return false;
             }
         }
 
-        this.onMoveHandler = this.onMove.bind(this, component);
-        this.onUpHandler = this.onUp.bind(this, component);
+        this.onMoveHandler = this.onMove.bind(this, widget);
+        this.onUpHandler = this.onUp.bind(this, widget);
 
         document.addEventListener('mousemove', this.onMoveHandler, false);
         document.addEventListener('mouseup', this.onUpHandler, false);
@@ -78,21 +81,53 @@ var TouchTracker = {
         return true;
     },
 
-    onMove: function(component, event) {
+    onTouchDown: function(widget, _event) {
+        var event = this.createEvent(widget, _event);
+
+        widget.handleEvent(event, true);
+
+        this.onMoveHandler = this.onTouchMove.bind(this, widget);
+        this.onUpHandler = this.onTouchUp.bind(this, widget);
+
+        document.addEventListener('mousemove', this.onMoveHandler, false);
+        document.addEventListener('mouseup', this.onUpHandler, false);
+
+        _event.preventDefault();
+
+        return true;
+    },
+
+    onTouchMove: function(widget, _event) {
+        var event = this.createEvent(widget, _event);
+
+        widget.handleEvent(event, false);
+
+        _event.preventDefault();
+        return false;
+    },
+
+    onTouchUp: function(widget, event) {
+        document.removeEventListener('mousemove', this.onMoveHandler, false);
+        document.removeEventListener('mouseup', this.onUpHandler, false);
+
+        event.preventDefault();
+    },
+
+    onMove: function(widget, event) {
         if (event.targetTouches) {
             for (var i = 0; i < event.targetTouches.length; i++) {
-                this.handleEvent(component, event.targetTouches[i], false);               
+                this.handleEvent(widget, event.targetTouches[i], false);               
             }
         }
         else {
-            this.handleEvent(component, event, false);
+            this.handleEvent(widget, event, false);
         }
 
         event.preventDefault();
         return false;
     },
 
-    onUp: function(component, event) {
+    onUp: function(widget, event) {
         document.removeEventListener('mousemove', this.onMoveHandler, false);
         document.removeEventListener(event.streamId ? 'MozTouchMove' : 'touchmove', this.onMoveHandler, false);
         document.removeEventListener(event.streamId ? 'MozTouchUp' : 'touchend', this.onUpHandler, false);
