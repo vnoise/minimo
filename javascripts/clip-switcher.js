@@ -13,7 +13,7 @@ function ClipSwitcher(options) {
     }
 }
 
-$.extend(ClipSwitcher.prototype, {
+ClipSwitcher.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
@@ -44,14 +44,14 @@ $.extend(ClipSwitcher.prototype, {
         this.active = clip;
         this.drawActive();
     }
-});
+};
 
 
 function ClipButton(options) {
     Widget.call(this, options);
 }
 
-$.extend(ClipButton.prototype, {
+ClipButton.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
@@ -64,4 +64,4 @@ $.extend(ClipButton.prototype, {
     onTouchDown: function(event) {
         this.callback(this.clip);
     }
-});
+};

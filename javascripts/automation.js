@@ -11,7 +11,7 @@ function Automation(options) {
     }
 }
 
-$.extend(Automation.prototype, {
+Automation.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
@@ -98,5 +98,5 @@ $.extend(Automation.prototype, {
 
         // this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 500);    
     }
-});
+};
 

@@ -68,7 +68,7 @@ function Instrument(options) {
     // this.addSlider('feedback'  , 0.5, 0, 1, 0.01);
 };
 
-$.extend(Instrument.prototype, {
+Instrument.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
@@ -260,5 +260,5 @@ $.extend(Instrument.prototype, {
             console.log('action not found: ' + action);
         }
     }
-});
+};
 

@@ -4,7 +4,7 @@ function Slider(options) {
     this.handleWidth = 20;
 }
 
-$.extend(Slider.prototype, {
+Slider.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
@@ -52,14 +52,14 @@ $.extend(Slider.prototype, {
     onTouchMove: function(event) {
         this.handleEvent(event);
     }
-});
+};
 
 
 function SliderPanel(options) {
     Widget.call(this, options);
 }
 
-$.extend(SliderPanel.prototype, {
+SliderPanel.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
@@ -73,4 +73,4 @@ $.extend(SliderPanel.prototype, {
             x += w;
         }
     }
-});
+};

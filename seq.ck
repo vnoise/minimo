@@ -1,24 +1,19 @@
-// OscRecv recv;
-// 9998 => recv.port;
-// recv.listen();
+OscRecv recv;
+Instrument @ instrument;
 
-// Instrument instrument;
-// instrument.init();
+9998 => recv.port;
+recv.listen();
 
-// recv.event("/instrument,ii") @=> OscEvent e;
+recv.event("/instrument,ii") @=> OscEvent e;
 
-// while (true) {
-//     e => now;
-//     while (e.nextMsg() != 0) {
-//         instrument.listen(e.getInt());
-//         instrument.setPort(e.getInt());
-//         instrument.loop();
-//     }
-// }
+while (true) {
+    e => now;
+    while (e.nextMsg() != 0) {
+        new Instrument @=> instrument;
 
-
-Instrument instrument;
-instrument.init();
-instrument.listen(10000);
-instrument.setPort(20000);
-instrument.loop();
+        instrument.init();
+        instrument.listen(e.getInt());
+        instrument.setPort(e.getInt());
+        instrument.loop();
+    }
+}

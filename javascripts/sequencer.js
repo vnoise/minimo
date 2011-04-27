@@ -14,7 +14,7 @@ Sequencer = function(options) {
     }
 };
 
-$.extend(Sequencer.prototype, {
+Sequencer.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
@@ -96,4 +96,4 @@ $.extend(Sequencer.prototype, {
         this.clip = clip;
         this.drawSteps();
     }
-});
+};

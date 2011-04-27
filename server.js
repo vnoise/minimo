@@ -19,20 +19,32 @@ var osc = require('osc');
 var dgram = require('dgram');
 
 var Instrument = function(sendPort, recvPort) {
+    events.EventEmitter.call(this);
+
     this.client = new _osc.Client(sendPort, '127.0.0.1');
     this.server = new osc.Server(recvPort, '127.0.0.1');
-    // this.messages = [];
 
-    // this.server.on('message', this.onMessage.bind(this));
+    this.server.on('message', this.onMessage.bind(this));
 };
 
 Instrument.prototype = {
     send: function(message) {
         this.client.send(message);
+    },
+
+    onMessage: function(message) {
+        this.emit('message', message);
     }
 };
 
-var instrument = new Instrument(10000, 20000);
+
+function InstrumentManager() {
+    events.EventEmitter.call(this);
+
+    this.client = new _osc.Client(9998, '127.0.0.1');
+};
+
+
 
 function index(req, res) {
     res.writeHead(200, {'Content-Type': 'text/html'});

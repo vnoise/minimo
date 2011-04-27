@@ -15,7 +15,7 @@ function Menu(options) {
     }
 }
 
-$.extend(Menu.prototype, {
+Menu.prototype = {
     __proto__: Widget.prototype,
 
     setLabel: function(label) {
@@ -57,7 +57,7 @@ $.extend(Menu.prototype, {
             return true         
         }
     }
-});
+};
 
 
 function MenuButton(options) {
@@ -65,7 +65,7 @@ function MenuButton(options) {
     this.visible = false;
 }
 
-$.extend(MenuButton.prototype, {
+MenuButton.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
@@ -93,4 +93,4 @@ $.extend(MenuButton.prototype, {
 
         return true;
     }
-});
+};
