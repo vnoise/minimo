@@ -58,14 +58,13 @@ function Instrument(options) {
     this.addSlider('octave'    , 0, 0, 6, 1);
     this.addSlider('pitch'     , 0, 0, 12, 1);
     this.addSlider('lowpass'   , 1, 0.1, 1, 0.01);
-    this.addSlider('hipass'    , 0.1, 0.1, 1, 0.01);
     this.addSlider('reso'      , 1, 1, 5, 0.05);
     this.addSlider('attack'    , 0, 0, 100, 1);
     this.addSlider('decay'     , 100, 0, 500, 5);
     this.addSlider('reverb'    , 0, 0, 0.5, 0.005);
     this.addSlider('echo'      , 0, 0, 1, 0.01);
-    // this.addSlider('echo_time' , 4, 0, 8, 1);
-    // this.addSlider('feedback'  , 0.5, 0, 1, 0.01);
+    this.addSlider('echo_time' , 4, 0, 8, 1);
+    this.addSlider('feedback'  , 0.5, 0, 1, 0.01);
 };
 
 Instrument.prototype = {

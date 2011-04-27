@@ -63,7 +63,7 @@ SliderPanel.prototype = {
     draw: function() {
         var x = 0;
         var y = 0;
-        var w = this.width() / 10;
+        var w = this.width() / this.children.length;
         var h = this.height();
 
         for (var i = 0; i < this.children.length; i++) {

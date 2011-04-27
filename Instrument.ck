@@ -22,7 +22,6 @@ public class Instrument {
     SndBuf sample;
 
     LPF lowpass;
-    HPF hipass;    
     ADSR adsr;    
     Dyno output;    
     NRev reverb;
@@ -46,23 +45,22 @@ public class Instrument {
     square => gain;
     sample => gain;
     
-    gain => hipass => lowpass => adsr => output => dac;
+    gain => lowpass => adsr => output => dac;
     
     float pattern[8][16];
     Parameter @ parameters[16];
     
     ["volume", "attack", "decay", "octave",
-    "pitch", "lowpass", "hipass", "reso", "reverb", "echo",
+    "pitch", "lowpass", "reso", "reverb", "echo",
     "echo_time", "feedback"] @=> string parameterNames[];
 
-    parameter("volume", 0, 1, 1);
+    parameter("volume", 0, 1, 0.5);
     parameter("attack", 1, 500, 1);
     parameter("decay", 1, 500, 200);
     parameter("octave", 0, 6, 2);
     parameter("pitch", 0, 12, 0);
-    parameter("lowpass", 0.1, 1, 1);
-    parameter("hipass", 0, 1, 0);
-    parameter("reso", 0.1, 5, 0.1);
+    parameter("lowpass", 0, 1, 1);
+    parameter("reso", 1, 5, 1);
     parameter("reverb", 0, 1, 0);
     parameter("echo", 0, 1, 0);
     parameter("echo_time", 0, 8, 2);
@@ -102,7 +100,6 @@ public class Instrument {
         0 => output.gain;
 
         20000 => lowpass.freq;
-        0     => hipass.freq;
 
         1 => reverb.mix;
         0.5 => reverb.gain;
@@ -146,7 +143,6 @@ public class Instrument {
         pitch / 12 + read("octave") => sample.rate;
         
         Math.pow(read("lowpass"), 4) * 20000 => lowpass.freq;
-        Math.pow(read("hipass"), 4) * 20000  => hipass.freq;
         
         (beat * 16) / Math.pow(2, read("echo_time")) => delay.delay;        
 

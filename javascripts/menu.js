@@ -33,7 +33,7 @@ Menu.prototype = {
 
         var h = this.height();
         var w = this.width();
-        var y = 0;
+        var y = h;
 
         for (var i = 0; i < this.children.length; i++, y += h) {     
             this.children[i].extent(0, y, w, h).draw();
@@ -43,7 +43,7 @@ Menu.prototype = {
     show: function(event) { 
         this.visible = true;
         this._height = this.height();
-        this.height(this.children.length * this.height());
+        this.height((this.children.length + 1) * this.height());
     },
 
     hide: function(event) {
