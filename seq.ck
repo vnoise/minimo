@@ -1,19 +1,23 @@
 OscRecv recv;
+Instrument @ instruments[16];
 Instrument @ instrument;
+int index;
 
 9998 => recv.port;
 recv.listen();
 
-recv.event("/instrument,ii") @=> OscEvent e;
+recv.event("/init,i") @=> OscEvent createEvent;
 
 while (true) {
-    e => now;
-    while (e.nextMsg() != 0) {
-        new Instrument @=> instrument;
+    createEvent => now;
+    while (createEvent.nextMsg() != 0) {
+        createEvent.getInt() => index;
 
+        new Instrument @=> instrument;          
+        instrument @=> instruments[index];
+        10000 + index => instrument.recvPort;
+        20000 + index => instrument.sendPort;
         instrument.init();
-        instrument.listen(e.getInt());
-        instrument.setPort(e.getInt());
-        instrument.loop();
+        spork ~ instrument.loop();
     }
 }

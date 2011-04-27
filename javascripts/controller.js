@@ -9,14 +9,19 @@ var controller = {
         });        
     },
 
-    send: function () {
-        var args = Array.prototype.slice.call(arguments, 0);
-
-        this.socket.send({ message: args });
+    send: function(message) {
+        this.socket.send(message);
     },
 
-    onMessage: function(message) {
-        this.instruments[0].receive(message.message);
+    receive: function(message) {
+        var instrument = this.instruments[message.instrument];
+
+        if (instrument) {
+            instrument.receive(message);
+        }
+        else {
+            console.log('instrument not found: ' + message.instrument);
+        }
     },
 
     onLoad: function(svg) {
@@ -34,7 +39,7 @@ var controller = {
             this.instruments[index].send('/update');
         }.bind(this));
 
-        this.socket.on('message', this.onMessage.bind(this));
+        this.socket.on('message', this.receive.bind(this));
  
         this.socket.on('disconnect', function() {
             console.log('disconnect');

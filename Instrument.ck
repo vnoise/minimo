@@ -11,7 +11,9 @@ public class Instrument {
     string modeName;
     string sampleName;
     string type;
-
+    int recvPort;
+    int sendPort;
+    
     Mode mode;
     SinOsc sinus;
     SawOsc saw;
@@ -274,14 +276,9 @@ public class Instrument {
         }
     }
 
-
-    public void setPort(int port) {
-        sender.setHost("localhost", port);        
-        <<< "Sending on port", port >>>;
-    }
-
-    public void listen(int port) {
-        port => receiver.port;
+    public void listen() {
+        sender.setHost("localhost", sendPort);
+        recvPort => receiver.port;
         receiver.listen();
 
         spork ~ receiveBpm();
@@ -294,7 +291,8 @@ public class Instrument {
         spork ~ receivePattern();
         spork ~ receiveUpdate();
 
-        <<< "Listening on port", port >>>;
+        <<< "Sending on port", sendPort >>>;
+        <<< "Receiving on port", recvPort >>>;
     }
 
     public void sendUpdates() {
@@ -339,7 +337,9 @@ public class Instrument {
         sender.addInt(clip);
     }
 
-    public void loop() {        
+    public void loop() {
+        listen();
+        
         (beat * 16) - (now % (beat * 16)) => now;
         (now / beat) $ int => clock;
 

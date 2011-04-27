@@ -38,10 +38,8 @@ Slider.prototype = {
         value = Math.floor(value / this.step) * this.step;      
 
         if (value != this.value) {
-            if (Math.abs(this.value - value) > 0.05) {
-                this.setValue(value);
-                this.instrument.send('/parameter', 'sf', this.key, this.value);
-            }
+            this.setValue(value);
+            this.instrument.send('/parameter', 'sf', this.key, this.value);
         }
     },
 

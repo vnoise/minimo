@@ -18,21 +18,27 @@ require.paths.unshift(__dirname + '/node-osc/lib');
 var osc = require('osc');
 var dgram = require('dgram');
 
-var Instrument = function(sendPort, recvPort) {
+var Instrument = function(index) {
     events.EventEmitter.call(this);
 
-    this.client = new _osc.Client(sendPort, '127.0.0.1');
-    this.server = new osc.Server(recvPort, '127.0.0.1');
+    this.index = index;
+    this.server = new osc.Server(20000 + this.index, '127.0.0.1');
 
     this.server.on('message', this.onMessage.bind(this));
 };
 
 Instrument.prototype = {
+    __proto__: events.EventEmitter.prototype,
+
     send: function(message) {
         this.client.send(message);
     },
 
     onMessage: function(message) {
+        if (this.client === undefined) {
+            this.client = new _osc.Client(10000 + this.index, '127.0.0.1');
+        }
+
         this.emit('message', message);
     }
 };
@@ -41,9 +47,36 @@ Instrument.prototype = {
 function InstrumentManager() {
     events.EventEmitter.call(this);
 
+    this.instruments = {};
+
     this.client = new _osc.Client(9998, '127.0.0.1');
 };
 
+InstrumentManager.prototype = {
+    __proto__: events.EventEmitter.prototype,
+    
+    send: function(index, message) {
+        this.instruments[index].send(message);
+    },
+
+    add: function(index) {
+        var instrument = this.instruments[index] = new Instrument(index);
+        instrument.on('message', this.onMessage.bind(this, index));
+
+        var msg = new _osc.Message('/init');
+        msg.append(index, 'i');
+        this.client.send(msg);
+    },
+
+    onMessage: function(index, message) {
+        this.emit('message', index, message);
+    }
+
+};
+
+var instruments = new InstrumentManager();
+
+instruments.add(0);
 
 
 function index(req, res) {
@@ -98,20 +131,24 @@ var io = io.listen(server);
 
 io.on('connection', function(client) {
 
-    instrument.server.on('message', function(message) {
-        client.send({ message: message });
+    instruments.on('message', function(index, message) {
+        client.send({ 
+            instrument: index,
+            address: message[0],
+            args: message.slice(1)
+        });
     });
 
-    client.on('message', function(data) {
-        var address = data.message[0];
-        var types = data.message[1];
-        var args = data.message.slice(2);
-        var msg = new _osc.Message(address);
+    client.on('message', function(message) {
+        var types = message.types;
+        var args = message.args;
+        var msg = new _osc.Message(message.address);
 
         for (var i in args) {
             msg.append(args[i], types[i]);
         }
-        instrument.send(msg);
+
+        instruments.send(message.instrument, msg);
     });
 
     client.on('disconnect', function(){

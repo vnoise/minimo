@@ -241,20 +241,21 @@ Instrument.prototype = {
         this.clipswitcher.setClip(clip);
     },
 
-    send: function () {
-        var args = Array.prototype.slice.call(arguments, 0);
-        this.controller.send.apply(this.controller, args);
+    send: function(address, types) {
+        this.controller.send({
+            instrument: this.index,
+            address: address,
+            types: types,
+            args: Array.prototype.slice.call(arguments, 2)
+        });
     },
 
     receive: function(message) {
-        var action = message[0].slice(1);
-        var args = message.slice(1);
+        var action = message.address.slice(1);
         var fun = this[action];
 
-        // console.log(action, args);
-
         if (fun) {
-            fun.apply(this, args);
+            fun.apply(this, message.args);
         }
         else {
             console.log('action not found: ' + action);
