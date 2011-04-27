@@ -62,7 +62,7 @@ public class Instrument {
     parameter("pitch", 0, 12, 0);
     parameter("lowpass", 0.1, 1, 1);
     parameter("hipass", 0, 1, 0);
-    parameter("reso", 0, 5, 0);
+    parameter("reso", 0.1, 5, 0.1);
     parameter("reverb", 0, 1, 0);
     parameter("echo", 0, 1, 0);
     parameter("echo_time", 0, 8, 2);
@@ -113,8 +113,8 @@ public class Instrument {
         
         adsr.set(0::ms, 100::ms, 0.0, 0::ms);
 
-        mode.set("chromatic");
-        "chromatic" => modeName;
+        setType("saw");
+        setMode("chromatic");
         "" => sampleName;
                 
         for (0 => int i; i < 8; i++) {
@@ -155,6 +155,11 @@ public class Instrument {
             adsr.keyOn();
             0 => sample.pos;
         }
+    }
+
+    public void setMode(string name) {
+        name => modeName;
+        mode.set(name);
     }
 
     public void setType(string _type) {
@@ -209,10 +214,9 @@ public class Instrument {
         while (true) {
             modeEvent => now;            
             while (modeEvent.nextMsg() != 0) {              
-                modeEvent.getString() => string key;
-                key => modeName;
-                mode.set(key);                    
-                <<< "mode", key >>>;
+                modeEvent.getString() => string name;
+                setMode(name);
+                <<< "mode", name >>>;
             }
         }
     }

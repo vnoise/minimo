@@ -77,6 +77,7 @@ InstrumentManager.prototype = {
 var instruments = new InstrumentManager();
 
 instruments.add(0);
+instruments.add(1);
 
 
 function index(req, res) {

@@ -72,27 +72,26 @@ Instrument.prototype = {
     __proto__: Widget.prototype,
 
     draw: function() {
-        var x = 0;
         var y = 0;
         var width = this.width();
 
-        this.drawMenus(x, y);
+        this.drawMenus(0, y);
 
         y += this.typeMenu.height() + 10;
 
-        this.clipswitcher.extent(x, y, width, 20).draw();
+        this.clipswitcher.extent(0, y, width, 20).draw();
 
         y += this.clipswitcher.height() + 10;
 
-        this.sequencer.extent(x, y, width, 100).draw();
+        this.sequencer.extent(0, y, width, 100).draw();
 
         y += this.sequencer.height() + 10;
 
-        this.sliders.extent(x, y, width, 100).draw();
+        this.sliders.extent(0, y, width, 100).draw();
 
         y += this.sliders.height() + 10;
         
-        this.drawAutomations(x, y, width, 50);
+        this.drawAutomations(0, y, width, 50);
     },
 
     drawMenus: function(x, y) {
@@ -164,8 +163,8 @@ Instrument.prototype = {
             step: step
         });
 
-        var automation = new Automation({
-            parent: this,
+        var automation = this.add({
+            type: Automation,
             instrument: this,
             key: key, 
             min: min, 
