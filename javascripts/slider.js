@@ -45,10 +45,12 @@ Slider.prototype = {
 
     onTouchDown: function(event) {
         this.handleEvent(event);
+        return true;
     },
 
     onTouchMove: function(event) {
         this.handleEvent(event);
+        return true;
     }
 };
 

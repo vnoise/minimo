@@ -211,32 +211,19 @@ Instrument.prototype = {
         if (automation) automation.setStep(index, value);
     },
 
-    _clock: function(clock) {
-        if (clock === undefined) {
-            this.clockCount += 1;
-        }
-        else {
-            this.clockCount = clock;
-        }
+    clock: function(clock, bpm) {
+        this.bpm = bpm;
 
-        this.sequencer.clock(this.clockCount);
+        this.sequencer.clock(clock);
 
         for (var i = 0; i < this.automations.length; i++) {
-            this.automations[i].clock(this.clockCount);
+            this.automations[i].clock(clock);
         }
-    },
-
-    clock: function(clock, bpm) {
-        this._clock(clock);
-
-        clearInterval(this.interval);
-
-        this.interval = setInterval(this._clock.bind(this), 60000 / this.bpm / 4);
     },
 
     clip: function(clip) {
-        this.sequencer.setClip(clip);
-        this.clipswitcher.setClip(clip);
+        this.sequencer.clip(clip);
+        this.clipswitcher.clip(clip);
     },
 
     send: function(address, types) {

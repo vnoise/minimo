@@ -23,6 +23,7 @@ var Instrument = function(index) {
 
     this.index = index;
     this.server = new osc.Server(20000 + this.index, '127.0.0.1');
+    this.client = new _osc.Client(10000 + this.index, '127.0.0.1');
 
     this.server.on('message', this.onMessage.bind(this));
 };
@@ -35,10 +36,6 @@ Instrument.prototype = {
     },
 
     onMessage: function(message) {
-        if (this.client === undefined) {
-            this.client = new _osc.Client(10000 + this.index, '127.0.0.1');
-        }
-
         this.emit('message', message);
     }
 };
@@ -56,7 +53,11 @@ InstrumentManager.prototype = {
     __proto__: events.EventEmitter.prototype,
     
     send: function(index, message) {
-        this.instruments[index].send(message);
+        var instrument = this.instruments[index];
+
+        if (instrument) {
+            instrument.send(message);
+        }
     },
 
     add: function(index) {
@@ -78,6 +79,8 @@ var instruments = new InstrumentManager();
 
 instruments.add(0);
 instruments.add(1);
+instruments.add(2);
+instruments.add(3);
 
 
 function index(req, res) {
@@ -150,6 +153,7 @@ io.on('connection', function(client) {
         }
 
         instruments.send(message.instrument, msg);
+        client.broadcast(message);
     });
 
     client.on('disconnect', function(){

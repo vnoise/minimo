@@ -8,44 +8,51 @@ function ScrollManager() {
     document.addEventListener("MozTouchMove", this.onTouchMove.bind(this), false);
 }
 
-ScrollManager.prototype.onTouchDown = function (event) {
-    if (event.target.localName == 'html') {
-        this.lastX = event.pageX;
-        this.lastY = event.pageY;
-        this.streamId = event.streamId;
-    }
-};
+ScrollManager.prototype = {
 
-ScrollManager.prototype.onTouchMove = function (event) {
-    if (event.target.localName == 'html' && event.streamId == streamId) {
-        // log("" + event.clientX + " : " + event.clientY);
+    isScrollArea: function(event) {
+        return (this.streamId == 0 || this.streamId == event.streamId) && 
+            (event.target.localName == 'body' || event.target.localName == 'html');
+    },
 
-        var x = this.lastX - event.pageX;
-        var y = this.lastY - event.pageY;
+    onTouchDown: function (event) {
+        if (this.isScrollArea(event)) {
+            this.lastX = event.pageX;
+            this.lastY = event.pageY;
+            this.streamId = event.streamId;
+        }
+    },
 
-        this.scrollBy(x, y);
-        
-        this.lastX = event.pageX;
-        this.lastY = event.pageY;
-    }
-};
+    onTouchMove: function (event) {
+        if (this.isScrollArea(event)) {
+            // log("" + event.clientX + " : " + event.clientY);
 
-ScrollManager.prototype.scrollBy = function (x, y) {
-    // if (timeout) {
-    //     clearTimeout(timeout);
-    // }
+            var x = this.lastX - event.pageX;
+            var y = this.lastY - event.pageY;
 
-    window.scrollBy(Math.ceil(x), Math.ceil(y));
+            this.scrollBy(x, y);
+            
+            this.lastX = event.pageX;
+            this.lastY = event.pageY;
+        }
+    },
 
-    // if (Math.abs(x) > 0.05 || Math.abs(y) > 0.05) {
-    //     var timeout = setTimeout(scrollBy.bind(this, x * 0.7, y * 0.7), 50);
-    // }
-};
+    scrollBy: function (x, y) {
+        // if (timeout) {
+        //     clearTimeout(timeout);
+        // }
 
-ScrollManager.prototype.onTouchUp = function (event) {
-    if (event.target.localName == 'html') {
-        if (event.streamId == streamId) {
-            this.streamId = null;
+        window.scrollBy(Math.ceil(x), Math.ceil(y));
+
+        // if (Math.abs(x) > 0.05 || Math.abs(y) > 0.05) {
+        //     var timeout = setTimeout(scrollBy.bind(this, x * 0.7, y * 0.7), 50);
+        // }
+    },
+
+    onTouchUp: function (event) {
+        if (this.isScrollArea(event)) {
+            this.streamId = 0;
         }
     }
+
 };

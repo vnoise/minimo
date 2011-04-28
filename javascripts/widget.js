@@ -7,8 +7,15 @@ var Widget = function(options) {
 
     this.canvas = options.svg.svg(options.container);
 
+    this.attr({
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        opacity: 1
+    });
+
     this.set(options);
-    this.canvas.addEventListener('mousedown', this._onTouchDown.bind(this), false);
 };
 
 Widget.prototype = {
@@ -21,59 +28,43 @@ Widget.prototype = {
         'opacity': 'float'
     },
 
-    createEvent :function(event) {
-        var offset = $(this.svg.root()).offset();
-
-        return {
-            localX: event.pageX - offset.left - this.pageX(),
-            localY: event.pageY - offset.top - this.pageY()
-        };
-    },
-
-    _onTouchDown: function(event) {
-        event.preventDefault();
-
-        this.__onTouchMove = this._onTouchMove.bind(this);
-        this.__onTouchUp = this._onTouchUp.bind(this);
-
-        document.addEventListener('mousemove', this.__onTouchMove, false);
-        document.addEventListener('mouseup', this.__onTouchUp, false);
-
-        return this.onTouchDown(this.createEvent(event));
-    },
-
-    _onTouchMove: function(event) {
-        event.preventDefault();
-
-        return this.onTouchMove(this.createEvent(event));
-    },
-
-    _onTouchUp: function(event) {
-        event.preventDefault();
-
-        document.removeEventListener('mousemove', this.__onTouchMove, false);
-        document.removeEventListener('mouseup', this.__onTouchUp, false);
-
-        return this.onTouchUp(this.createEvent(event));
-    },
-
     onTouchDown: function(event) {
+        return false;
     },
 
     onTouchMove: function(event) {
+        return false;
     },
 
     onTouchUp: function(event) {
-    },
-
-    handleEvent: function(event) {
         return false;
     },
 
     clear: function() {
-        while (this.canvas.childNodes.length >= 1) {
-            this.canvas.removeChild(this.canvas.firstChild); 
+        var nodes = [];
+        var children = this.canvas.childNodes;
+
+        for (var i = 0; i < children.length; i++) {
+            if (children[i].tagName != 'svg') {
+                nodes.push(children[i]);
+            }
         }
+
+        for (var i = 0; i < nodes.length; i++) {        
+            this.canvas.removeChild(nodes[i]); 
+        }
+
+        for (var i = 0; i < this.children.length; i++) {
+            this.children[i].clear();
+        }
+    },
+
+    draw: function() {
+    },
+
+    redraw: function() {
+        this.clear();
+        this.draw();
     },
 
     set: function(options) {
@@ -88,7 +79,10 @@ Widget.prototype = {
     },
 
     add: function(options) {
-        var child = new options.type($.extend({
+        var type = options.type;
+        delete options.type;
+
+        var child = new type($.extend({
             svg: this.svg,
             parent: this,
             container: this.canvas,
@@ -96,6 +90,24 @@ Widget.prototype = {
 
         this.children.push(child);
         return child;
+    },
+
+    append: function(widget) {
+        this.children.push(widget);
+
+        if (widget.parent) {
+            widget.parent.remove(widget);
+        }
+
+        widget.parent = this;
+        this.canvas.appendChild(widget.canvas);
+    },
+
+    remove: function(widget) {
+        var index = this.children.indexOf(widget);
+        this.children.splice(index, 1);
+        this.canvas.removeChild(widget.canvas);
+        widget.parent = null;
     },
 
     child: function(key) {
@@ -149,6 +161,15 @@ Widget.prototype = {
         }
         else {
             this.attr({ width: w, height: h});
+            return this;
+        }
+    },
+
+    root: function() {
+        if (this.parent) {
+            return this.parent.root();
+        }
+        else {
             return this;
         }
     },

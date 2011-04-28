@@ -351,11 +351,11 @@ public class Instrument {
             
             play(clock % 16);
 
-            if (clock % 16 == 0) {
+            // if (clock % 16 == 0) {
                 sender.startMsg("/clock,if");
                 sender.addInt(clock);
                 sender.addFloat(bpm);
-            }
+            // }
 
             beat => now;
         }

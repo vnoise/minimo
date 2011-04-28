@@ -3,7 +3,7 @@ body {
     font-family: helvetica;
     font-size: 10px;
     cursor: hand;
-    margin: 10px;
+    margin: 50px;
 }
 
 .clipswitcher {
@@ -84,12 +84,12 @@ body {
     fill: #aaa;
 }
 
-.menu .button { 
+.menu-button { 
     stroke: #aaa;
     fill: #333;    
 }
 
-.menu .button .label { 
+.menu-button .label { 
     stroke: none;
     fill: #aaa;    
     font-size: 10px;

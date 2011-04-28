@@ -1,12 +1,15 @@
 var controller = {
     instruments: [],
+    width: 1360,
+    height: 1000,
+    numInstruments: 4,
 
     initialize: function() {
         $(document.body).svg({
-            width: 1600,
-            height: 1000,
             onLoad: this.onLoad.bind(this)
-        });        
+        });
+
+        this.scrollManager = new ScrollManager();
     },
 
     send: function(message) {
@@ -15,8 +18,22 @@ var controller = {
 
     onLoad: function(svg) {
         this.svg = svg;
-        this.svg.root().setAttribute('width', 1600);
-        this.svg.root().setAttribute('height', 1000);
+        this.svg.root().setAttribute('width', this.width);
+        this.svg.root().setAttribute('height', this.height);
+
+        this.root = new Widget({
+            svg: this.svg,
+            container: this.svg.root(),
+            width: this.width,
+            height: this.height
+        });
+        
+        TouchTracker.init(this.root);
+
+        for (var i = 0; i < this.numInstruments; i++) {
+            this.create(i);
+        }
+
         this.connect();
     },
 
@@ -31,11 +48,16 @@ var controller = {
     onConnect: function() {
         console.log('connect');
 
-        this.create(0);
-        this.create(1);
+        for (var i = 0; i < this.numInstruments; i++) {
+            this.instruments[i].send('/update');
+        }
     },
 
     onMessage: function(message) {
+        // if (message.address != '/clock') {
+        //     console.log(message);
+        // }
+
         var instrument = this.instruments[message.instrument];
 
         if (instrument) {
@@ -51,10 +73,9 @@ var controller = {
     },
 
     create: function(index) {
-        this.instruments[index] = new Instrument({
+        this.instruments[index] = this.root.add({
+            type: Instrument,
             controller: this,
-            svg: this.svg,
-            container: this.svg.root(),
             index: index,
             x: 340 * index,
             y: 0,
@@ -63,6 +84,5 @@ var controller = {
         });
 
         this.instruments[index].draw();
-        this.instruments[index].send('/update');
     }
 };

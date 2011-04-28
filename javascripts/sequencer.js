@@ -1,15 +1,15 @@
 Sequencer = function(options) {
     Widget.call(this, options);
 
-    this.pattern = [];
-    this.clocks = [];
-    this.steps = [];
-    this.clip = 0;
+    this._pattern = [];
+    this._clocks = [];
+    this._steps = [];
+    this._clip = 0;
 
     for (var i = 0; i < 8; i++) {
-        this.pattern[i] = [];
+        this._pattern[i] = [];
         for (var j = 0; j < 16; j++) {
-            this.pattern[i][j] = 0;
+            this._pattern[i][j] = 0;
         }
     }
 };
@@ -29,8 +29,8 @@ Sequencer.prototype = {
             for (var j = 0; j < 4; j++) {
                 var x = this.stepx / 2 + j * this.stepx;
                 var y = this.stepy / 2 + i * this.stepy;
-                this.steps[i * 4 + j] = this.circle(x, y, this.radius, { 'class': 'step', opacity: 0 });
-                this.clocks[i * 4 + j] = this.circle(x, y, 1, { 'class': 'clock' });
+                this._steps[i * 4 + j] = this.circle(x, y, this.radius, { 'class': 'step', opacity: 0 });
+                this._clocks[i * 4 + j] = this.circle(x, y, 1, { 'class': 'clock' });
             }
         }
 
@@ -42,58 +42,60 @@ Sequencer.prototype = {
     },
 
     touchStep: function(index) {
-        if (this.draggingValue != this.pattern[this.clip][index]) {
-            this.setStep(this.clip, index, this.draggingValue); 
+        if (this.draggingValue != this._pattern[this._clip][index]) {
+            this.setStep(this._clip, index, this.draggingValue); 
 
-            this.instrument.send('/pattern', 'iif', this.clip, index, this.pattern[this.clip][index]);        
+            this.instrument.send('/pattern', 'iif', this._clip, index, this._pattern[this._clip][index]);        
         }
     },
 
     onTouchDown: function(event) {
         var index = this.indexForEvent(event);
-        this.draggingValue = (this.pattern[this.clip][index] + 1) % 2;
+        this.draggingValue = (this._pattern[this._clip][index] + 1) % 2;
         this.touchStep(index);
+        return true;
     },
 
     onTouchMove: function(event) {
         this.touchStep(this.indexForEvent(event));
+        return true;
     },
 
     setStep: function(clip, index, value) {
-        this.pattern[clip][index] = value;
+        this._pattern[clip][index] = value;
 
-        if (clip == this.clip) {
+        if (clip == this._clip) {
             this.drawStep(index, value);
         }
     },
 
     drawStep: function(index, value) {
-        if (this.steps[index]) {
-            this.steps[index].setAttribute('opacity', value);
+        if (this._steps[index]) {
+            this._steps[index].setAttribute('opacity', value);
         }
     },
 
     clock: function(index) {   
         for (var i = 0; i < 16; i++) {
-            this.clocks[i].setAttribute('r', 1);
+            this._clocks[i].setAttribute('r', 1);
         }
 
-        this.clocks[(index + 13) % 16].setAttribute('r', 2);
-        this.clocks[(index + 14) % 16].setAttribute('r', 4);
-        this.clocks[(index + 15) % 16].setAttribute('r', 6);
-        this.clocks[(index + 16) % 16].setAttribute('r', 8);
+        this._clocks[(index + 13) % 16].setAttribute('r', 2);
+        this._clocks[(index + 14) % 16].setAttribute('r', 4);
+        this._clocks[(index + 15) % 16].setAttribute('r', 6);
+        this._clocks[(index + 16) % 16].setAttribute('r', 8);
 
-        // this.svg.animate.start(this.clocks[index], { r: 1 }, 500);
+        // this.svg.animate.start(this._clocks[index], { r: 1 }, 500);
     },
 
     drawSteps: function() {
         for (var i = 0; i < 16; i++) {
-            this.drawStep(i, this.pattern[this.clip][i]);
+            this.drawStep(i, this._pattern[this._clip][i]);
         }
     },
 
-    setClip: function(clip) {
-        this.clip = clip;
+    clip: function(clip) {
+        this._clip = clip;
         this.drawSteps();
     }
 };

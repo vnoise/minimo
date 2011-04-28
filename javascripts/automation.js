@@ -49,16 +49,16 @@ Automation.prototype = {
             this.setStep(index, value); 
             this.send(index);
         }
-
-        return true;
     },
 
     onTouchDown: function(event) {
         this.handleEvent(event);
+        return true;
     },
 
     onTouchMove: function(event) {
         this.handleEvent(event);
+        return true;
     },
 
     send: function(index) {
