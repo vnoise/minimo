@@ -1,2 +1,2 @@
-"C:\node\bin\node.exe" "server.js"
+"node\bin\node.exe" "server.js"
 pause

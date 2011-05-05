@@ -4,7 +4,7 @@ function ScrollManager() {
     this.streamId = 0;
 
     document.addEventListener("MozTouchUp",   this.onTouchUp.bind(this), false);
-    document.addEventListener("MozTouchDown", this.onTouchDown.bind(this), false);
+    // document.addEventListener("MozTouchDown", this.onTouchDown.bind(this), false);
     document.addEventListener("MozTouchMove", this.onTouchMove.bind(this), false);
 }
 
@@ -16,15 +16,13 @@ ScrollManager.prototype = {
     },
 
     onTouchDown: function (event) {
-        if (this.isScrollArea(event)) {
-            this.lastX = event.pageX;
-            this.lastY = event.pageY;
-            this.streamId = event.streamId;
-        }
+        this.lastX = event.pageX;
+        this.lastY = event.pageY;
+        this.streamId = event.streamId;
     },
 
     onTouchMove: function (event) {
-        if (this.isScrollArea(event)) {
+        if (this.streamId == event.streamId) {
             // log("" + event.clientX + " : " + event.clientY);
 
             var x = this.lastX - event.pageX;
@@ -50,7 +48,7 @@ ScrollManager.prototype = {
     },
 
     onTouchUp: function (event) {
-        if (this.isScrollArea(event)) {
+        if (this.streamId == event.streamId) {
             this.streamId = 0;
         }
     }

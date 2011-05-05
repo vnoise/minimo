@@ -4,6 +4,8 @@ var http   = require("http");
 var events = require('events');
 var io     = require('./socket.io/lib/socket.io');
 var _osc   = require('./osc/osc');
+var spawn  = require('child_process').spawn;
+
 
 Function.prototype.bind = function(object) {
     var fn = this;
@@ -77,10 +79,11 @@ InstrumentManager.prototype = {
 
 var instruments = new InstrumentManager();
 
-instruments.add(0);
-instruments.add(1);
-instruments.add(2);
-instruments.add(3);
+setTimeout(function() {
+    for (var i = 0; i < 4; i++) {
+        instruments.add(i);
+    }
+}, 2000);
 
 
 function index(req, res) {
@@ -88,6 +91,26 @@ function index(req, res) {
     fs.readFile("index.html", function(err, file) {
         res.end(file);
     });
+}
+
+function samples(req, res) {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    var instrument = req.url.split('/')[2];
+    var dirs = fs.readdirSync("samples");
+    var samples = [];
+
+    for (var d in dirs) {
+        var files = fs.readdirSync('samples/' + dirs[d]);
+        for (var i in files) {
+            var msg = new _osc.Message('/sample');
+            var sample = dirs[d] + '/' + files[i];
+            msg.append(sample, 's');
+            instruments.send(instrument, msg);
+            samples.push(sample);
+        }
+    }       
+
+    res.end(JSON.stringify(samples));
 }
 
 function file(req, res) {
@@ -111,7 +134,74 @@ function file(req, res) {
     });
 }
 
+var clients = {};
+
+//var chuck = spawn('chuck', 
+//                   ['./chuck/Parameter.ck',
+//                    './chuck/Mode.ck', 
+//                    './chuck/Instrument.ck', 
+//                    './chuck/seq.ck', 
+//                    './stream.ck']);
+
+
+var chuck = spawn('chuck', ['-s', 'test.ck', 'stream.ck']);
+
+var lame = spawn('lame', ['-', '-']);
+
+// chuck.stdout.on('data', function(data) {
+//     lame.stdin.write(data);
+// });
+
+chuck.stdout.pipe(lame.stdin);
+
+lame.stdout.on('data', function (data) {
+    console.log(data.length);
+
+    for (id in clients) {
+        clients[id].write(data, 'binary');
+    }
+});
+
+chuck.stderr.on('data', function (data) {
+    console.log(data.toString());
+});
+
+lame.stderr.on('data', function (data) {
+    console.log(data.toString());
+});
+
+chuck.on('exit', function (code) {
+    console.log('chuck exited with code ' + code);
+});
+
+
+function stream(req, res) { 
+    res.writeHead(200,{
+        "Content-Type": "audio/mp3",
+        'Transfer-Encoding': 'chunked'
+    });
+
+
+    res.id = Number(new Date());
+
+    res.on('close', function() {
+        for (id in clients) {
+            if (id == res.id) {
+                delete clients[id];
+            }
+        }       
+        console.log('Client disconnected: ' + res.id); 
+    });
+
+    clients[res.id] = res;
+
+    console.log('Client connected: ' + res.id); 
+}
+
+
 var routes = [
+    [/^stream/, stream],
+    [/^samples/, samples],
     [/^$/, index],
     [/.*/, file]
 ];
@@ -129,7 +219,7 @@ function controller(req, res) {
 
 var server = http.createServer(controller);
 
-server.listen(80, "127.0.0.1");
+server.listen(80, "0.0.0.0");
 
 var io = io.listen(server);
 

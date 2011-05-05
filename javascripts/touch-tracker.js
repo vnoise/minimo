@@ -1,23 +1,29 @@
 var TouchTracker = {
     touchModel: null,
+    streams: {},
 
-    init: function(root) {
-        if (navigator.userAgent.match(/iPad|iPhone/i)) {
-            this.touchModel = "apple";
-            this.event = {
-                down: 'touchstart',
-                move: 'touchmove',
-                up: 'touchend'
-            };
-        }
-        else if (navigator.userAgent.match(/Firefox/i)) {
-            document.multitouchData = true;
-            this.touchModel = "mozilla";
-            this.event = {
-                down: 'MozTouchDown',
-                move: 'MozTouchMove',
-                up: 'MozTouchUp'
-            };
+    init: function(root, svg) {
+        if (window.location.hash == '#touch') {
+            if (navigator.userAgent.match(/iPad|iPhone/i)) {
+                this.touchModel = "apple";
+                this.event = {
+                    down: 'touchstart',
+                    move: 'touchmove',
+                    up: 'touchend'
+                };
+            }
+            else if (navigator.userAgent.match(/Firefox/i)) {
+                document.multitouchData = true;
+                this.touchModel = "mozilla";
+                this.event = {
+                    down: 'MozTouchDown',
+                    move: 'MozTouchMove',
+                    up: 'MozTouchUp'
+                };
+            }
+            else {
+                throw "no touch device found";
+            }
         }
         else {
             this.touchModel = "mouse";
@@ -31,16 +37,22 @@ var TouchTracker = {
         // document.documentElement.style.webkitTapHighlightColor = "rgba(0,0,0,0)";
         // document.documentElement.style.webkitTouchCallout = "none";
 
-        // document.onselectstart = function () { return false; };
-        // document.onselect = function () { return false; };
+        document.onselectstart = function () { return false; };
+        document.onselect = function () { return false; };
 
-        // document.ongesturechange = function(e) { e.preventDefault(); };
-        // document.ongesturestart = function(e) { e.preventDefault(); };
+        document.ongesturechange = function(e) { e.preventDefault(); };
+        document.ongesturestart = function(e) { e.preventDefault(); };
 
         this.root = root;
-        this.offset = $(this.root.svg.root()).offset();
+        this.svg = svg;
+        this.offset = $(this.svg).offset();
         
         document.addEventListener(this.event.down, this.onTouchDown.bind(this), false);
+        document.addEventListener(this.event.move, this.onTouchMove.bind(this), false);
+        document.addEventListener(this.event.up, this.onTouchUp.bind(this), false);
+
+
+        this.scrollManager = new ScrollManager();
     },
 
     createEvent :function(widget, event) {
@@ -72,7 +84,10 @@ var TouchTracker = {
     },
 
     bubbleEvent: function(widget, event) {
-        if (!this.processDown(widget, event)) {
+        if (this.handleEvent(widget, "onTouchDown", event)) { 
+            this.streams[event.streamId == null ? 1 : event.streamId] = widget;
+        }
+        else {
             if (widget.parent) {
                 this.bubbleEvent(widget, event);
             }
@@ -83,55 +98,57 @@ var TouchTracker = {
         return widget[method].call(widget, this.createEvent(widget, event));
     },
 
-    processDown: function(widget, event) {
-        if (!this.handleEvent(widget, "onTouchDown", event)) {
-            return false;
-        }
-
-        this.onTouchMoveHandler = this.onTouchMove.bind(this, widget);
-        this.onTouchUpHandler = this.onTouchUp.bind(this, widget);
-
-        document.addEventListener(this.event.move, this.onTouchMoveHandler, false);
-        document.addEventListener(this.event.up, this.onTouchUpHandler, false);
-
-        event.preventDefault();
-
-        return true;
-    },
-
     findTargetAndBubble: function(event) {
         var target = this.findTarget(this.root, event);
 
-        console.log(target);
-
-        if (target) {
+        if (target && target.parent) {
             this.bubbleEvent(target, event);
-        }       
+        }
+        else {
+            this.scrollManager.onTouchDown(event);
+        }
     },
 
     onTouchDown: function(event) {
+        event.preventDefault();
+
         if (event.targetTouches) {
             for (var i = 0; i < event.targetTouches.length; i++) {
-                this.findTargetAndBubble(event.targetTouches[i]);
+                var e = event.targetTouches[i];
+                e.streamId = i;
+                this.findTargetAndBubble(e);
             }
         }
         else {
             this.findTargetAndBubble(event);
         }
-    },
 
-    onTouchMove: function(widget, event) {
-        this.handleEvent(widget, "onTouchMove", event);
-        event.preventDefault();
         return false;
     },
 
-    onTouchUp: function(widget, event) {
-        this.handleEvent(widget, "onTouchMove", event);
-
-        document.removeEventListener(this.event.move, this.onTouchMoveHandler, false);
-        document.removeEventListener(this.event.up, this.onTouchUpHandler, false);
-
+    onTouchMove: function(event) {
         event.preventDefault();
+
+        var widget = this.streams[event.streamId == null ? 1 : event.streamId];
+
+        if (widget) {
+            this.handleEvent(widget, "onTouchMove", event);
+        }
+
+        return false;
+    },
+
+    onTouchUp: function(event) {
+        event.preventDefault();
+
+        var widget = this.streams[event.streamId == null ? 1 : event.streamId];
+
+        if (widget) {
+            this.handleEvent(widget, "onTouchUp", event);
+        }
+
+        delete this.streams[event.streamId == null ? 1 : event.streamId];
+
+        return false;
     }
 };

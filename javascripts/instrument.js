@@ -11,8 +11,14 @@ function Instrument(options) {
 
     this.types = [
         "sinus",
+        "sinus_fifth",
+        "sinus_oct",
         "saw",
-        "square",
+        "saw_fifth",
+        "saw_oct",
+        "pulse",
+        "pulse_fifth",
+        "pulse_oct",
         "noise",
         "sample"
     ];
@@ -25,14 +31,14 @@ function Instrument(options) {
         "dorian",
         "aeolian",
         "phrygian",
-        "locrian"
-        // "harmonic minor",
-        // "melodic minor",        
-        // "major pentatonic",
-        // "minor pentatonic",        
-        // "wholetone",
-        // "whole-half",
-        // "half-whole"
+        "locrian",
+        "harmonic minor",
+        "melodic minor",        
+        "major pentatonic",
+        "minor pentatonic",
+        "wholetone",
+        "whole-half",
+        "half-whole"
     ];
 
     this.typeMenu = this.add({
@@ -47,24 +53,29 @@ function Instrument(options) {
         callback: this.onSelectMode.bind(this)
     });
 
-    // this.sampleMenu = this.add({
-    //     type: Menu,
-    //     options: window.samples,
-    //     callback: this.onSelectSample.bind(this)
-    // });
+    this.sampleMenu = this.add({
+        type: Menu,
+        callback: this.onSelectSample.bind(this)
+    });
 
+    setTimeout(function() {
+        $.get('/samples/' + this.index, function(samples) {
+            this.sampleMenu.options = samples;
+        }.bind(this));
+    }.bind(this), this.index * 500);
 
-    this.addSlider('volume'    , 0, 0, 1, 0.01);
-    this.addSlider('octave'    , 0, 0, 6, 1);
-    this.addSlider('pitch'     , 0, 0, 12, 1);
-    this.addSlider('lowpass'   , 1, 0.1, 1, 0.01);
-    this.addSlider('reso'      , 1, 1, 5, 0.05);
-    this.addSlider('attack'    , 0, 0, 100, 1);
-    this.addSlider('decay'     , 100, 0, 500, 5);
-    this.addSlider('reverb'    , 0, 0, 0.5, 0.005);
-    this.addSlider('echo'      , 0, 0, 1, 0.01);
-    this.addSlider('echo_time' , 4, 0, 8, 1);
-    this.addSlider('feedback'  , 0.5, 0, 1, 0.01);
+    this.addSlider('volume'    , 0, 1, 0.01);
+    this.addSlider('octave'    , 0, 6, 1);
+    this.addSlider('pitch'     , 0, 12, 1);
+    this.addSlider('pwidth'    , 0, 1, 0.01);
+    this.addSlider('cutoff'    , 0.1, 1, 0.01);
+    this.addSlider('reso'      , 1, 5, 0.01);
+    this.addSlider('attack'    , 0, 1000, 10);
+    this.addSlider('decay'     , 0, 1000, 10);
+    this.addSlider('reverb'    , 0, 0.5, 0.005);
+    this.addSlider('delay'     , 0, 1, 0.01);
+    this.addSlider('dtime'     , 0, 8, 1);
+    this.addSlider('fback'     , 0, 1, 0.01);
 };
 
 Instrument.prototype = {
@@ -94,7 +105,7 @@ Instrument.prototype = {
     },
 
     drawMenus: function(x, y) {
-        var w = 60;
+        var w = 100;
         var h = 20;
 
         this.typeMenu.extent(x, y, w, h).draw();
@@ -105,7 +116,7 @@ Instrument.prototype = {
 
         x += w + 10;
 
-        // this.sampleMenu.extent(x, y, w, h).draw();
+        this.sampleMenu.extent(x, y, w, h).draw();
     },
 
     drawAutomations: function(x, y, w, h) {
@@ -144,19 +155,18 @@ Instrument.prototype = {
     },
 
     sample: function(sample) {
-        // this.sampleMenu.setLabel(sample);
+        this.sampleMenu.setLabel(sample);
     },
 
     mode: function(mode) {
         this.modeMenu.setLabel(mode);
     },
 
-    addSlider: function(key, value, min, max, step) {
+    addSlider: function(key, min, max, step) {
         this.sliders.add({
             type: Slider,
             instrument: this,
             key: key,
-            value: value,
             min: min,
             max: max,
             step: step

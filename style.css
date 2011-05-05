@@ -27,12 +27,12 @@ body {
 }
 
 .sequencer .step {
-    fill: #faa;
+    fill: #aaa;
     stroke: none;
 }
 
 .sequencer .clock {
-    fill: #afa;
+    fill: #c99;
     stroke: none;
 }
 
@@ -47,9 +47,9 @@ body {
 }
 
 .automation .step { 
-    fill: #faa;
+    fill: #c99;
     stroke: none;
-    opacity: 1;
+    opacity: 0.5;
 }
 
 .automation .clock { 

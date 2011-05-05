@@ -81,9 +81,9 @@ Sequencer.prototype = {
         }
 
         this._clocks[(index + 13) % 16].setAttribute('r', 2);
-        this._clocks[(index + 14) % 16].setAttribute('r', 4);
-        this._clocks[(index + 15) % 16].setAttribute('r', 6);
-        this._clocks[(index + 16) % 16].setAttribute('r', 8);
+        this._clocks[(index + 14) % 16].setAttribute('r', 3);
+        this._clocks[(index + 15) % 16].setAttribute('r', 4);
+        this._clocks[(index + 16) % 16].setAttribute('r', 5);
 
         // this.svg.animate.start(this._clocks[index], { r: 1 }, 500);
     },

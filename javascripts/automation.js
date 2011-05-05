@@ -28,11 +28,7 @@ Automation.prototype = {
 
         for (var i = 0; i < 16; i++) {
             this.steps[i] = this.rect(i * this.stepx, 0, this.stepx, 0, { 'class': 'step' });
-
-            this.clocks[i] = this.rect(i * this.stepx, 0, this.stepx, h, {
-                'class': 'clock',
-                opacity: i % 4 == 0 ? 0.2 : 0
-            });
+            this.clocks[i] = this.rect(i * this.stepx, 0, this.stepx, h, { 'class': 'clock', 'opacity': 0 });
         }
 
         this.drawSteps();
@@ -91,12 +87,10 @@ Automation.prototype = {
             this.clocks[i].setAttribute('opacity', i % 4 == 0 ? 0.1 : 0);
         }
 
-        this.clocks[(index + 13) % 16].setAttribute('opacity', 0.2);
-        this.clocks[(index + 14) % 16].setAttribute('opacity', 0.3);
-        this.clocks[(index + 15) % 16].setAttribute('opacity', 0.4);
-        this.clocks[(index + 16) % 16].setAttribute('opacity', 0.5);
-
-        // this.svg.animate.start(this.clocks[index], { opacity: index % 4 == 0 ? 0.2 : 0 }, 500);    
+        // this.clocks[(index + 13) % 16].setAttribute('opacity', 0.1);
+        // this.clocks[(index + 14) % 16].setAttribute('opacity', 0.15);
+        // this.clocks[(index + 15) % 16].setAttribute('opacity', 0.2);
+        this.clocks[(index + 16) % 16].setAttribute('opacity', 0.3);
     }
 };
 

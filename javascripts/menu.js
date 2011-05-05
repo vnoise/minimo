@@ -1,4 +1,7 @@
 function Menu(options) {
+    this.options = [];
+    this.visible = false;
+
     Widget.call(this, options);
 
     this._buttons = [];
@@ -16,7 +19,7 @@ Menu.prototype = {
     draw: function() {
         this.attr('class', 'menu');
         this.rect(0, 0, this.width(), this.height(), 0, 0);
-        this.textLabel = this.text(5, this.height() / 2 + 4, this.label, { 'class': 'label' });
+        this.text(5, this.height() / 2 + 4, this.label, { 'class': 'label' });
     },
 
     show: function() { 
@@ -38,6 +41,8 @@ Menu.prototype = {
 
             this._buttons[i].draw();
         }
+
+        this.visible = true;
     },
 
     hide: function(event) {
@@ -45,10 +50,16 @@ Menu.prototype = {
             this.root().remove(this._buttons[i]);
         }
         this._buttons = [];
+        this.visible = false;
     },
 
     onTouchDown: function(event) {
-        this.show();
+        if (this.visible) {
+            this.hide();
+        }
+        else {
+            this.show();
+        }
         return true;         
     },
 

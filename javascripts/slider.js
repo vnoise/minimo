@@ -1,4 +1,6 @@
 function Slider(options) {
+    this.value = 0;
+
     Widget.call(this, options);
 
     this.handleWidth = 20;
@@ -12,7 +14,7 @@ Slider.prototype = {
 
         this.rect(0, 0, this.width(), this.height(), 5, 5);
         this.text(2, this.height() / 2 + 5, this.key.slice(0, 5), { 'class': 'label' });
-        this.handle = this.rect(0, 0, this.width(), this.handleWidth, 5, 5, { 'class': 'handle' });
+        this.handle = this.rect(0, 0, this.width(), this.handleWidth, { 'class': 'handle', rx: 5, ry: 5 });
 
         this.setHandlePosition();
     },
