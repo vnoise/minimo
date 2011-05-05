@@ -1,2 +1,2 @@
-chuck Parameter.ck Mode.ck Instrument.ck seq.ck 
+chuck.exe ./chuck/Parameter.ck ./chuck/Mode.ck ./chuck/Instrument.ck ./chuck/seq.ck 
 pause

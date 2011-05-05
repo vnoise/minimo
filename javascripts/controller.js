@@ -1,34 +1,26 @@
 var controller = {
     instruments: [],
-    width: 1360,
+    width: 2000,
     height: 1000,
     numInstruments: 4,
-
-    initialize: function() {
-        $(document.body).svg({
-            onLoad: this.onLoad.bind(this)
-        });
-
-        this.scrollManager = new ScrollManager();
-    },
 
     send: function(message) {
         this.socket.send(message);
     },
 
-    onLoad: function(svg) {
-        this.svg = svg;
-        this.svg.root().setAttribute('width', this.width);
-        this.svg.root().setAttribute('height', this.height);
+    initialize: function() {
+        this.svg = document.getElementById('svg');
+        this.svg.setAttribute('width', this.width);
+        this.svg.setAttribute('height', this.height);
 
         this.root = new Widget({
-            svg: this.svg,
-            container: this.svg.root(),
+            _svg: this.svg,
+            container: this.svg,
             width: this.width,
             height: this.height
         });
         
-        TouchTracker.init(this.root);
+        TouchTracker.init(this.root, this.svg);
 
         for (var i = 0; i < this.numInstruments; i++) {
             this.create(i);
@@ -77,7 +69,7 @@ var controller = {
             type: Instrument,
             controller: this,
             index: index,
-            x: 340 * index,
+            x: 400 * index,
             y: 0,
             width: 320,
             height: 1000

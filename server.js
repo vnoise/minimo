@@ -77,10 +77,9 @@ InstrumentManager.prototype = {
 
 var instruments = new InstrumentManager();
 
-instruments.add(0);
-instruments.add(1);
-instruments.add(2);
-instruments.add(3);
+for (var i = 0; i < 4; i++) {
+    instruments.add(i);
+}
 
 
 function index(req, res) {
@@ -88,6 +87,26 @@ function index(req, res) {
     fs.readFile("index.html", function(err, file) {
         res.end(file);
     });
+}
+
+function samples(req, res) {
+    res.writeHead(200, {'Content-Type': 'application/json'});
+    var instrument = req.url.split('/')[2];
+    var dirs = fs.readdirSync("samples");
+    var samples = [];
+
+    for (var d in dirs) {
+        var files = fs.readdirSync('samples/' + dirs[d]);
+        for (var i in files) {
+            var msg = new _osc.Message('/sample');
+            var sample = dirs[d] + '/' + files[i];
+            msg.append(sample, 's');
+            instruments.send(instrument, msg);
+            samples.push(sample);
+        }
+    }       
+
+    res.end(JSON.stringify(samples));
 }
 
 function file(req, res) {
@@ -112,6 +131,7 @@ function file(req, res) {
 }
 
 var routes = [
+    [/^samples/, samples],
     [/^$/, index],
     [/.*/, file]
 ];

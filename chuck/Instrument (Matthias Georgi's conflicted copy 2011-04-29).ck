@@ -173,9 +173,9 @@ public class Instrument {
     public void receiveUpdate() {        
         while (true) {
             updateEvent => now;            
-            while (updateEvent.nextMsg() != 0) {              
+            while (updateEvent.nextMsg() != 0) {
                 sendUpdates();                    
-                <<< "update" >>>;
+                // <<< "update" >>>;
             }                   
         }
     }
@@ -186,7 +186,7 @@ public class Instrument {
             while (bpmEvent.nextMsg() != 0) {              
                 bpmEvent.getFloat() => bpm;
                 minute / bpm / 4 => beat;
-                <<< "bpm", bpm >>>;
+                // <<< "bpm", bpm >>>;
             }
         }
     }
@@ -201,7 +201,7 @@ public class Instrument {
                 if (clip >= 0 && clip < 8 && pos >= 0 && pos < 16) {
                     value => pattern[clip][pos];
                 }
-                <<< "pattern", clip, pos, value >>>;
+                // <<< "pattern", clip, pos, value >>>;
             }
         }
     }
@@ -212,7 +212,7 @@ public class Instrument {
             while (modeEvent.nextMsg() != 0) {              
                 modeEvent.getString() => string name;
                 setMode(name);
-                <<< "mode", name >>>;
+                // <<< "mode", name >>>;
             }
         }
     }
@@ -223,7 +223,7 @@ public class Instrument {
             while (typeEvent.nextMsg() != 0) {
                 typeEvent.getString() => string key;                    
                 setType(key);                    
-                <<< "type", key >>>;
+                // <<< "type", key >>>;
             }
         }
     }
@@ -234,7 +234,7 @@ public class Instrument {
             while (sampleEvent.nextMsg() != 0) {
                 sampleEvent.getString() => sampleName;                    
                 sample.read("./samples/" + sampleName + ".wav");                    
-                <<< "sample", sampleName >>>;
+                // <<< "sample", sampleName >>>;
             }
         }
     }   
@@ -244,7 +244,7 @@ public class Instrument {
             clipEvent => now;            
             while (clipEvent.nextMsg() != 0) {
                 clipEvent.getInt() => clip;                
-                <<< "clip", clip >>>;
+                // <<< "clip", clip >>>;
             }
         }
     }
@@ -259,7 +259,7 @@ public class Instrument {
                 if (pos >= 0 && pos < 16) {
                     value => parameters[key].pattern[pos];
                 }
-                <<< "automation", key, clip, pos, value >>>;
+                // <<< "automation", key, clip, pos, value >>>;
             }
         }
     }
@@ -271,7 +271,7 @@ public class Instrument {
                 parameterEvent.getString() => string key;
                 parameterEvent.getFloat() => float value;                    
                 value => parameters[key].value;                    
-                <<< "parameter", key, value >>>;
+                // <<< "parameter", key, value >>>;
             }
         }
     }
@@ -323,7 +323,7 @@ public class Instrument {
                 sender.addFloat(value);
             }
         }
-                
+
         sender.startMsg("/mode,s");
         sender.addString(modeName);
                 
