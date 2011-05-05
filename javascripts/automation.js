@@ -93,4 +93,3 @@ Automation.prototype = {
         this.clocks[(index + 16) % 16].setAttribute('opacity', 0.3);
     }
 };
-

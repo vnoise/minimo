@@ -1,4 +1,3 @@
-
 public class Parameter {
     float min;
     float max;
@@ -21,4 +20,3 @@ public class Parameter {
         }
     }
 };
-
