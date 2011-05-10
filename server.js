@@ -144,63 +144,58 @@ var clients = {};
 //                    './stream.ck']);
 
 
-var chuck = spawn('chuck', ['-s', 'test.ck', 'stream.ck']);
+// var chuck = spawn('chuck', ['-s', 'test.ck', 'stream.ck']);
+// var lame = spawn('lame', ['-', '-']);
 
-var lame = spawn('lame', ['-', '-']);
+// chuck.stdout.pipe(lame.stdin);
 
-// chuck.stdout.on('data', function(data) {
-//     lame.stdin.write(data);
+// lame.stdout.on('data', function (data) {
+//     console.log(data.length);
+
+//     for (id in clients) {
+//         clients[id].write(data, 'binary');
+//     }
 // });
 
-chuck.stdout.pipe(lame.stdin);
+// chuck.stderr.on('data', function (data) {
+//     console.log(data.toString());
+// });
 
-lame.stdout.on('data', function (data) {
-    console.log(data.length);
+// lame.stderr.on('data', function (data) {
+//     console.log(data.toString());
+// });
 
-    for (id in clients) {
-        clients[id].write(data, 'binary');
-    }
-});
-
-chuck.stderr.on('data', function (data) {
-    console.log(data.toString());
-});
-
-lame.stderr.on('data', function (data) {
-    console.log(data.toString());
-});
-
-chuck.on('exit', function (code) {
-    console.log('chuck exited with code ' + code);
-});
+// chuck.on('exit', function (code) {
+//     console.log('chuck exited with code ' + code);
+// });
 
 
-function stream(req, res) { 
-    res.writeHead(200,{
-        "Content-Type": "audio/mp3",
-        'Transfer-Encoding': 'chunked'
-    });
+// function stream(req, res) { 
+//     res.writeHead(200,{
+//         "Content-Type": "audio/mp3",
+//         'Transfer-Encoding': 'chunked'
+//     });
 
 
-    res.id = Number(new Date());
+//     res.id = Number(new Date());
 
-    res.on('close', function() {
-        for (id in clients) {
-            if (id == res.id) {
-                delete clients[id];
-            }
-        }       
-        console.log('Client disconnected: ' + res.id); 
-    });
+//     res.on('close', function() {
+//         for (id in clients) {
+//             if (id == res.id) {
+//                 delete clients[id];
+//             }
+//         }       
+//         console.log('Client disconnected: ' + res.id); 
+//     });
 
-    clients[res.id] = res;
+//     clients[res.id] = res;
 
-    console.log('Client connected: ' + res.id); 
-}
+//     console.log('Client connected: ' + res.id); 
+// }
 
 
 var routes = [
-    [/^stream/, stream],
+    // [/^stream/, stream],
     [/^samples/, samples],
     [/^$/, index],
     [/.*/, file]
