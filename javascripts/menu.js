@@ -1,11 +1,10 @@
 function Menu(options) {
-    this.options = [];
     this.visible = false;
+    this._buttons = [];
+    this._options = [];
+    this.label = "";
 
     Widget.call(this, options);
-
-    this._buttons = [];
-    this.label = "";
 } 
 
 Menu.prototype = {
@@ -22,23 +21,37 @@ Menu.prototype = {
         this.text(5, this.height() / 2 + 4, this.label, { 'class': 'label' });
     },
 
+    addButton: function(button) {
+        this._options.push(button);
+    },
+
+    options: function(options) {
+        this._options = [];
+
+        for (var i in options) {
+            this.addButton({
+                type: MenuButton,
+                value: options[i]
+            });
+        }
+    },        
+
     show: function() { 
         var x = this.pageX();
         var y = this.pageY() + this.height() + 10;
         var w = this.width();
         var h = this.height();
 
-        for (var i = 0; i < this.options.length; i++, y += h) {     
-            this._buttons[i] = this.root().add({
-                type: MenuButton,
+        for (var i = 0; i < this._options.length; i++, y += h) {         
+            var button = $.extend({
                 x: x,
                 y: y,
                 width: w,
                 height: h,
-                value: this.options[i],
-                callback: this.onButtonClick.bind(this)
-            });     
+                callback: this.onButtonClick.bind(this)             
+            }, this._options[i]);
 
+            this._buttons[i] = this.root().add(button);
             this._buttons[i].draw();
         }
 
@@ -64,9 +77,11 @@ Menu.prototype = {
     },
 
     onButtonClick: function(value) {
-        this.hide();
-        this.setLabel(value);
-        this.callback(value);
+        if (this.callback) {
+            this.hide();
+            this.setLabel(value);
+            this.callback(value);
+        }
     }
 };
 

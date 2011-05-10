@@ -53,14 +53,38 @@ function Instrument(options) {
         callback: this.onSelectMode.bind(this)
     });
 
+    this.dirMenu = this.add({
+        type: Menu,
+        callback: this.onSelectDir.bind(this)
+    });
+
     this.sampleMenu = this.add({
         type: Menu,
         callback: this.onSelectSample.bind(this)
     });
 
+    this.samples = {};
+
     setTimeout(function() {
         $.get('/samples/' + this.index, function(samples) {
-            this.sampleMenu.options = samples;
+            for (var i in samples) {
+                var name = samples[i].split('/');
+                var dir = name[0];
+                var file = name[1];
+                
+                if (this.samples[dir] === undefined) {
+                    this.samples[dir] = [];
+                }
+
+                this.samples[dir].push(file);
+            }
+            
+            for (var dir in this.samples) {
+                this.dirMenu.addButton({
+                    type: MenuButton,
+                    value: dir
+                });
+            }
         }.bind(this));
     }.bind(this), this.index * 500);
 
@@ -105,7 +129,7 @@ Instrument.prototype = {
     },
 
     drawMenus: function(x, y) {
-        var w = 100;
+        var w = 70;
         var h = 20;
 
         this.typeMenu.extent(x, y, w, h).draw();
@@ -113,6 +137,10 @@ Instrument.prototype = {
         x += w + 10;
 
         this.modeMenu.extent(x, y, w, h).draw();
+
+        x += w + 10;
+
+        this.dirMenu.extent(x, y, w, h).draw();
 
         x += w + 10;
 
@@ -142,8 +170,13 @@ Instrument.prototype = {
         this.send('/type', 's', type);
     },
 
+    onSelectDir: function(dir) {
+        this.dir = dir;
+        this.sampleMenu.options(this.samples[dir]);
+    },
+
     onSelectSample: function(sample) {
-        this.send('/sample', 's', sample);
+        this.send('/sample', 's', this.dir + '/' + sample);
     },
 
     onSelectMode: function(mode) {
@@ -155,7 +188,10 @@ Instrument.prototype = {
     },
 
     sample: function(sample) {
-        this.sampleMenu.setLabel(sample);
+        var name = sample.split('/');
+        this.dir = name[0];
+        this.dirMenu.setLabel(name[0]);
+        this.sampleMenu.setLabel(name[1]);
     },
 
     mode: function(mode) {
