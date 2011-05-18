@@ -1,27 +1,27 @@
-function ClipSwitcher(options) {
-    Widget.call(this, options);
+var ClipSwitcher = new Class({
+    Extends: Widget,
 
-    this.active = 0;
+    initialize: function(options) {
+        Widget.prototype.initialize.call(this, options);
 
-    for (var i = 0; i < 8; i++) {
-        this.add({
-            type: ClipButton,
-            label: i.toString(),
-            clip: i,
-            callback: this.onButtonClick.bind(this)
-        });
-    }
-}
+        this.active = 0;
 
-ClipSwitcher.prototype = {
-    __proto__: Widget.prototype,
+        for (var i = 0; i < 8; i++) {
+            this.add({
+                type: ClipButton,
+                label: i.toString(),
+                clip: i,
+                callback: this.onButtonClick.bind(this)
+            });
+        }
+    },
 
     draw: function() {      
         var w = this.width() / 8;
         var x = 0;
         this.attr('class', 'clipswitcher');
 
-        for (var i = 0; i < 8; i++, x += w) {           
+        for (var i = 0; i < 8; i++, x += w) {
             this.children[i].set({
                 x: x, 
                 y: 0,
@@ -45,15 +45,11 @@ ClipSwitcher.prototype = {
         this.active = clip;
         this.redraw();
     }
-};
+});
 
 
-function ClipButton(options) {
-    Widget.call(this, options);
-}
-
-ClipButton.prototype = {
-    __proto__: Widget.prototype,
+var ClipButton = new Class({
+    Extends: Widget,
 
     draw: function() {
         this.attr('class', 'button');
@@ -65,4 +61,4 @@ ClipButton.prototype = {
         this.callback(this.clip);
         return true;
     }
-};
+});

@@ -1,25 +1,28 @@
-var Widget = function(options) {
-    this.children = [];
-    this.canvas = document.createElementNS(this.svgNS, 'g');
+var WidgetId = 1;
 
-    options.container.appendChild(this.canvas);
+var Widget = new Class({
 
-    var list = this.canvas.transform.baseVal;
-    list.appendItem(options._svg.createSVGTransform());
-    list.appendItem(options._svg.createSVGTransform());
+    initialize: function(options) {
+        this.svgNS = 'http://www.w3.org/2000/svg';
+        this.xlinkNS = 'http://www.w3.org/1999/xlink';
 
-    this._x = 0;
-    this._y = 0;
-    this._width = 0;
-    this._height = 0;
+        this.children = [];
+        this.canvas = document.createElementNS(this.svgNS, 'g');
 
-    this.set(options);
-};
+        options.container.appendChild(this.canvas);
 
-Widget.prototype = {
+        var list = this.canvas.transform.baseVal;
+        list.appendItem(options._svg.createSVGTransform());
+        list.appendItem(options._svg.createSVGTransform());
 
-    svgNS: 'http://www.w3.org/2000/svg',
-    xlinkNS: 'http://www.w3.org/1999/xlink',
+        this.id = WidgetId++;
+        this._x = 0;
+        this._y = 0;
+        this._width = 0;
+        this._height = 0;
+
+        this.set(options);
+    },
 
     x: function(value) {
         if (value === undefined) {
@@ -164,6 +167,10 @@ Widget.prototype = {
 
     set: function(options) {
         for (var name in options) {
+            if (name == 'type') {
+                continue;
+            }
+
             if (typeof(this[name]) == "function") {
                 this[name](options[name]);
             } 
@@ -175,34 +182,44 @@ Widget.prototype = {
 
     add: function(options) {
         var type = options.type;
-        delete options.type;
 
-        var child = new type($.extend({
-            _svg: this._svg,
-            parent: this,
-            container: this.canvas,
-        }, options));
+        options._svg = this._svg;
+        options._parent = this;
+        options.container = this.canvas;
+
+        var child = new type.prototype.$constructor(options);
 
         this.children.push(child);
+
         return child;
     },
 
     append: function(widget) {
         this.children.push(widget);
 
-        if (widget.parent) {
-            widget.parent.remove(widget);
+        if (widget._parent) {
+            widget._parent.remove(widget);
         }
 
-        widget.parent = this;
+        widget._parent = this;
         this.canvas.appendChild(widget.canvas);
     },
 
+    find: function(id) {
+        for (var i = 0; i < this.children.length; i++) {
+            if (this.children[i].id == id) {
+                return i;
+            }
+        }
+
+        return null;
+    },
+
     remove: function(widget) {
-        var index = this.children.indexOf(widget);
+        var index = this.find(widget.id);
         this.children.splice(index, 1);
         this.canvas.removeChild(widget.canvas);
-        widget.parent = null;
+        widget._parent = null;
     },
 
     child: function(key) {
@@ -263,8 +280,8 @@ Widget.prototype = {
     },
 
     root: function() {
-        if (this.parent) {
-            return this.parent.root();
+        if (this._parent) {
+            return this._parent.root();
         }
         else {
             return this;
@@ -272,8 +289,8 @@ Widget.prototype = {
     },
 
     pageX: function() {
-        if (this.parent) {
-            return this.parent.pageX() + this.x();
+        if (this._parent) {
+            return this._parent.pageX() + this.x();
         }
         else {
             return this.x();
@@ -281,8 +298,8 @@ Widget.prototype = {
     },
 
     pageY: function() {
-        if (this.parent) {
-            return this.parent.pageY() + this.y();
+        if (this._parent) {
+            return this._parent.pageY() + this.y();
         }
         else {
             return this.y();
@@ -353,4 +370,4 @@ Widget.prototype = {
         return this.createElement('polyline', { points: points }, settings);       
     }
 
-};
+});

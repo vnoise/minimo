@@ -1,18 +1,16 @@
-function Slider(options) {
-    this.value = 0;
+var Slider = new Class({
+    Extends: Widget,
 
-    Widget.call(this, options);
-
-    this.handleWidth = 20;
-}
-
-Slider.prototype = {
-    __proto__: Widget.prototype,
+    initialize: function(options) {
+        this.value = 0;
+        Widget.prototype.initialize.call(this, options);
+        this.handleWidth = 20;
+    },
 
     draw: function() {
         this.attr('class', 'slider');
 
-        this.rect(0, 0, this.width(), this.height(), 5, 5);
+        this.rect(0, 0, this.width(), this.height(), { rx: 5, ry: 5 });
         this.text(2, this.height() / 2 + 5, this.key.slice(0, 5), { 'class': 'label' });
         this.handle = this.rect(0, 0, this.width(), this.handleWidth, { 'class': 'handle', rx: 5, ry: 5 });
 
@@ -54,15 +52,11 @@ Slider.prototype = {
         this.handleEvent(event);
         return true;
     }
-};
+});
 
 
-function SliderPanel(options) {
-    Widget.call(this, options);
-}
-
-SliderPanel.prototype = {
-    __proto__: Widget.prototype,
+var SliderPanel = new Class({
+    Extends: Widget,
 
     draw: function() {
         var x = 0;
@@ -75,4 +69,4 @@ SliderPanel.prototype = {
             x += w;
         }
     }
-};
+});

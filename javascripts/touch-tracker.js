@@ -1,8 +1,8 @@
-var TouchTracker = {
+var TouchTracker = new Class({
     touchModel: null,
     streams: {},
 
-    init: function(root, svg) {
+    initialize: function(root, svg) {
         if (window.location.hash == '#touch') {
             if (navigator.userAgent.match(/iPad|iPhone/i)) {
                 this.touchModel = "apple";
@@ -45,26 +45,24 @@ var TouchTracker = {
 
         this.root = root;
         this.svg = svg;
-        this.offset = $(this.svg).offset();
         
         document.addEventListener(this.event.down, this.onTouchDown.bind(this), false);
         document.addEventListener(this.event.move, this.onTouchMove.bind(this), false);
         document.addEventListener(this.event.up, this.onTouchUp.bind(this), false);
-
 
         this.scrollManager = new ScrollManager();
     },
 
     createEvent :function(widget, event) {
         return {
-            localX: event.pageX - this.offset.left - widget.pageX(),
-            localY: event.pageY - this.offset.top - widget.pageY()
+            localX: event.pageX - widget.pageX(),
+            localY: event.pageY - widget.pageY()
         };
     },
 
     eventInside: function(widget, event) {
-        var x = event.pageX - this.offset.left - widget.pageX();
-        var y = event.pageY - this.offset.top - widget.pageY();
+        var x = event.pageX - widget.pageX();
+        var y = event.pageY - widget.pageY();
 
         return x >= 0 && x <= widget.width() && y >= 0 && y <= widget.height();
     },
@@ -151,4 +149,4 @@ var TouchTracker = {
 
         return false;
     }
-};
+});

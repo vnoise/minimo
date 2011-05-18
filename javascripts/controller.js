@@ -1,14 +1,11 @@
-var controller = {
-    instruments: [],
-    width: 2000,
-    height: 1000,
-    numInstruments: 4,
-
-    send: function(message) {
-        this.socket.send(message);
-    },
+var Controller = new Class({
 
     initialize: function() {
+        this.instruments = [];
+        this.width = 2000;
+        this.height = 1000;
+        this.numInstruments = 4;
+
         this.svg = document.getElementById('svg');
         this.svg.setAttribute('width', this.width);
         this.svg.setAttribute('height', this.height);
@@ -20,13 +17,17 @@ var controller = {
             height: this.height
         });
         
-        TouchTracker.init(this.root, this.svg);
+        this.touchtracker = new TouchTracker(this.root, this.svg);
 
         for (var i = 0; i < this.numInstruments; i++) {
             this.create(i);
         }
 
         this.connect();
+    },
+
+    send: function(message) {
+        this.socket.send(message);
     },
 
     connect: function() {
@@ -38,8 +39,6 @@ var controller = {
     },
 
     onConnect: function() {
-        console.log('connect');
-
         for (var i = 0; i < this.numInstruments; i++) {
             this.instruments[i].send('/update');
         }
@@ -77,4 +76,4 @@ var controller = {
 
         this.instruments[index].draw();
     }
-};
+});

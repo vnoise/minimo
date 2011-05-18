@@ -1,14 +1,14 @@
-function ScrollManager() {
-    this.lastX = 0;
-    this.lastY = 0;
-    this.streamId = 0;
+var ScrollManager = new Class({
 
-    document.addEventListener("MozTouchUp",   this.onTouchUp.bind(this), false);
-    // document.addEventListener("MozTouchDown", this.onTouchDown.bind(this), false);
-    document.addEventListener("MozTouchMove", this.onTouchMove.bind(this), false);
-}
+    initialize: function () {
+        this.lastX = 0;
+        this.lastY = 0;
+        this.streamId = 0;
 
-ScrollManager.prototype = {
+        document.addEventListener("MozTouchUp",   this.onTouchUp.bind(this), false);
+        // document.addEventListener("MozTouchDown", this.onTouchDown.bind(this), false);
+        document.addEventListener("MozTouchMove", this.onTouchMove.bind(this), false);
+    },
 
     isScrollArea: function(event) {
         return (this.streamId == 0 || this.streamId == event.streamId) && 
@@ -53,4 +53,4 @@ ScrollManager.prototype = {
         }
     }
 
-};
+});

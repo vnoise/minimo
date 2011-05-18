@@ -1,109 +1,115 @@
-function Instrument(options) {
-    Widget.call(this, options);
+var Instrument = new Class({
+    Extends: Widget,
 
-    this.clipswitcher   = this.add({ type: ClipSwitcher, instrument: this });
-    this.sequencer      = this.add({ type: Sequencer, instrument: this });
-    this.sliders        = this.add({ type: SliderPanel, instrument: this });
-    this.automations    = [];
-    this.sendPort       = 10000 + this.index;
-    this.recvPort       = 20000 + this.index;
-    this.bpm            = 120;
+    initialize: function (options) {
+        Widget.prototype.initialize.call(this, options);
 
-    this.types = [
-        "sinus",
-        "sinus_fifth",
-        "sinus_oct",
-        "saw",
-        "saw_fifth",
-        "saw_oct",
-        "pulse",
-        "pulse_fifth",
-        "pulse_oct",
-        "noise",
-        "sample"
-    ];
+        this.clipswitcher   = this.add({ type: ClipSwitcher, instrument: this });
+        this.sequencer      = this.add({ type: Sequencer, instrument: this });
+        this.sendPort       = 10000 + this.index;
+        this.recvPort       = 20000 + this.index;
+        this.bpm            = 120;
 
-    this.modes = [
-        "chromatic",
-        "lydian",
-        "ionian",
-        "mixolydian",
-        "dorian",
-        "aeolian",
-        "phrygian",
-        "locrian",
-        "harmonic minor",
-        "melodic minor",        
-        "major pentatonic",
-        "minor pentatonic",
-        "wholetone",
-        "whole-half",
-        "half-whole"
-    ];
+        this.initMenus();
+        this.initSliders();
+    },
 
-    this.typeMenu = this.add({
-        type: Menu,
-        options: this.types,
-        callback: this.onSelectType.bind(this)
-    });
+    initSliders: function() {
+        this.sliders = this.add({ type: SliderPanel, instrument: this });
+        this.automations    = [];
 
-    this.modeMenu = this.add({
-        type: Menu,
-        options: this.modes,
-        callback: this.onSelectMode.bind(this)
-    });
+        this.addSlider('volume'    , 0, 1, 0.01);
+        this.addSlider('octave'    , 0, 6, 1);
+        this.addSlider('pitch'     , 0, 12, 1);
+        this.addSlider('pwidth'    , 0, 1, 0.01);
+        this.addSlider('cutoff'    , 0.1, 1, 0.01);
+        this.addSlider('reso'      , 1, 5, 0.01);
+        this.addSlider('attack'    , 0, 1000, 10);
+        this.addSlider('decay'     , 0, 1000, 10);
+        this.addSlider('reverb'    , 0, 0.5, 0.005);
+        this.addSlider('delay'     , 0, 1, 0.01);
+        this.addSlider('dtime'     , 0, 8, 1);
+        this.addSlider('fback'     , 0, 1, 0.01);
+    },
 
-    this.dirMenu = this.add({
-        type: Menu,
-        callback: this.onSelectDir.bind(this)
-    });
+    initMenus: function() {
+        this.types = [
+            "sinus",
+            "sinus_fifth",
+            "sinus_oct",
+            "saw",
+            "saw_fifth",
+            "saw_oct",
+            "pulse",
+            "pulse_fifth",
+            "pulse_oct",
+            "noise",
+            "sample"
+        ];
 
-    this.sampleMenu = this.add({
-        type: Menu,
-        callback: this.onSelectSample.bind(this)
-    });
+        this.modes = [
+            "chromatic",
+            "lydian",
+            "ionian",
+            "mixolydian",
+            "dorian",
+            "aeolian",
+            "phrygian",
+            "locrian",
+            "harmonic minor",
+            "melodic minor",        
+            "major pentatonic",
+            "minor pentatonic",
+            "wholetone",
+            "whole-half",
+            "half-whole"
+        ];
 
-    this.samples = {};
+        this.typeMenu = this.add({
+            type: Menu,
+            options: this.types,
+            callback: this.onSelectType.bind(this)
+        });
 
-    setTimeout(function() {
-        $.get('/samples/' + this.index, function(samples) {
-            for (var i in samples) {
-                var name = samples[i].split('/');
-                var dir = name[0];
-                var file = name[1];
-                
-                if (this.samples[dir] === undefined) {
-                    this.samples[dir] = [];
-                }
+        this.modeMenu = this.add({
+            type: Menu,
+            options: this.modes,
+            callback: this.onSelectMode.bind(this)
+        });
 
-                this.samples[dir].push(file);
-            }
+        this.dirMenu = this.add({
+            type: Menu,
+            callback: this.onSelectDir.bind(this)
+        });
+
+        this.sampleMenu = this.add({
+            type: Menu,
+            callback: this.onSelectSample.bind(this)
+        });
+
+        this._samples = {};
+    },
+
+    samples: function(samples) {
+        samples.each(function(sample) {
+            var name = sample.split('/');
+            var dir = name[0];
+            var file = name[1];
             
-            for (var dir in this.samples) {
-                this.dirMenu.addButton({
-                    type: MenuButton,
-                    value: dir
-                });
+            if (this._samples[dir] === undefined) {
+                this._samples[dir] = [];
             }
-        }.bind(this));
-    }.bind(this), this.index * 500);
 
-    this.addSlider('volume'    , 0, 1, 0.01);
-    this.addSlider('octave'    , 0, 6, 1);
-    this.addSlider('pitch'     , 0, 12, 1);
-    this.addSlider('pwidth'    , 0, 1, 0.01);
-    this.addSlider('cutoff'    , 0.1, 1, 0.01);
-    this.addSlider('reso'      , 1, 5, 0.01);
-    this.addSlider('attack'    , 0, 1000, 10);
-    this.addSlider('decay'     , 0, 1000, 10);
-    this.addSlider('reverb'    , 0, 0.5, 0.005);
-    this.addSlider('delay'     , 0, 1, 0.01);
-    this.addSlider('dtime'     , 0, 8, 1);
-    this.addSlider('fback'     , 0, 1, 0.01);
-};
-
-Instrument.prototype = {
-    __proto__: Widget.prototype,
+            this._samples[dir].push(file);
+        }, this);
+        
+        for (var dir in this._samples) {
+            this.dirMenu.addButton({
+                type: MenuButton,
+                value: dir
+            });
+        }
+    },
 
     draw: function() {
         var y = 0;
@@ -230,7 +236,7 @@ Instrument.prototype = {
         });
 
         var automation = new Automation({
-            parent: this,
+            _parent: this,
             instrument: this,
             key: key, 
             min: min, 
@@ -292,4 +298,4 @@ Instrument.prototype = {
             console.log('action not found: ' + action);
         }
     }
-};
+});

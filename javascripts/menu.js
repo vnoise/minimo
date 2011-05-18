@@ -1,14 +1,14 @@
-function Menu(options) {
-    this.visible = false;
-    this._buttons = [];
-    this._options = [];
-    this.label = "";
+var Menu = new Class({
+    Extends: Widget,
 
-    Widget.call(this, options);
-} 
+    initialize: function(options) {
+        this.visible = false;
+        this._buttons = [];
+        this._options = [];
+        this.label = "";
 
-Menu.prototype = {
-    __proto__: Widget.prototype,
+        Widget.prototype.initialize.call(this, options);
+    },
 
     setLabel: function(label) {
         this.label = label;
@@ -28,12 +28,12 @@ Menu.prototype = {
     options: function(options) {
         this._options = [];
 
-        for (var i in options) {
+        options.each(function(value) {
             this.addButton({
                 type: MenuButton,
-                value: options[i]
+                value: value
             });
-        }
+        }, this);
     },        
 
     show: function() { 
@@ -43,14 +43,12 @@ Menu.prototype = {
         var h = this.height();
 
         for (var i = 0; i < this._options.length; i++, y += h) {         
-            var button = $.extend({
-                x: x,
-                y: y,
-                width: w,
-                height: h,
-                callback: this.onButtonClick.bind(this)             
-            }, this._options[i]);
-
+            var button = this._options[i];
+            button.x = x;
+            button.y = y;
+            button.width = w;
+            button.height = h;
+            button.callback = this.onButtonClick.bind(this);
             this._buttons[i] = this.root().add(button);
             this._buttons[i].draw();
         }
@@ -59,9 +57,9 @@ Menu.prototype = {
     },
 
     hide: function(event) {
-        for (var i in this._buttons) {
-            this.root().remove(this._buttons[i]);
-        }
+        this._buttons.each(function(button) {
+            this.root().remove(button);
+        }, this);
         this._buttons = [];
         this.visible = false;
     },
@@ -83,16 +81,16 @@ Menu.prototype = {
             this.callback(value);
         }
     }
-};
+});
 
 
-function MenuButton(options) {
-    Widget.call(this, options);
-    this.visible = false;
-}
+var MenuButton = new Class({
+    Extends: Widget,
 
-MenuButton.prototype = {
-    __proto__: Widget.prototype,
+    initialize: function(options) {
+        Widget.prototype.initialize.call(this, options);
+        this.visible = false;
+    },
 
     draw: function() {
         this.attr('class', 'menu-button');
@@ -104,4 +102,4 @@ MenuButton.prototype = {
         this.callback(this.value);
         return true;
     }
-};
+});

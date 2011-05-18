@@ -1,25 +1,25 @@
-Sequencer = function(options) {
-    Widget.call(this, options);
+var Sequencer = new Class({
+    Extends: Widget,
 
-    this._pattern = [];
-    this._clocks = [];
-    this._steps = [];
-    this._clip = 0;
+    initialize: function(options) {
+        Widget.prototype.initialize.call(this, options);
 
-    for (var i = 0; i < 8; i++) {
-        this._pattern[i] = [];
-        for (var j = 0; j < 16; j++) {
-            this._pattern[i][j] = 0;
+        this._pattern = [];
+        this._clocks = [];
+        this._steps = [];
+        this._clip = 0;
+
+        for (var i = 0; i < 8; i++) {
+            this._pattern[i] = [];
+            for (var j = 0; j < 16; j++) {
+                this._pattern[i][j] = 0;
+            }
         }
-    }
-};
-
-Sequencer.prototype = {
-    __proto__: Widget.prototype,
+    },
 
     draw: function() {
         this.attr('class', 'sequencer');
-        this.rect(0, 0, this.width(), this.height(), 10, 10);
+        this.rect(0, 0, this.width(), this.height(), { rx: 10, ry: 10 });
 
         this.stepx = this.width() / 4;
         this.stepy = this.height() / 4;
@@ -98,4 +98,4 @@ Sequencer.prototype = {
         this._clip = clip;
         this.drawSteps();
     }
-};
+});

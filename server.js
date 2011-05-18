@@ -96,6 +96,11 @@ function index(req, res) {
 function samples(req, res) {
     res.writeHead(200, {'Content-Type': 'application/json'});
     var instrument = req.url.split('/')[2];
+
+    res.end(JSON.stringify(samples));
+}
+
+function loadSamples(instrument) {
     var dirs = fs.readdirSync("samples");
     var samples = [];
 
@@ -110,7 +115,7 @@ function samples(req, res) {
         }
     }       
 
-    res.end(JSON.stringify(samples));
+    return samples;
 }
 
 function file(req, res) {
@@ -228,6 +233,14 @@ io.on('connection', function(client) {
     });
 
     client.on('message', function(message) {
+        if (message.address == "/update") {
+            client.send({
+                instrument: message.instrument,
+                address: '/samples',
+                args: [loadSamples()]
+            });
+        }
+
         var types = message.types;
         var args = message.args;
         var msg = new _osc.Message(message.address);

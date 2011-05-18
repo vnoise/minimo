@@ -1,18 +1,18 @@
-function Automation(options) {
-    Widget.call(this, options);
+var Automation = new Class({
+    Extends: Widget,
 
-    this.pattern = [];
-    this.clocks = [];
-    this.steps = [];
-    this.clip = 0;
+    initialize: function (options) {
+        Widget.prototype.initialize.call(this, options);
 
-    for (var i = 0; i < 16; i++) {
-        this.pattern[i] = 0;
-    }
-}
+        this.pattern = [];
+        this.clocks = [];
+        this.steps = [];
+        this.clip = 0;
 
-Automation.prototype = {
-    __proto__: Widget.prototype,
+        for (var i = 0; i < 16; i++) {
+            this.pattern[i] = 0;
+        }
+    },
 
     draw: function() {
         var w = this.width();
@@ -92,4 +92,4 @@ Automation.prototype = {
         // this.clocks[(index + 15) % 16].setAttribute('opacity', 0.2);
         this.clocks[(index + 16) % 16].setAttribute('opacity', 0.3);
     }
-};
+});
