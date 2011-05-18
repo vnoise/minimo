@@ -3,6 +3,10 @@ Instrument @ instruments[16];
 Instrument @ instrument;
 int index;
 
+Dyno master => dac;
+master.limit();
+0.8 => master.gain;
+
 9998 => recv.port;
 recv.listen();
 
@@ -15,6 +19,7 @@ while (true) {
 
         new Instrument @=> instrument;          
         instrument @=> instruments[index];
+        instrument.output => master;
         10000 + index => instrument.recvPort;
         20000 + index => instrument.sendPort;
         instrument.init();

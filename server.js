@@ -136,12 +136,11 @@ function file(req, res) {
 
 var clients = {};
 
-//var chuck = spawn('chuck', 
-//                   ['./chuck/Parameter.ck',
-//                    './chuck/Mode.ck', 
-//                    './chuck/Instrument.ck', 
-//                    './chuck/seq.ck', 
-//                    './stream.ck']);
+var chuck = spawn('chuck', 
+                  ['./chuck/Parameter.ck',
+                   './chuck/Mode.ck', 
+                   './chuck/Instrument.ck', 
+                   './chuck/seq.ck']);
 
 
 // var chuck = spawn('chuck', ['-s', 'test.ck', 'stream.ck']);

@@ -52,7 +52,7 @@ public class Instrument {
     pulse2 => gain;
     sample => gain;
     
-    gain => lowpass => adsr => output => dac;
+    gain => lowpass => adsr => output;
     
     float pattern[8][16];
     Parameter @ parameters[16];
