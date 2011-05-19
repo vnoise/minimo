@@ -17,6 +17,8 @@ public class Instrument {
     Mode mode;
     SinOsc sinus;
     SinOsc sinus2;
+    TriOsc tri;
+    TriOsc tri2;
     SawOsc saw;
     SawOsc saw2;
     PulseOsc pulse;
@@ -46,6 +48,8 @@ public class Instrument {
     noise  => gain;
     sinus  => gain;
     sinus2 => gain;
+    tri    => gain;
+    tri2   => gain;
     saw    => gain;
     saw2   => gain;
     pulse  => gain;
@@ -104,6 +108,8 @@ public class Instrument {
         0 => noise.gain;
         0 => sinus.gain;
         0 => sinus2.gain;
+        0 => tri.gain;
+        0 => tri2.gain;
         0 => saw.gain;
         0 => saw2.gain;
         0 => pulse.gain;
@@ -140,7 +146,7 @@ public class Instrument {
     public void play(int pos) {
         pos => position;
         
-        read("volume")          => output.gain;
+        read("volume") * 0.5    => output.gain;
         read("attack")::ms      => adsr.attackTime;
         read("decay")::ms       => adsr.decayTime;
         read("reso")            => lowpass.Q;
@@ -153,7 +159,7 @@ public class Instrument {
         read("volume")          => output.gain;
 
         Std.mtof(mode.note(pitch) + 24 + read("octave") * 12) =>
-        pulse.freq => sinus.freq => saw.freq;
+        pulse.freq => sinus.freq => tri.freq => saw.freq;
 
         if (type == "sinus_oct") {
             sinus.freq() * 2 => sinus2.freq;
@@ -166,6 +172,12 @@ public class Instrument {
         }
         else if (type == "saw_fifth") {
             saw.freq() * 1.5 => saw2.freq;
+        }
+        else if (type == "tri_oct") {
+            tri.freq() * 2 => tri2.freq;
+        }
+        else if (type == "tri_fifth") {
+            tri.freq() * 1.5 => tri2.freq;
         }
         else if (type == "pulse_oct") {
             pulse.freq() * 2 => pulse2.freq;
@@ -195,33 +207,52 @@ public class Instrument {
     public void setType(string t) {
         t => type;
         
-        0 => sinus.gain => pulse.gain => pulse2.gain => saw.gain => sample.gain => noise.gain;
+        0 => sinus.gain => sinus2.gain =>
+        tri.gain => tri.gain =>
+        pulse.gain => pulse2.gain =>
+        saw.gain => sample.gain => noise.gain;
 
-        if (type == "sinus" ) {
+        if (type == "sinus" || type == "sinus_pulse" || type == "sinus_noise" || type == "sinus_saw" || type == "sinus_tri" ) {
             1 => sinus.gain;
         }       
-        else if (type == "sinus_oct" || type == "sinus_fifth") {
+
+        if (type == "sinus_oct" || type == "sinus_fifth") {
             0.5 => sinus.gain;
             0.5 => sinus2.gain;
         }
-        else if (type == "pulse" ) {
+
+        if (type == "pulse" || type == "sinus_pulse" || type == "pulse_saw" || type == "pulse_tri" || type == "pulse_noise") {
             0.5 => pulse.gain;
         }
-        else if (type == "pulse_oct" || type == "pulse_fifth") {
+
+        if (type == "pulse_oct" || type == "pulse_fifth") {
             0.5 => pulse.gain;
             0.5 => pulse2.gain;
         }
-        else if (type == "saw") {
+
+        if (type == "saw" || type == "sinus_saw" || type == "pulse_saw" || type == "saw_noise") {
             0.5 => saw.gain;
         }
-        else if (type == "saw_oct" || type == "saw_fifth") {
+
+        if (type == "saw_oct" || type == "saw_fifth") {
             0.5 => saw.gain;
             0.5 => saw2.gain;
         }
-        else if (type == "noise" ) {
+
+        if (type == "tri" || type == "sinus_tri" || type == "pulse_tri" || type == "tri_noise") {
+            0.5 => tri.gain;
+        }
+
+        if (type == "tri_oct" || type == "tri_fifth") {
+            0.5 => tri.gain;
+            0.5 => tri2.gain;
+        }
+
+        if (type == "noise" || type == "sinus_noise" || type == "pulse_noise" || type == "saw_noise" || type == "tri_noise") {
             0.5 => noise.gain;
         }
-        else if (type == "sample") {
+
+        if (type == "sample") {
             1 => sample.gain;
         }
     }

@@ -26,8 +26,7 @@ var ClipSwitcher = new Class({
                 x: x, 
                 y: 0,
                 width: w, 
-                height: this.height(),
-                opacity: i == this.active ? 1 : 0.5
+                height: this.height()
             });
 
             this.children[i].draw();
@@ -38,12 +37,18 @@ var ClipSwitcher = new Class({
         this.active = clip;
         this.instrument.sequencer.clip(this.active);
         this.instrument.send('/clip', 'i', this.active);
-        this.redraw();
+        this.drawActive();
+    },
+
+    drawActive: function() {
+        this.children.each(function(child, i) {
+            child.attr('opacity', i == this.active ? 1 : 0.5);
+        }, this);
     },
 
     clip: function(clip) {
         this.active = clip;
-        this.redraw();
+        this.drawActive();
     }
 });
 

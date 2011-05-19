@@ -55,7 +55,7 @@ var Slider = new Class({
 });
 
 
-var SliderPanel = new Class({
+var HPanel = new Class({
     Extends: Widget,
 
     draw: function() {
@@ -68,5 +68,31 @@ var SliderPanel = new Class({
             this.children[i].extent(x, y, w, h).draw();
             x += w;
         }
+    }
+});
+
+
+var ToggleButton = new Class({
+    Extends: Widget,
+
+    initialize: function(options) {
+        Widget.prototype.initialize.call(this, options);
+        this.active = true;
+    },
+
+    draw: function() {
+        this.attr('class', 'menu-button');
+        this.rect(0, 0, this.width(), this.height(), 0, 0);
+        this.text(5, this.height() / 2 + 4, this.label, { 'class': 'label' });
+    },
+
+    toggle: function() {
+        this.active = !this.active;
+        this.callback(this);
+    },
+
+    onTouchDown: function(event) {
+        this.toggle();
+        return true;
     }
 });

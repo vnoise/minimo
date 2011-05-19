@@ -15,8 +15,9 @@ var Instrument = new Class({
     },
 
     initSliders: function() {
-        this.sliders = this.add({ type: SliderPanel, instrument: this });
-        this.automations    = [];
+        this.sliders = this.add({ type: HPanel, instrument: this });
+        this.buttons = this.add({ type: HPanel, instrument: this });
+        this.automations = [];
 
         this.addSlider('volume'    , 0, 1, 0.01);
         this.addSlider('octave'    , 0, 6, 1);
@@ -35,12 +36,23 @@ var Instrument = new Class({
     initMenus: function() {
         this.types = [
             "sinus",
+            "sinus_pulse",
+            "sinus_noise",
+            "sinus_saw",
+            "sinus_tri",
             "sinus_fifth",
             "sinus_oct",
+            "tri",
+            "tri_noise",
+            "tri_fifth",
+            "tri_oct",
             "saw",
+            "saw_noise",
             "saw_fifth",
             "saw_oct",
             "pulse",
+            "pulse_saw",
+            "pulse_tri",
             "pulse_fifth",
             "pulse_oct",
             "noise",
@@ -130,6 +142,10 @@ var Instrument = new Class({
         this.sliders.extent(0, y, width, 100).draw();
 
         y += this.sliders.height() + 10;
+
+        this.buttons.extent(0, y, width, 30).draw();
+
+        y += this.buttons.height() + 10;
         
         this.drawAutomations(0, y, width, 50);
     },
@@ -154,9 +170,10 @@ var Instrument = new Class({
     },
 
     drawAutomations: function(x, y, w, h) {
-        for (var i = 0; i < this.automations.length; i++, y += h) {
-            this.automations[i].extent(x, y, w, h).draw();
-        }        
+        this.automations.each(function(automation, i) {
+            automation.extent(x, y, w, h).draw();
+            y += h;
+        }, this);
     },
 
     getSlider: function(key) {
@@ -178,7 +195,7 @@ var Instrument = new Class({
 
     onSelectDir: function(dir) {
         this.dir = dir;
-        this.sampleMenu.options(this.samples[dir]);
+        this.sampleMenu.options(this._samples[dir]);
     },
 
     onSelectSample: function(sample) {
@@ -204,6 +221,10 @@ var Instrument = new Class({
         this.modeMenu.setLabel(mode);
     },
 
+    onTouchButton: function(button) {
+        this.redraw();
+    },
+
     addSlider: function(key, min, max, step) {
         this.sliders.add({
             type: Slider,
@@ -212,6 +233,13 @@ var Instrument = new Class({
             min: min,
             max: max,
             step: step
+        });
+
+        this.buttons.add({
+            type: ToggleButton,
+            instrument: this,
+            label: key,
+            callback: this.onTouchButton.bind(this)
         });
 
         var automation = this.add({
