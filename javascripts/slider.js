@@ -54,24 +54,6 @@ var Slider = new Class({
     }
 });
 
-
-var HPanel = new Class({
-    Extends: Widget,
-
-    draw: function() {
-        var x = 0;
-        var y = 0;
-        var w = this.width() / this.children.length;
-        var h = this.height();
-
-        for (var i = 0; i < this.children.length; i++) {
-            this.children[i].extent(x, y, w, h).draw();
-            x += w;
-        }
-    }
-});
-
-
 var ToggleButton = new Class({
     Extends: Widget,
 

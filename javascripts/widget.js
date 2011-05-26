@@ -2,6 +2,8 @@ var WidgetId = 1;
 
 var Widget = new Class({
 
+    Implements: Events,
+
     initialize: function(options) {
         this.svgNS = 'http://www.w3.org/2000/svg';
         this.xlinkNS = 'http://www.w3.org/1999/xlink';
@@ -11,17 +13,32 @@ var Widget = new Class({
 
         options.container.appendChild(this.canvas);
 
-        var list = this.canvas.transform.baseVal;
-        list.appendItem(options._svg.createSVGTransform());
-        list.appendItem(options._svg.createSVGTransform());
-
         this.id = WidgetId++;
         this._x = 0;
         this._y = 0;
         this._width = 0;
         this._height = 0;
+        this._scaleX = 1;
+        this._scaleY = 1;
 
+        this.marginTop = 0;
+        this.marginBottom = 0;
+        this.marginLeft = 0;
+        this.marginRight = 0;
+
+        this.sizeHint = 1; 
         this.set(options);
+    },
+
+    on: function(event, callback) {
+        if (callback) {
+            this.addEvent(event, callback);
+        }
+        else {
+            for (var name in event) {
+                this.addEvent(name, event[name]);               
+            }
+        }
     },
 
     x: function(value) {
@@ -32,7 +49,7 @@ var Widget = new Class({
             this._x = value;
         }
 
-        this.translate(this._x, this._y);
+        this.updateTransform();
     },
 
     y: function(value) {
@@ -43,7 +60,7 @@ var Widget = new Class({
             this._y = value;
         }
 
-        this.translate(this._x, this._y);
+        this.updateTransform();
     },
 
     width: function(value) {
@@ -64,8 +81,10 @@ var Widget = new Class({
         }
     },
     
-    transform: function(index) {
-        return this.canvas.transform.baseVal.getItem(index);
+    updateTransform: function() {
+        this.attr('transform', 
+                  'translate(' + this._x + ',' + this._y + ') ' +
+                  'scale(' + this._scaleX + ',' + this._scaleY + ')');
     },
 
     translate: function(x, y) {
@@ -157,7 +176,84 @@ var Widget = new Class({
         }
     },
 
-    draw: function() {
+    doLayout: function() {
+        switch (this.layout) {
+        case 'horizontal': 
+            this.doHorizontalLayout();
+            break;
+        case 'vertical': 
+            this.doVerticalLayout();
+            break;
+        }
+
+        this.children.each(function(child) {
+            child.doLayout();
+        });
+    },
+
+    sumSizeHints: function() {
+        var size = 0;
+
+        this.children.each(function(child) {
+            size += child.sizeHint;
+        });
+
+        return size;
+    },
+
+    sumVerticalMargins: function() {
+        var margin = 0;
+
+        this.children.each(function(child) {
+            margin += child.marginTop + child.marginBottom;
+        });
+
+        return margin;
+    },
+
+    sumHorizontalMargins: function() {
+        var margin = 0;
+
+        this.children.each(function(child) {
+            margin += child.marginLeft + child.marginRight;
+        });
+
+        return margin;
+    },
+
+    doHorizontalLayout: function() {
+        var x = 0;
+        var y = 0;
+        var width = 0;
+        var w = (this.width() - this.sumHorizontalMargins()) / this.sumSizeHints();
+        var h = this.height();
+
+        this.children.each(function(child) {
+            x += child.marginLeft;
+            child.extent(x, y, w * child.sizeHint, h);
+            x += child.width();
+            x += child.marginRight;
+        });
+    },
+
+    doVerticalLayout: function() {
+        var x = 0;
+        var y = 0;
+        var w = this.width();
+        var h = (this.height() - this.sumVerticalMargins()) / this.sumSizeHints();
+
+        this.children.each(function(child) {
+            y += child.marginTop;
+            child.extent(x, y, w, h * child.sizeHint);
+            y += child.height();
+            y += child.marginBottom;
+        });
+    },
+
+    draw: function() {      
+        this.children.each(function(child) {
+            child.draw();
+        });
     },
 
     redraw: function() {
@@ -181,7 +277,7 @@ var Widget = new Class({
     },
 
     add: function(options) {
-        var type = options.type;
+        var type = options.type || Widget;
 
         options._svg = this._svg;
         options._parent = this;
@@ -249,32 +345,38 @@ var Widget = new Class({
 
     pos: function(x, y) {
         if (x === undefined) {
-            return [this.x(), this.y()];
+            return [this._x, this._y];
         }
         else {
-            this.x(x);
-            this.y(y);
+            this._x = x;
+            this._y = y;
+            this.updateTransform();
             return this;
         }
     },
 
     extent: function(x, y, w, h) {
         if (x === undefined) {
-            return [this.x(), this.y(), this.width(), this.height()];           
+            return [this._x, this._y, this._width, this._height]; 
         }
         else {
-            this.set({ x: x, y: y, width: w, height: h });
+            this._x = x;
+            this._y = y;
+            this._width = w;
+            this._height = h;
+            this.updateTransform();
             return this;
         }
     },
 
     size: function(w, h) {
-        if (w  === undefined) {
-            return [this.getWidth(), this.getHeight()];
+        if (w === undefined) {
+            return [this._width, this._height];
         }
         else {
-            this.width(w);
-            this.height(h);
+            this._width = w;
+            this._height = h;
+            this.updateTransform();
             return this;
         }
     },

@@ -78,17 +78,18 @@ InstrumentManager.prototype = {
 };
 
 var instruments = new InstrumentManager();
+var numInstruments = 1;
 
 setTimeout(function() {
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i < numInstruments; i++) {
         instruments.add(i);
     }
 }, 2000);
 
 
 function index(req, res) {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    fs.readFile("index.html", function(err, file) {
+    res.writeHead(200, {'Content-Type': 'image/svg+xml'});
+    fs.readFile("index.svg", function(err, file) {
         res.end(file);
     });
 }
@@ -120,10 +121,6 @@ function loadSamples(instrument) {
 
 function file(req, res) {
     var type = 'text/plain';
-
-    if (req.url.match(/\.html$/)) {
-        type = 'text/html';
-    }
 
     if (req.url.match(/\.js$/)) {
         type = 'text/javascript';

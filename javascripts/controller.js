@@ -1,27 +1,39 @@
 var Controller = new Class({
 
+    log: function(value) {
+        if (this.console.childNodes[0]) {
+            this.console.removeChild(this.console.childNodes[0]);
+        }
+        var text = document.createTextNode(value);
+        this.console.appendChild(text);
+    },
+
     initialize: function() {
         this.instruments = [];
-        this.width = 2000;
-        this.height = 1000;
-        this.numInstruments = 4;
+        this.width = 800;
+        this.height = 600;
+        this.numInstruments = 1;
 
         this.svg = document.getElementById('svg');
-        this.svg.setAttribute('width', this.width);
-        this.svg.setAttribute('height', this.height);
+        this.console = document.getElementById('console');
 
         this.root = new Widget({
+            layout: 'horizontal',
             _svg: this.svg,
             container: this.svg,
+            y: 50,
             width: this.width,
             height: this.height
         });
         
-        this.touchtracker = new TouchTracker(this.root, this.svg);
+        this.touchtracker = new TouchTracker(this);
 
         for (var i = 0; i < this.numInstruments; i++) {
             this.create(i);
         }
+
+        this.root.doLayout();
+        this.root.draw();
 
         this.connect();
     },
@@ -31,7 +43,7 @@ var Controller = new Class({
     },
 
     connect: function() {
-        this.socket = new io.Socket('localhost'); 
+        this.socket = new io.Socket('192.168.2.127'); 
         this.socket.connect();
         this.socket.on('connect', this.onConnect.bind(this));
         this.socket.on('message', this.onMessage.bind(this));
@@ -67,13 +79,7 @@ var Controller = new Class({
         this.instruments[index] = this.root.add({
             type: Instrument,
             controller: this,
-            index: index,
-            x: 400 * index,
-            y: 0,
-            width: 320,
-            height: 1000
+            index: index
         });
-
-        this.instruments[index].draw();
     }
 });

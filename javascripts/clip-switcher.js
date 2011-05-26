@@ -5,32 +5,23 @@ var ClipSwitcher = new Class({
         Widget.prototype.initialize.call(this, options);
 
         this.active = 0;
+        this.layout = 'horizontal';
 
         for (var i = 0; i < 8; i++) {
             this.add({
                 type: ClipButton,
                 label: i.toString(),
                 clip: i,
-                callback: this.onButtonClick.bind(this)
+                on: {
+                    click: this.onButtonClick.bind(this)
+                }
             });
         }
     },
 
     draw: function() {      
-        var w = this.width() / 8;
-        var x = 0;
         this.attr('class', 'clipswitcher');
-
-        for (var i = 0; i < 8; i++, x += w) {
-            this.children[i].set({
-                x: x, 
-                y: 0,
-                width: w, 
-                height: this.height()
-            });
-
-            this.children[i].draw();
-        }
+        Widget.prototype.draw.call(this);
     },
 
     onButtonClick: function(clip) {
@@ -63,7 +54,7 @@ var ClipButton = new Class({
     },
 
     onTouchDown: function(event) {
-        this.callback(this.clip);
+        this.fireEvent('click', this.clip);
         return true;
     }
 });

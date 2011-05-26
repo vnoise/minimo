@@ -1,8 +1,9 @@
 var TouchTracker = new Class({
-    touchModel: null,
-    streams: {},
 
-    initialize: function(root, svg) {
+    initialize: function(controller) {
+        this.touchModel = null;
+        this.touches = {};
+
         if (window.location.hash == '#touch') {
             if (navigator.userAgent.match(/iPad|iPhone/i)) {
                 this.touchModel = "apple";
@@ -43,14 +44,19 @@ var TouchTracker = new Class({
         document.ongesturechange = function(e) { e.preventDefault(); };
         document.ongesturestart = function(e) { e.preventDefault(); };
 
-        this.root = root;
-        this.svg = svg;
+        this.controller = controller;
+        this.root = controller.root;
+        this.svg = controller.svg;
         
         document.addEventListener(this.event.down, this.onTouchDown.bind(this), false);
         document.addEventListener(this.event.move, this.onTouchMove.bind(this), false);
         document.addEventListener(this.event.up, this.onTouchUp.bind(this), false);
 
         this.scrollManager = new ScrollManager();
+    },
+
+    log: function(str) {
+        this.controller.log(str);
     },
 
     createEvent :function(widget, event) {
@@ -83,7 +89,7 @@ var TouchTracker = new Class({
 
     bubbleEvent: function(widget, event) {
         if (this.handleEvent(widget, "onTouchDown", event)) { 
-            this.streams[event.streamId == null ? 1 : event.streamId] = widget;
+            this.touches[event.identifier] = widget;
         }
         else {
             if (widget.parent) {
@@ -107,15 +113,31 @@ var TouchTracker = new Class({
         }
     },
 
-    onTouchDown: function(event) {
-        event.preventDefault();
+    foreachTouch: function(event, method) {
+        for (var i = 0; i < event.changedTouches.length; i++) {
+            this[method].call(this, event.changedTouches[i]);
+        }       
+    },
 
-        if (event.targetTouches) {
-            for (var i = 0; i < event.targetTouches.length; i++) {
-                var e = event.targetTouches[i];
-                e.streamId = i;
-                this.findTargetAndBubble(e);
-            }
+    prepareEvent: function(event) {
+        if (event.preventDefault) {
+            event.preventDefault();
+        }
+
+        if (!event.streamId === undefined) {
+            event.identifier = event.streamId;
+        }
+
+        if (event.identifier === undefined) {
+            event.identifier = 1;
+        }
+    },
+
+    onTouchDown: function(event) {
+        this.prepareEvent(event);
+
+        if (event.touches) {
+            this.foreachTouch(event, 'onTouchDown');
         }
         else {
             this.findTargetAndBubble(event);
@@ -125,28 +147,36 @@ var TouchTracker = new Class({
     },
 
     onTouchMove: function(event) {
-        event.preventDefault();
+        this.prepareEvent(event);
 
-        var widget = this.streams[event.streamId == null ? 1 : event.streamId];
-
-        if (widget) {
-            this.handleEvent(widget, "onTouchMove", event);
+        if (event.touches) {
+            this.foreachTouch(event, 'onTouchMove');
         }
+        else {
+            var widget = this.touches[event.identifier];
 
+            if (widget) {
+                this.handleEvent(widget, "onTouchMove", event);
+            }
+        }
         return false;
     },
 
     onTouchUp: function(event) {
-        event.preventDefault();
+        this.prepareEvent(event);
 
-        var widget = this.streams[event.streamId == null ? 1 : event.streamId];
-
-        if (widget) {
-            this.handleEvent(widget, "onTouchUp", event);
+        if (event.touches) {
+            this.foreachTouch(event, 'onTouchUp');
         }
+        else {
+            var widget = this.touches[event.identifier];
 
-        delete this.streams[event.streamId == null ? 1 : event.streamId];
+            if (widget) {
+                this.handleEvent(widget, "onTouchUp", event);
+            }
 
+            delete this.touches[event.identifier];
+        }
         return false;
     }
 });

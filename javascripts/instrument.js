@@ -4,19 +4,67 @@ var Instrument = new Class({
     initialize: function (options) {
         Widget.prototype.initialize.call(this, options);
 
-        this.clipswitcher   = this.add({ type: ClipSwitcher, instrument: this });
-        this.sequencer      = this.add({ type: Sequencer, instrument: this });
-        this.sendPort       = 10000 + this.index;
-        this.recvPort       = 20000 + this.index;
-        this.bpm            = 120;
+        this.bpm = 120;
+        this.layout = 'vertical';
 
         this.initMenus();
+
+        this.clipswitcher = this.add({ 
+            type: ClipSwitcher, 
+            sizeHint: 0.5,
+            marginTop: 10,
+            instrument: this
+        });
+
+        this.sequencer = this.add({ 
+            type: Sequencer, 
+            sizeHint: 2,
+            marginTop: 10,
+            instrument: this 
+        });
+
         this.initSliders();
     },
 
+    initMenus: function() {
+        this.menus = this.add({ 
+            layout: 'horizontal',
+            sizeHint: 0.5,
+            instrument: this 
+        });
+
+        this.typeMenu = this.menus.add({
+            type: TypeMenu,
+            instrument: this
+        });
+
+        this.modeMenu = this.menus.add({
+            type: ModeMenu,
+            instrument: this
+        });
+
+        this.dirMenu = this.menus.add({
+            type: SampleDirMenu,
+            instrument: this
+        });
+
+        this.sampleMenu = this.menus.add({
+            type: SampleMenu,
+            instrument: this
+        });
+
+        this.dirMenu.sampleMenu = this.sampleMenu;
+    },
+
     initSliders: function() {
-        this.sliders = this.add({ type: HPanel, instrument: this });
-        this.buttons = this.add({ type: HPanel, instrument: this });
+        this.sliders = this.add({ 
+            layout: 'horizontal',
+            sizeHint: 2,
+            marginTop: 10,
+            instrument: this 
+        });
+
+        // this.buttons = this.add({ type: HPanel, instrument: this });
         this.automations = [];
 
         this.addSlider('volume'    , 0, 1, 0.01);
@@ -33,147 +81,8 @@ var Instrument = new Class({
         this.addSlider('fback'     , 0, 1, 0.01);
     },
 
-    initMenus: function() {
-        this.types = [
-            "sinus",
-            "sinus_pulse",
-            "sinus_noise",
-            "sinus_saw",
-            "sinus_tri",
-            "sinus_fifth",
-            "sinus_oct",
-            "tri",
-            "tri_noise",
-            "tri_fifth",
-            "tri_oct",
-            "saw",
-            "saw_noise",
-            "saw_fifth",
-            "saw_oct",
-            "pulse",
-            "pulse_saw",
-            "pulse_tri",
-            "pulse_fifth",
-            "pulse_oct",
-            "noise",
-            "sample"
-        ];
-
-        this.modes = [
-            "chromatic",
-            "lydian",
-            "ionian",
-            "mixolydian",
-            "dorian",
-            "aeolian",
-            "phrygian",
-            "locrian",
-            "harmonic minor",
-            "melodic minor",        
-            "major pentatonic",
-            "minor pentatonic",
-            "wholetone",
-            "whole-half",
-            "half-whole"
-        ];
-
-        this.typeMenu = this.add({
-            type: Menu,
-            options: this.types,
-            callback: this.onSelectType.bind(this)
-        });
-
-        this.modeMenu = this.add({
-            type: Menu,
-            options: this.modes,
-            callback: this.onSelectMode.bind(this)
-        });
-
-        this.dirMenu = this.add({
-            type: Menu,
-            callback: this.onSelectDir.bind(this)
-        });
-
-        this.sampleMenu = this.add({
-            type: Menu,
-            callback: this.onSelectSample.bind(this)
-        });
-
-        this._samples = {};
-    },
-
     samples: function(samples) {
-        samples.each(function(sample) {
-            var name = sample.split('/');
-            var dir = name[0];
-            var file = name[1];
-            
-            if (this._samples[dir] === undefined) {
-                this._samples[dir] = [];
-            }
-
-            this._samples[dir].push(file);
-        }, this);
-        
-        for (var dir in this._samples) {
-            this.dirMenu.addButton({
-                type: MenuButton,
-                value: dir
-            });
-        }
-    },
-
-    draw: function() {
-        var y = 0;
-        var width = this.width();
-
-        this.drawMenus(0, y);
-
-        y += this.typeMenu.height() + 10;
-
-        this.clipswitcher.extent(0, y, width, 20).draw();
-
-        y += this.clipswitcher.height() + 10;
-
-        this.sequencer.extent(0, y, width, 100).draw();
-
-        y += this.sequencer.height() + 10;
-
-        this.sliders.extent(0, y, width, 100).draw();
-
-        y += this.sliders.height() + 10;
-
-        this.buttons.extent(0, y, width, 30).draw();
-
-        y += this.buttons.height() + 10;
-        
-        this.drawAutomations(0, y, width, 50);
-    },
-
-    drawMenus: function(x, y) {
-        var w = 70;
-        var h = 20;
-
-        this.typeMenu.extent(x, y, w, h).draw();
-
-        x += w + 10;
-
-        this.modeMenu.extent(x, y, w, h).draw();
-
-        x += w + 10;
-
-        this.dirMenu.extent(x, y, w, h).draw();
-
-        x += w + 10;
-
-        this.sampleMenu.extent(x, y, w, h).draw();
-    },
-
-    drawAutomations: function(x, y, w, h) {
-        this.automations.each(function(automation, i) {
-            automation.extent(x, y, w, h).draw();
-            y += h;
-        }, this);
+        this.dirMenu.samples(samples)
     },
 
     getSlider: function(key) {
@@ -187,23 +96,6 @@ var Instrument = new Class({
             }    
         }
         return null;
-    },
-
-    onSelectType: function(type) {
-        this.send('/type', 's', type);
-    },
-
-    onSelectDir: function(dir) {
-        this.dir = dir;
-        this.sampleMenu.options(this._samples[dir]);
-    },
-
-    onSelectSample: function(sample) {
-        this.send('/sample', 's', this.dir + '/' + sample);
-    },
-
-    onSelectMode: function(mode) {
-        this.send('/mode', 's', mode);
     },
 
     type: function(type) {
@@ -235,23 +127,24 @@ var Instrument = new Class({
             step: step
         });
 
-        this.buttons.add({
-            type: ToggleButton,
-            instrument: this,
-            label: key,
-            callback: this.onTouchButton.bind(this)
-        });
+        // this.buttons.add({
+        //     type: ToggleButton,
+        //     instrument: this,
+        //     label: key,
+        //     callback: this.onTouchButton.bind(this)
+        // });
 
-        var automation = this.add({
-            type: Automation,
-            instrument: this,
-            key: key, 
-            min: min, 
-            max: max, 
-            step: step
-        });
+        // var automation = this.add({
+        //     type: Automation,
+        //     instrument: this,
+        //     marginTop: 10,
+        //     key: key, 
+        //     min: min, 
+        //     max: max, 
+        //     step: step
+        // });
 
-        this.automations.push(automation);
+        // this.automations.push(automation);
     },
 
     slider: function(key, min, max, step) {
@@ -288,7 +181,9 @@ var Instrument = new Class({
     automation: function(key, index, value) {
         var automation = this.getAutomation(key);
         
-        if (automation) automation.setStep(index, value);
+        if (automation) {
+            automation.setStep(index, value);
+        }
     },
 
     clock: function(clock, bpm) {

@@ -75,17 +75,13 @@ var Sequencer = new Class({
         }
     },
 
-    clock: function(index) {   
-        for (var i = 0; i < 16; i++) {
-            this._clocks[i].setAttribute('r', 1);
-        }
+    clock: function(index) {
+        var r = this.radius / 8;
 
-        this._clocks[(index + 13) % 16].setAttribute('r', 2);
-        this._clocks[(index + 14) % 16].setAttribute('r', 3);
-        this._clocks[(index + 15) % 16].setAttribute('r', 4);
-        this._clocks[(index + 16) % 16].setAttribute('r', 5);
-
-        // this.svg.animate.start(this._clocks[index], { r: 1 }, 500);
+        this._clocks[(index + 13) % 16].setAttribute('r', r * 1);
+        this._clocks[(index + 14) % 16].setAttribute('r', r * 2);
+        this._clocks[(index + 15) % 16].setAttribute('r', r * 3);
+        this._clocks[(index + 16) % 16].setAttribute('r', r * 4);
     },
 
     drawSteps: function() {

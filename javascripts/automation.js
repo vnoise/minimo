@@ -87,9 +87,6 @@ var Automation = new Class({
             this.clocks[i].setAttribute('opacity', i % 4 == 0 ? 0.1 : 0);
         }
 
-        // this.clocks[(index + 13) % 16].setAttribute('opacity', 0.1);
-        // this.clocks[(index + 14) % 16].setAttribute('opacity', 0.15);
-        // this.clocks[(index + 15) % 16].setAttribute('opacity', 0.2);
         this.clocks[(index + 16) % 16].setAttribute('opacity', 0.3);
     }
 });

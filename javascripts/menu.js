@@ -6,6 +6,7 @@ var Menu = new Class({
         this._buttons = [];
         this._options = [];
         this.label = "";
+        this.on('select', this.onSelect.bind(this));
 
         Widget.prototype.initialize.call(this, options);
     },
@@ -48,7 +49,9 @@ var Menu = new Class({
             button.y = y;
             button.width = w;
             button.height = h;
-            button.callback = this.onButtonClick.bind(this);
+            button.on = {
+                click: this.onButtonClick.bind(this)
+            };
             this._buttons[i] = this.root().add(button);
             this._buttons[i].draw();
         }
@@ -75,11 +78,12 @@ var Menu = new Class({
     },
 
     onButtonClick: function(value) {
-        if (this.callback) {
-            this.hide();
-            this.setLabel(value);
-            this.callback(value);
-        }
+        this.hide();
+        this.setLabel(value);
+        this.fireEvent('select', value);
+    },
+
+    onSelect: function(value) {
     }
 });
 
@@ -99,7 +103,7 @@ var MenuButton = new Class({
     },
 
     onTouchDown: function(event) {
-        this.callback(this.value);
+        this.fireEvent('click', this.value);
         return true;
     }
 });

@@ -1,9 +1,7 @@
-body {
+svg {
     background: #444;
     font-family: helvetica;
-    font-size: 10px;
-    cursor: hand;
-    margin: 0px;
+    font-size: 1em;
 }
 
 .clipswitcher {
