@@ -2,6 +2,8 @@ var Automation = new Class({
     Extends: Widget,
 
     initialize: function (options) {
+        this.clockColor = '#fff';
+
         Widget.prototype.initialize.call(this, options);
 
         this.pattern = [];
@@ -15,8 +17,8 @@ var Automation = new Class({
     },
 
     drawCanvas: function(context) {
-        var w = this.width();
-        var h = this.height();
+        var w = this.width;
+        var h = this.height;
 
         this.stepx = w / 16;
 
@@ -24,25 +26,25 @@ var Automation = new Class({
             var value = this.pattern[i];
             var x = i * this.stepx;
 
-            context.fillStyle = "#00f";        
+            context.fillStyle = this.bgColor;        
             context.fillRect(x, 0, this.stepx, h);
-            context.fillStyle = "#f00";
+            context.fillStyle = this.fgColor;
             context.fillRect(x, h - value * h, this.stepx, value * h);
 
             if (this._clock == i) {
-                context.fillStyle = "#0f0";
-                context.fillRect(i * this.stepx, 0, 2, h);
+                context.fillStyle = this.clockColor;
+                context.fillRect(i * this.stepx, h - 5, 1, 5);
             }
         }
 
-        context.font = "20px Helvetica";
-        context.fillStyle = "#f00";
-        context.fillText(this.key, 5, h / 2);
+        context.font = (this.height / 5) + "px Arial";
+        context.fillStyle = "#fff";
+        context.fillText(this.key, 5, 20);
     },
 
     handleEvent: function(event) {
         var index = Math.floor(event.localX / this.stepx);
-        var value = Math.max(0, Math.min(1, 1 - event.localY / this.height()));
+        var value = Math.max(0, Math.min(1, 1 - event.localY / this.height));
         var step = this.step / (this.max - this.min);
 
         value = Math.floor(value / step) * step;

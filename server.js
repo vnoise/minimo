@@ -78,7 +78,7 @@ InstrumentManager.prototype = {
 };
 
 var instruments = new InstrumentManager();
-var numInstruments = 2;
+var numInstruments = 4;
 
 setTimeout(function() {
     for (var i = 0; i < numInstruments; i++) {
@@ -92,31 +92,6 @@ function index(req, res) {
     fs.readFile("index.svg", function(err, file) {
         res.end(file);
     });
-}
-
-function samples(req, res) {
-    res.writeHead(200, {'Content-Type': 'application/json'});
-    var instrument = req.url.split('/')[2];
-
-    res.end(JSON.stringify(samples));
-}
-
-function loadSamples(instrument) {
-    var dirs = fs.readdirSync("samples");
-    var samples = [];
-
-    for (var d in dirs) {
-        var files = fs.readdirSync('samples/' + dirs[d]);
-        for (var i in files) {
-            var msg = new _osc.Message('/sample');
-            var sample = dirs[d] + '/' + files[i];
-            msg.append(sample, 's');
-            instruments.send(instrument, msg);
-            samples.push(sample);
-        }
-    }       
-
-    return samples;
 }
 
 function file(req, res) {
@@ -148,6 +123,14 @@ var chuck = spawn('chuck',
                    './chuck/Instrument.ck', 
                    './chuck/seq.ck']);
 
+
+chuck.stderr.on('data', function (data) {
+    console.log(data.toString());
+});
+
+chuck.stdout.on('data', function (data) {
+    console.log(data.toString());
+});
 
 // var chuck = spawn('chuck', ['-s', 'test.ck', 'stream.ck']);
 // var lame = spawn('lame', ['-', '-']);
@@ -201,7 +184,6 @@ var chuck = spawn('chuck',
 
 var routes = [
     // [/^stream/, stream],
-    [/^samples/, samples],
     [/^$/, index],
     [/.*/, file]
 ];
@@ -234,13 +216,7 @@ io.on('connection', function(client) {
     });
 
     client.on('message', function(message) {
-        if (message.address == "/update") {
-            client.send({
-                instrument: message.instrument,
-                address: '/samples',
-                args: [loadSamples()]
-            });
-        }
+        // console.log(message);
 
         var types = message.types;
         var args = message.args;

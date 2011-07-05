@@ -12,7 +12,7 @@ var ClipSwitcher = new Class({
                 active: i == 0,
                 type: ClipButton,
                 label: i.toString(),
-                marginRight: 5,
+                marginRight: 1,
                 clip: i,
                 on: {
                     click: this.onButtonClick.bind(this)
@@ -37,14 +37,11 @@ var ClipSwitcher = new Class({
 
 
 var ClipButton = new Class({
-    Extends: Widget,
+    Extends: Button,
 
     drawCanvas: function(context) {
-        context.font = "20px Helvetica";
-        context.fillStyle = this.active ? "#f00" : "#009";
-        context.fillRect(0, 0, this.width(), this.height());
-        context.fillStyle = "#fff";
-        context.fillText(this.label, this.width() / 2 - 5, this.height() / 2 + 5);
+        this.drawBackground(context, this.active ? this.fgColor : this.bgColor);
+        this.drawLabel(context);
     },
 
     onTouchDown: function(event) {

@@ -4,27 +4,30 @@ public class Instrument {
 
     int clip;
     int pitch;
+    float detune;
+    int pitch1;
+    int pitch2;
     int position;
     float bpm;
     int clock;
     dur beat;
     string modeName;
-    string sampleName;
-    string type;
+    string type1;
+    string type2;
     int recvPort;
     int sendPort;
     
     Mode mode;
-    SinOsc sinus;
+    SinOsc sinus1;
     SinOsc sinus2;
-    TriOsc tri;
+    TriOsc tri1;
     TriOsc tri2;
-    SawOsc saw;
+    SawOsc saw1;
     SawOsc saw2;
-    PulseOsc pulse;
+    PulseOsc pulse1;
     PulseOsc pulse2;
-    Noise noise;    
-    SndBuf sample;
+    Noise noise1;
+    Noise noise2;
 
     LPF lowpass;
     ADSR adsr;    
@@ -39,38 +42,41 @@ public class Instrument {
     Gain gain;
 
     output.compress();
-    
+
     adsr => reverbSend => reverb => output;
     adsr => delaySend   => delay => output;
     
     feedback => delay => feedback;
 
-    noise  => gain;
-    sinus  => gain;
+    noise1 => gain;
+    noise2 => gain;
+    sinus1 => gain;
     sinus2 => gain;
-    tri    => gain;
+    tri1   => gain;
     tri2   => gain;
-    saw    => gain;
+    saw1   => gain;
     saw2   => gain;
-    pulse  => gain;
+    pulse1 => gain;
     pulse2 => gain;
-    sample => gain;
     
     gain => lowpass => adsr => output;
     
     float pattern[8][16];
     Parameter @ parameters[16];
     
-    ["volume", "attack", "decay", "pwidth", "octave",
-    "pitch", "cutoff", "reso", "reverb", "delay",
+    ["volume", "attack", "decay", "sustain", "release", "pwidth", "octave",
+    "pitch", "detune", "cutoff", "reso", "reverb", "delay",
     "dtime", "fback"] @=> string parameterNames[];
 
     parameter("volume" , 0, 0, 1, 0.5, 1);
     parameter("attack" , 1, 1, 1000, 0, 0);
     parameter("decay"  , 1, 1, 1000, 100, 0);
+    parameter("sustain", 0, 0, 1, 1, 0.5);
+    parameter("release", 1, 1, 1000, 100, 0);
     parameter("pwidth" , 1, 0, 1, 0.5, 0);
     parameter("octave" , 1, 0, 6, 1, 0);
     parameter("pitch"  , 1, 0, 12, 0, 0);
+    parameter("detune" , 1, 0, 0.05, 0, 0);
     parameter("cutoff" , 0, 0.1, 1, 1, 1);
     parameter("reso"   , 0, 1, 5, 2, 0.5);
     parameter("reverb" , 0, 0, 1, 0, 0.5);
@@ -80,8 +86,8 @@ public class Instrument {
 
     receiver.event("/bpm,f")           @=> OscEvent bpmEvent;
     receiver.event("/mode,s")          @=> OscEvent modeEvent;
-    receiver.event("/type,s")          @=> OscEvent typeEvent;
-    receiver.event("/sample,s")        @=> OscEvent sampleEvent;
+    receiver.event("/type,is")         @=> OscEvent typeEvent;
+    receiver.event("/pitch,ii")        @=> OscEvent pitchEvent;
     receiver.event("/clip,i")          @=> OscEvent clipEvent;
     receiver.event("/parameter,sf")    @=> OscEvent parameterEvent;
     receiver.event("/automation,sif")  @=> OscEvent automationEvent;
@@ -105,16 +111,16 @@ public class Instrument {
         minute / bpm / 4 => beat;
         0 => clock;
 
-        0 => noise.gain;
-        0 => sinus.gain;
+        0 => noise1.gain;
+        0 => noise2.gain;
+        0 => sinus1.gain;
         0 => sinus2.gain;
-        0 => tri.gain;
+        0 => tri1.gain;
         0 => tri2.gain;
-        0 => saw.gain;
+        0 => saw1.gain;
         0 => saw2.gain;
-        0 => pulse.gain;
+        0 => pulse1.gain;
         0 => pulse2.gain;
-        0 => sample.gain;
         0 => output.gain;
 
         20000 => lowpass.freq;
@@ -128,9 +134,11 @@ public class Instrument {
         
         adsr.set(0::ms, 100::ms, 0.0, 0::ms);
 
-        setType("saw");
-        setMode("chromatic");
-        "" => sampleName;
+        0 => pitch1;
+        0 => pitch2;
+        setType1("sinus");
+        setType2("sinus");
+        setMode("phrygian");
         
         for (0 => int i; i < 8; i++) {
             for (0 => int j; j < 16; j++) {
@@ -146,56 +154,36 @@ public class Instrument {
     public void play(int pos) {
         pos => position;
         
-        read("volume") * 0.5    => output.gain;
+        read("volume") * 0.2    => output.gain;
         read("attack")::ms      => adsr.attackTime;
         read("decay")::ms       => adsr.decayTime;
+        read("release")::ms     => adsr.releaseTime;
+        read("sustain")         => adsr.sustainLevel;
         read("reso")            => lowpass.Q;
-        read("pwidth")          => pulse.width;
+        read("pwidth")          => pulse1.width;
         read("pwidth")          => pulse2.width;
         read("reverb")          => reverbSend.gain;
         read("delay")           => delaySend.gain;
         read("fback")           => feedback.gain;
         read("pitch") $ int     => pitch;
+        read("detune")          => detune;
         read("volume")          => output.gain;
 
-        Std.mtof(mode.note(pitch) + 24 + read("octave") * 12) =>
-        pulse.freq => sinus.freq => tri.freq => saw.freq;
-
-        if (type == "sinus_oct") {
-            sinus.freq() * 2 => sinus2.freq;
-        }
-        else if (type == "sinus_fifth") {
-            sinus.freq() * 1.5 => sinus2.freq;
-        }
-        else if (type == "saw_oct") {
-            saw.freq() * 2 => saw2.freq;
-        }
-        else if (type == "saw_fifth") {
-            saw.freq() * 1.5 => saw2.freq;
-        }
-        else if (type == "tri_oct") {
-            tri.freq() * 2 => tri2.freq;
-        }
-        else if (type == "tri_fifth") {
-            tri.freq() * 1.5 => tri2.freq;
-        }
-        else if (type == "pulse_oct") {
-            pulse.freq() * 2 => pulse2.freq;
-        }
-        else if (type == "pulse_fifth") {
-            pulse.freq() * 1.5 => pulse2.freq;
-        }
-
-        pitch / 12 + read("octave") => sample.rate;
+        Std.mtof(mode.note(pitch) + pitch1 + 24 + read("octave") * 12) * (1 + detune) =>
+        sinus1.freq => tri1.freq => saw1.freq => pulse1.freq;
+        
+        Std.mtof(mode.note(pitch) + pitch2 + 24 + read("octave") * 12) * (1 - detune) =>
+        sinus2.freq => tri2.freq => saw2.freq => pulse2.freq;
         
         Math.pow(read("cutoff"), 4) * 20000 => lowpass.freq;
                 
         (beat * 16) / Math.pow(2, read("dtime")) => delay.delay;        
 
         if (pattern[clip][position] == 1) {
-            adsr.keyOff();
             adsr.keyOn();
-            0 => sample.pos;
+        }
+        else {
+            adsr.keyOff();
         }
     }
 
@@ -204,56 +192,47 @@ public class Instrument {
         mode.set(name);
     }
 
-    public void setType(string t) {
-        t => type;
+    public void setType1(string t) {
+        t => type1;
         
-        0 => sinus.gain => sinus2.gain =>
-        tri.gain => tri.gain =>
-        pulse.gain => pulse2.gain =>
-        saw.gain => sample.gain => noise.gain;
+        0 => sinus1.gain => tri1.gain => pulse1.gain => saw1.gain => noise1.gain;
 
-        if (type == "sinus" || type == "sinus_noise") {
-            1 => sinus.gain;
-        }       
+        if (type1 == "sinus") {
+            0.5 => sinus1.gain;
+        }
+        else if (type1 == "pulse") {
+            0.5 => pulse1.gain;
+        }
+        else if (type1 == "saw") {
+            0.5 => saw1.gain;
+        }
+        else if (type1 == "tri") {
+            0.5 => tri1.gain;
+        }
+        else if (type1 == "noise") {
+            0.5 => noise1.gain;
+        }
+    }
 
-        if (type == "sinus_oct" || type == "sinus_fifth") {
-            0.5 => sinus.gain;
+    public void setType2(string t) {
+        t => type2;
+        
+        0 => sinus2.gain => tri2.gain => pulse2.gain => saw2.gain => noise2.gain;
+
+        if (type2 == "sinus") {
             0.5 => sinus2.gain;
         }
-
-        if (type == "pulse" || type == "pulse_saw" || type == "pulse_tri" || type == "pulse_noise") {
-            0.5 => pulse.gain;
-        }
-
-        if (type == "pulse_oct" || type == "pulse_fifth") {
-            0.5 => pulse.gain;
+        else if (type2 == "pulse") {
             0.5 => pulse2.gain;
         }
-
-        if (type == "saw" || type == "pulse_saw" || type == "saw_noise") {
-            0.5 => saw.gain;
-        }
-
-        if (type == "saw_oct" || type == "saw_fifth") {
-            0.5 => saw.gain;
+        else if (type2 == "saw") {
             0.5 => saw2.gain;
         }
-
-        if (type == "tri" || type == "pulse_tri" || type == "tri_noise") {
-            0.5 => tri.gain;
-        }
-
-        if (type == "tri_oct" || type == "tri_fifth") {
-            0.5 => tri.gain;
+        else if (type2 == "tri") {
             0.5 => tri2.gain;
         }
-
-        if (type == "noise" || type == "sinus_noise" || type == "pulse_noise" || type == "saw_noise" || type == "tri_noise") {
-            0.5 => noise.gain;
-        }
-
-        if (type == "sample") {
-            1 => sample.gain;
+        else if (type2 == "noise") {
+            0.5 => noise2.gain;
         }
     }
 
@@ -308,23 +287,37 @@ public class Instrument {
         while (true) {
             typeEvent => now;            
             while (typeEvent.nextMsg() != 0) {
-                typeEvent.getString() => string key;                    
-                setType(key);                    
+                typeEvent.getInt() => int i;
+                typeEvent.getString() => string key;
+
+                if (i == 1) {
+                    setType1(key);
+                }
+                else if (i == 2) {
+                    setType2(key);
+                }
                 // <<< "type", key >>>;
             }
         }
     }
     
-    public void receiveSample() {
+    public void receivePitch() {
         while (true) {
-            sampleEvent => now;            
-            while (sampleEvent.nextMsg() != 0) {
-                sampleEvent.getString() => sampleName;                    
-                sample.read("./samples/" + sampleName);
-                // <<< "sample", sampleName >>>;
+            pitchEvent => now;            
+            while (pitchEvent.nextMsg() != 0) {
+                pitchEvent.getInt() => int i;
+                pitchEvent.getInt() => int p;
+                
+                if (i == 1) {
+                    p => pitch1;
+                }
+                else if (i == 2) {
+                    p => pitch2;
+                }
+                // <<< "type", key >>>;
             }
         }
-    }   
+    }
 
     public void receiveClip() {
         while (true) {
@@ -379,7 +372,7 @@ public class Instrument {
         spork ~ receiveBpm();
         spork ~ receiveMode();
         spork ~ receiveType();
-        spork ~ receiveSample();
+        spork ~ receivePitch();
         spork ~ receiveClip();
         spork ~ receiveParameter();
         spork ~ receiveAutomation();
@@ -422,11 +415,21 @@ public class Instrument {
         sender.startMsg("/mode,s");
         sender.addString(modeName);
         
-        sender.startMsg("/type,s");
-        sender.addString(type);
+        sender.startMsg("/type,is");
+        sender.addInt(1);
+        sender.addString(type1);
 
-        sender.startMsg("/sample,s");
-        sender.addString(sampleName);
+        sender.startMsg("/type,is");
+        sender.addInt(2);
+        sender.addString(type2);
+        
+        sender.startMsg("/pitch,ii");
+        sender.addInt(1);
+        sender.addInt(pitch1);
+
+        sender.startMsg("/pitch,ii");
+        sender.addInt(2);
+        sender.addInt(pitch2);
 
         sender.startMsg("/clip,i");
         sender.addInt(clip);

@@ -2,35 +2,19 @@ var Controller = new Class({
 
     initialize: function() {
         this.instruments = [];
-        this.width = 800;
-        this.height = 500;
-        this.numInstruments = 1;
+        this.numInstruments = 4;
 
         this.canvas = document.getElementById('canvas');
 
         this.root = new Widget({
-            layout: 'horizontal',
-            y: 50,
-            width: this.width,
-            height: this.height
+            layout: 'horizontal'
         });
-        
-        this.touchtracker = new TouchTracker(this);
 
         for (var i = 0; i < this.numInstruments; i++) {
             this.create(i);
         }
 
-        setInterval(this.onTick.bind(this), 50);
-
         this.connect();
-    },
-
-    onTick: function() {
-        var ctx = this.canvas.getContext("2d");
-        ctx.clearRect(0, 0, this.width, this.height);
-        this.root.doLayout();
-        this.root.draw(ctx);
     },
 
     send: function(message) {
@@ -53,7 +37,7 @@ var Controller = new Class({
 
     onMessage: function(message) {
         // if (message.address != '/clock') {
-        //     console.log(message);
+        // console.log(message);
         // }
 
         var instrument = this.instruments[message.instrument];
@@ -73,6 +57,7 @@ var Controller = new Class({
     create: function(index) {
         this.instruments[index] = this.root.add({
             type: Instrument,
+            marginRight: 5,
             controller: this,
             index: index
         });

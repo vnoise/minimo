@@ -7,18 +7,29 @@ var Widget = new Class({
     initialize: function(options) {
         this.children = [];
         this.id = WidgetId++;
-        this._x = 0;
-        this._y = 0;
-        this._width = 0;
-        this._height = 0;
-
+        this.x = 0;
+        this.y = 0;
+        this.width = 0;
+        this.height = 0;
+        this.visible = true;
+        this.absolute = false;
         this.marginTop = 0;
         this.marginBottom = 0;
         this.marginLeft = 0;
         this.marginRight = 0;
+        this.bgColor = '#0E1B1F';
+        this.fgColor = '#4D95AB';
+        this.color1 = "#172C33";
+        this.color2 = "#193038";
+        this.color3 = "#305C6B";
+
 
         this.sizeHint = 1; 
         this.set(options);
+
+        if (!this._parent) {
+            this.initCanvas();
+        }
     },
 
     on: function(event, callback) {
@@ -29,42 +40,6 @@ var Widget = new Class({
             for (var name in event) {
                 this.addEvent(name, event[name]);               
             }
-        }
-    },
-
-    x: function(value) {
-        if (value === undefined) {
-            return this._x;
-        }
-        else {
-            this._x = value;
-        }
-    },
-
-    y: function(value) {
-        if (value === undefined) {
-            return this._y;
-        }
-        else {
-            this._y = value;
-        }
-    },
-
-    width: function(value) {
-        if (value === undefined) {
-            return this._width;
-        }
-        else {
-            this._width = value;
-        }
-    },
-
-    height: function(value) {
-        if (value === undefined) {
-            return this._height;
-        }
-        else {
-            this._height = value;
         }
     },
 
@@ -90,6 +65,10 @@ var Widget = new Class({
             break;
         }
 
+        this.layoutChildren();
+    },
+
+    layoutChildren: function() {
         this.children.each(function(child) {
             child.doLayout();
         });
@@ -99,7 +78,9 @@ var Widget = new Class({
         var size = 0;
 
         this.children.each(function(child) {
-            size += child.sizeHint;
+            if (!child.absolute) {
+                size += child.sizeHint;
+            }
         });
 
         return size;
@@ -109,7 +90,9 @@ var Widget = new Class({
         var margin = 0;
 
         this.children.each(function(child) {
-            margin += child.marginTop + child.marginBottom;
+            if (!child.absolute) {
+                margin += child.marginTop + child.marginBottom;
+            }
         });
 
         return margin;
@@ -119,7 +102,9 @@ var Widget = new Class({
         var margin = 0;
 
         this.children.each(function(child) {
-            margin += child.marginLeft + child.marginRight;
+            if (!child.absolute) {
+                margin += child.marginLeft + child.marginRight;
+            }
         });
 
         return margin;
@@ -129,47 +114,83 @@ var Widget = new Class({
         var x = 0;
         var y = 0;
         var width = 0;
-        var w = (this.width() - this.sumHorizontalMargins()) / this.sumSizeHints();
-        var h = this.height();
+        var w = (this.width - this.sumHorizontalMargins()) / this.sumSizeHints();
+        var h = this.height;
 
         this.children.each(function(child) {
-            x += child.marginLeft;
-            child.extent(x, y, w * child.sizeHint, h);
-            x += child.width();
-            x += child.marginRight;
+            if (!child.absolute) {
+                x += child.marginLeft;
+                child.extent(x, y, w * child.sizeHint, h);
+                x += child.width;
+                x += child.marginRight;
+            }
         });
     },
 
     doVerticalLayout: function() {
         var x = 0;
         var y = 0;
-        var w = this.width();
-        var h = (this.height() - this.sumVerticalMargins()) / this.sumSizeHints();
+        var w = this.width;
+        var h = (this.height - this.sumVerticalMargins()) / this.sumSizeHints();
 
         this.children.each(function(child) {
-            y += child.marginTop;
-            child.extent(x, y, w, h * child.sizeHint);
-            y += child.height();
-            y += child.marginBottom;
+            if (!child.absolute) {
+                y += child.marginTop;
+                child.extent(x, y, w, h * child.sizeHint);
+                y += child.height;
+                y += child.marginBottom;
+            }
         });
+    },
+
+    initCanvas: function() {
+        this.canvas = document.createElement('canvas');
+        this.canvas.setAttribute("width", window.innerWidth);
+        this.canvas.setAttribute("height", window.innerHeight);
+        this.touchtracker = new TouchTracker(this);
+
+        document.body.appendChild(this.canvas);
+
+        setInterval(function() {
+            this.draw()     
+        }.bind(this), 50);
     },
 
     drawCanvas: function(context) {
     },
 
     draw: function(context) {
-        context.save();
-        context.translate(this.x(), this.y());
+        if (!this.visible) {
+            return;
+        }
 
-        this.drawCanvas(context);
-        this.children.each(function(child) {
-            child.draw(context);
-        });
+        if (context) {
+            context.save();
+            context.translate(this.x, this.y);
 
-        context.restore();
+            this.drawChildren(context);
+            this.drawCanvas(context);
+
+            context.restore();
+        }
+        else {
+            this.canvas.setAttribute("width", window.innerWidth);
+            this.canvas.setAttribute("height", window.innerHeight);
+            this.width = window.innerWidth;
+            this.height = window.innerHeight;
+            this.doLayout();
+
+            context = this.canvas.getContext("2d");
+            context.clearRect(0, 0, this.width, this.height);
+
+            this.drawChildren(context);
+        }
     },
 
     drawChildren: function(context) {
+        this.children.each(function(child) {
+            child.draw(context);
+        });
     },
 
     redraw: function() {
@@ -192,26 +213,30 @@ var Widget = new Class({
         }
     },
 
+    listen: function() {
+        this.controller.addEvent.apply(this.controller, arguments);
+    },
+
+    send: function() {
+        this.controller.send.apply(this.controller, arguments);
+    },
+
     add: function(options) {
         var type = options.type || Widget;
 
-        options._parent = this;
+        if (!options.controller) {
+            options.controller = this.controller;
+        }
+
+        if (!options._parent) {
+            options._parent = this;
+        }
 
         var child = new type.prototype.$constructor(options);
 
         this.children.push(child);
 
         return child;
-    },
-
-    append: function(widget) {
-        this.children.push(widget);
-
-        if (widget._parent) {
-            widget._parent.remove(widget);
-        }
-
-        widget._parent = this;
     },
 
     find: function(id) {
@@ -239,44 +264,37 @@ var Widget = new Class({
         return null;
     },
 
-    updateTransform: function() {
-        
-    },
-
     pos: function(x, y) {
         if (x === undefined) {
-            return [this._x, this._y];
+            return [this.x, this.y];
         }
         else {
-            this._x = x;
-            this._y = y;
-            this.updateTransform();
+            this.x = x;
+            this.y = y;
             return this;
         }
     },
 
     extent: function(x, y, w, h) {
         if (x === undefined) {
-            return [this._x, this._y, this._width, this._height]; 
+            return [this.x, this.y, this.width, this.height]; 
         }
         else {
-            this._x = x;
-            this._y = y;
-            this._width = w;
-            this._height = h;
-            this.updateTransform();
+            this.x = x;
+            this.y = y;
+            this.width = w;
+            this.height = h;
             return this;
         }
     },
 
     size: function(w, h) {
         if (w === undefined) {
-            return [this._width, this._height];
+            return [this.width, this.height];
         }
         else {
-            this._width = w;
-            this._height = h;
-            this.updateTransform();
+            this.width = w;
+            this.height = h;
             return this;
         }
     },
@@ -292,19 +310,19 @@ var Widget = new Class({
 
     pageX: function() {
         if (this._parent) {
-            return this._parent.pageX() + this.x();
+            return this._parent.pageX() + this.x;
         }
         else {
-            return this.x();
+            return this.x;
         }
     },
 
     pageY: function() {
         if (this._parent) {
-            return this._parent.pageY() + this.y();
+            return this._parent.pageY() + this.y;
         }
         else {
-            return this.y();
+            return this.y;
         }
     }
 

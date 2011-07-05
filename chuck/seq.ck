@@ -3,9 +3,13 @@ Instrument @ instruments[16];
 Instrument @ instrument;
 int index;
 
-Dyno master => dac;
-master.limit();
+Dyno master => Dyno limiter => dac;
+
+master.compress();
+limiter.limit();
+
 0.8 => master.gain;
+0.8 => limiter.gain;
 
 9998 => recv.port;
 recv.listen();

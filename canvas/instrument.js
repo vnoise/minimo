@@ -7,77 +7,87 @@ var Instrument = new Class({
         this.bpm = 120;
         this.layout = 'vertical';
 
-        // this.initMenus();
+        this.initMenus();
 
         this.clipswitcher = this.add({ 
             type: ClipSwitcher, 
             sizeHint: 0.5,
-            marginTop: 10,
+            marginTop: 5,
             instrument: this
         });
 
         this.sequencer = this.add({ 
             type: Sequencer, 
-            sizeHint: 2,
-            marginTop: 10,
+            sizeHint: 1,
+            marginTop: 5,
             instrument: this 
         });
 
         this.initSliders();
     },
 
-    // initMenus: function() {
-    //     this.menus = this.add({ 
-    //         layout: 'horizontal',
-    //         sizeHint: 0.2,
-    //         instrument: this 
-    //     });
+    initMenus: function() {
+        this.menus = this.add({ 
+            layout: 'horizontal',
+            sizeHint: 0.5,
+            instrument: this 
+        });
 
-    //     this.typeMenu = this.menus.add({
-    //         type: TypeMenu,
-    //         instrument: this
-    //     });
+        this.type1Menu = this.menus.add({
+            type: TypeMenu,
+            instrument: this,
+            index: 1
+        });
 
-    //     this.modeMenu = this.menus.add({
-    //         type: ModeMenu,
-    //         instrument: this
-    //     });
+        this.pitch1Menu = this.menus.add({
+            type: PitchMenu,
+            instrument: this,
+            index: 1
+        });
 
-    //     this.dirMenu = this.menus.add({
-    //         type: SampleDirMenu,
-    //         instrument: this
-    //     });
+        this.type2Menu = this.menus.add({
+            type: TypeMenu,
+            instrument: this,
+            index: 2
+        });
 
-    //     this.sampleMenu = this.menus.add({
-    //         type: SampleMenu,
-    //         instrument: this
-    //     });
+        this.pitch2Menu = this.menus.add({
+            type: PitchMenu,
+            instrument: this,
+            index: 2
+        });
 
-    //     this.dirMenu.sampleMenu = this.sampleMenu;
-    // },
+        this.modeMenu = this.menus.add({
+            type: ModeMenu,
+            instrument: this
+        });
+    },
 
     initSliders: function() {
         this.sliders = this.add({ 
             layout: 'horizontal',
             sizeHint: 2,
-            marginTop: 10,
+            marginTop: 5,
             instrument: this 
         });
 
         this.automations = [];
 
-        this.addSlider('volume'    , 0, 1, 0.01);
-        this.addSlider('octave'    , 0, 6, 1);
-        this.addSlider('pitch'     , 0, 12, 1);
-        this.addSlider('pwidth'    , 0, 1, 0.01);
-        this.addSlider('cutoff'    , 0.1, 1, 0.01);
-        this.addSlider('reso'      , 1, 5, 0.01);
-        this.addSlider('attack'    , 0, 1000, 10);
-        this.addSlider('decay'     , 0, 1000, 10);
-        this.addSlider('reverb'    , 0, 0.5, 0.005);
-        this.addSlider('delay'     , 0, 1, 0.01);
-        this.addSlider('dtime'     , 0, 8, 1);
-        this.addSlider('fback'     , 0, 1, 0.01);
+        this.addSlider(this.color1, 'volume'    , 0, 1, 0.01);
+        this.addSlider(this.color1, 'octave'    , 0, 6, 1);
+        this.addSlider(this.color1, 'pitch'     , 0, 12, 1);
+        this.addSlider(this.color1, 'detune'    , 0, 0.05, 0.0005);
+        this.addSlider(this.color1, 'pwidth'    , 0, 1, 0.01);
+        this.addSlider(this.color1, 'cutoff'    , 0.1, 1, 0.01);
+        this.addSlider(this.color1, 'reso'      , 1, 5, 0.01);
+        this.addSlider(this.color2, 'attack'    , 0, 1000, 10);
+        this.addSlider(this.color2, 'decay'     , 0, 1000, 10);
+        this.addSlider(this.color2, 'sustain'   , 0, 1, 0.01);
+        this.addSlider(this.color2, 'release'   , 0, 1000, 10);
+        this.addSlider(this.color3, 'reverb'    , 0, 0.5, 0.005);
+        this.addSlider(this.color3, 'delay'     , 0, 1, 0.01);
+        this.addSlider(this.color3, 'dtime'     , 0, 8, 1);
+        this.addSlider(this.color3, 'fback'     , 0, 1, 0.01);
     },
 
     clock: function(clock, bpm) {
@@ -95,10 +105,6 @@ var Instrument = new Class({
         this.clipswitcher.clip(clip);
     },
 
-    // samples: function(samples) {
-    //     this.dirMenu.samples(samples)
-    // },
-
     getSlider: function(key) {
         return this.sliders.child(key);
     },
@@ -112,45 +118,52 @@ var Instrument = new Class({
         return null;
     },
 
-    // type: function(type) {
-    //     this.typeMenu.setLabel(type);
-    // },
+    type: function(index, type) {
+        if (index == 1) {
+            this.type1Menu.value(type);
+        }
+        if (index == 2) {
+            this.type2Menu.value(type);
+        }
+    },
 
-    // sample: function(sample) {
-    //     var name = sample.split('/');
-    //     this.dir = name[0];
-    //     this.dirMenu.setLabel(name[0]);
-    //     this.sampleMenu.setLabel(name[1]);
-    // },
+    pitch: function(index, type) {
+        if (index == 1) {
+            this.pitch1Menu.value(type);
+        }
+        if (index == 2) {
+            this.pitch2Menu.value(type);
+        }
+    },
 
-    // mode: function(mode) {
-    //     this.modeMenu.setLabel(mode);
-    // },
+    mode: function(mode) {
+        this.modeMenu.value(mode);
+    },
 
-    addSlider: function(key, min, max, step) {
+    addSlider: function(color, key, min, max, step) {
         this.sliders.add({
             type: Slider,
+            fgColor: color,
             instrument: this,
-            marginRight: 10,
+            label: key,
             key: key,
             min: min,
             max: max,
             step: step
         });
 
-        if (this.children.length < 8) {
-            var automation = this.add({
-                type: Automation,
-                instrument: this,
-                marginTop: 10,
-                key: key, 
-                min: min, 
-                max: max, 
-                step: step
-            });
+        var automation = this.add({
+            type: Automation,
+            fgColor: color,
+            instrument: this,
+            marginTop: 5,
+            key: key, 
+            min: min, 
+            max: max, 
+            step: step
+        });
 
-            this.automations.push(automation);
-        }
+        this.automations.push(automation);
     },
     
     pattern: function(clip, index, value) {
@@ -160,7 +173,7 @@ var Instrument = new Class({
     parameter: function(key, value) {
         var slider = this.getSlider(key);
 
-        if (slider) slider.setValue(value);
+        if (slider) slider.value(value);
     },
 
     automation: function(key, index, value) {
@@ -188,7 +201,7 @@ var Instrument = new Class({
             fun.apply(this, message.args);
         }
         else {
-            // console.log('action not found: ' + action);
+            console.log('action not found: ' + action);
         }
     }
 });
