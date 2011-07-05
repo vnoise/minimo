@@ -2,44 +2,61 @@ var Slider = new Class({
     Extends: Widget,
 
     initialize: function(options) {
-        this.value = 0;
+        this._value = 0;
+        this.handleSize = 20;
+        this.handlePos = 0;
+        this.lastEventTime = 0;
+        this.min = 0;
+        this.max = 1;
+        this.label = "";
+        this.fgColor = '#0b9eff';
+        this.bgColor = '#3a3637';
+        this.fontColor = '#ffffff';
+
         Widget.prototype.initialize.call(this, options);
-        this.handleWidth = 20;
     },
 
-    draw: function() {
-        this.attr('class', 'slider');
+    drawCanvas: function(context) {
+        var position = (this.height - this.handleSize) * 
+                ((this._value - this.min) / (this.max - this.min));
 
-        this.rect(0, 0, this.width(), this.height(), { rx: 5, ry: 5 });
-        this.text(2, this.height() / 2 + 5, this.key.slice(0, 5), { 'class': 'label' });
-        this.handle = this.rect(0, 0, this.width(), this.handleWidth, { 'class': 'handle', rx: 5, ry: 5 });
+        this.handlePos = this.height - this.handleSize - position;        
 
-        this.setHandlePosition();
+        context.fillStyle = this.bgColor;
+        context.fillRect(0, 0, this.width, this.height);
+
+        context.fillStyle = this.fgColor;
+        context.fillRect(0, this.handlePos, this.width, this.height-this.handlePos);//*-1);
+
+        context.rotate(-Math.PI / 2);
+        context.font = (this.height / 8) + "px Arial";
+        context.fillStyle = this.fontColor;
+        context.fillText(this.label, -this.height + 10, 20)
     },
 
-    setHandlePosition: function() {
-        var position = 
-            (this.height() - this.handleWidth) * 
-            ((this.value - this.min) / (this.max - this.min));
-
-        if (this.handle) {
-            this.handle.setAttribute('y', this.height() - this.handleWidth - position);
+    value: function(value) {
+        if (value === undefined) {
+            return this._value;
+        }
+        else {
+            this._value = Math.max(this.min, Math.min(this.max, value));
         }
     },
 
-    setValue: function(value) {
-        this.value = Math.max(this.min, Math.min(this.max, value));
-        this.setHandlePosition();
+    setValueTimed: function(value) {
+        if (this.lastEventTime + 500 < Number(new Date())) {
+            this.value(value);
+        }
     },
 
     handleEvent: function(event) {    
-        var value = this.min + ((this.height() - event.localY) / this.height()) * (this.max - this.min);
+        var value = this.min + ((this.height - event.localY) / this.height) * (this.max - this.min);
 
-        value = Math.floor(value / this.step) * this.step;      
-
-        if (value != this.value) {
-            this.setValue(value);
-            this.instrument.send('/parameter', 'sf', this.key, this.value);
+        if (Math.abs(value - this._value) >= this.step) {
+            this.lastEventTime = Number(new Date());
+            this.value(value);
+            this.fireEvent("change", this._value);
+            this.instrument.send('/parameter', 'sf', this.key, this._value);
         }
     },
 
@@ -50,31 +67,6 @@ var Slider = new Class({
 
     onTouchMove: function(event) {
         this.handleEvent(event);
-        return true;
-    }
-});
-
-var ToggleButton = new Class({
-    Extends: Widget,
-
-    initialize: function(options) {
-        Widget.prototype.initialize.call(this, options);
-        this.active = true;
-    },
-
-    draw: function() {
-        this.attr('class', 'menu-button');
-        this.rect(0, 0, this.width(), this.height(), 0, 0);
-        this.text(5, this.height() / 2 + 4, this.label, { 'class': 'label' });
-    },
-
-    toggle: function() {
-        this.active = !this.active;
-        this.callback(this);
-    },
-
-    onTouchDown: function(event) {
-        this.toggle();
         return true;
     }
 });

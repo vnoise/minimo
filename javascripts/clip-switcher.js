@@ -9,8 +9,10 @@ var ClipSwitcher = new Class({
 
         for (var i = 0; i < 8; i++) {
             this.add({
+                active: i == 0,
                 type: ClipButton,
                 label: i.toString(),
+                marginRight: 1,
                 clip: i,
                 on: {
                     click: this.onButtonClick.bind(this)
@@ -19,38 +21,27 @@ var ClipSwitcher = new Class({
         }
     },
 
-    draw: function() {      
-        this.attr('class', 'clipswitcher');
-        Widget.prototype.draw.call(this);
-    },
-
     onButtonClick: function(clip) {
-        this.active = clip;
+        this.clip(clip);
         this.instrument.sequencer.clip(this.active);
         this.instrument.send('/clip', 'i', this.active);
-        this.drawActive();
-    },
-
-    drawActive: function() {
-        this.children.each(function(child, i) {
-            child.attr('opacity', i == this.active ? 1 : 0.5);
-        }, this);
     },
 
     clip: function(clip) {
         this.active = clip;
-        this.drawActive();
+        this.children.each(function(child, i) {
+            child.active = i == this.active;
+        }, this);
     }
 });
 
 
 var ClipButton = new Class({
-    Extends: Widget,
+    Extends: Button,
 
-    draw: function() {
-        this.attr('class', 'button');
-        this.border = this.rect(0, 0, this.width(), this.height(), 0, 0);
-        this.text(5, this.height() / 2 + 4, this.label, { 'class': 'label' });
+    drawCanvas: function(context) {
+        this.drawBackground(context, this.active ? this.fgColor : this.bgColor);
+        this.drawLabel(context);
     },
 
     onTouchDown: function(event) {

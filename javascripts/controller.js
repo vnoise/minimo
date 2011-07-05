@@ -1,38 +1,18 @@
 var Controller = new Class({
 
-    log: function(value) {
-        if (this.console.childNodes[0]) {
-            this.console.removeChild(this.console.childNodes[0]);
-        }
-        var text = document.createTextNode(value);
-        this.console.appendChild(text);
-    },
-
     initialize: function() {
         this.instruments = [];
-        this.width = 1200;
-        this.height = 600;
-        this.numInstruments = 2;
+        this.numInstruments = 4;
 
-        this.svg = document.getElementById('svg');
-        this.console = document.getElementById('console');
+        this.canvas = document.getElementById('canvas');
 
         this.root = new Widget({
-            layout: 'horizontal',
-            _svg: this.svg,
-            container: this.svg,
-            width: this.width,
-            height: this.height
+            layout: 'horizontal'
         });
-        
-        this.touchtracker = new TouchTracker(this);
 
         for (var i = 0; i < this.numInstruments; i++) {
             this.create(i);
         }
-
-        this.root.doLayout();
-        this.root.draw();
 
         this.connect();
     },
@@ -57,7 +37,7 @@ var Controller = new Class({
 
     onMessage: function(message) {
         // if (message.address != '/clock') {
-        //     console.log(message);
+        // console.log(message);
         // }
 
         var instrument = this.instruments[message.instrument];
@@ -77,9 +57,7 @@ var Controller = new Class({
     create: function(index) {
         this.instruments[index] = this.root.add({
             type: Instrument,
-            marginLeft: 10,
-            marginTop: 10,
-            marginRight: 10,
+            marginRight: 5,
             controller: this,
             index: index
         });

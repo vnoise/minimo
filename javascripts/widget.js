@@ -5,29 +5,31 @@ var Widget = new Class({
     Implements: Events,
 
     initialize: function(options) {
-        this.svgNS = 'http://www.w3.org/2000/svg';
-        this.xlinkNS = 'http://www.w3.org/1999/xlink';
-
         this.children = [];
-        this.canvas = document.createElementNS(this.svgNS, 'g');
-
-        options.container.appendChild(this.canvas);
-
         this.id = WidgetId++;
-        this._x = 0;
-        this._y = 0;
-        this._width = 0;
-        this._height = 0;
-        this._scaleX = 1;
-        this._scaleY = 1;
-
+        this.x = 0;
+        this.y = 0;
+        this.width = 0;
+        this.height = 0;
+        this.visible = true;
+        this.absolute = false;
         this.marginTop = 0;
         this.marginBottom = 0;
         this.marginLeft = 0;
         this.marginRight = 0;
+        this.bgColor = '#0E1B1F';
+        this.fgColor = '#4D95AB';
+        this.color1 = "#172C33";
+        this.color2 = "#193038";
+        this.color3 = "#305C6B";
+
 
         this.sizeHint = 1; 
         this.set(options);
+
+        if (!this._parent) {
+            this.initCanvas();
+        }
     },
 
     on: function(event, callback) {
@@ -39,110 +41,6 @@ var Widget = new Class({
                 this.addEvent(name, event[name]);               
             }
         }
-    },
-
-    x: function(value) {
-        if (value === undefined) {
-            return this._x;
-        }
-        else {
-            this._x = value;
-        }
-
-        this.updateTransform();
-    },
-
-    y: function(value) {
-        if (value === undefined) {
-            return this._y;
-        }
-        else {
-            this._y = value;
-        }
-
-        this.updateTransform();
-    },
-
-    width: function(value) {
-        if (value === undefined) {
-            return this._width;
-        }
-        else {
-            this._width = value;
-        }
-    },
-
-    height: function(value) {
-        if (value === undefined) {
-            return this._height;
-        }
-        else {
-            this._height = value;
-        }
-    },
-    
-    updateTransform: function() {
-        this.attr('transform', 
-                  'translate(' + this._x + ',' + this._y + ') ' +
-                  'scale(' + this._scaleX + ',' + this._scaleY + ')');
-    },
-
-    translate: function(x, y) {
-        if (x === undefined) {
-            var matrix = this.transform(0).matrix;
-            return [matrix.e, matrix.f];
-        }
-        else {
-            this.transform(0).setTranslate(x, y);
-            return this;            
-        }
-    },
-
-    scale: function(sx, sy) {
-        if (sx === undefined) {
-            var matrix = this.transform(1).matrix;
-            return [matrix.a, matrix.d];
-        }
-        else {
-            this.transform(1).setScale(sx, sy);
-            return this;            
-        }
-    },
-
-    animate: function(element, attributes, duration) {
-        var iteration = 0;
-        var steps = duration / 50;
-        var values = {};
-        var step = {};
-        var name;
-
-        for (name in attributes) {
-            values[name] = parseFloat(element.getAttribute(name));
-        }
-
-        for (name in attributes) {
-            step[name] = (attributes[name] - values[name]) / steps;
-        }
-
-        var interval = setInterval(function() {
-            iteration += 1;
-            
-            var value;
-            
-            if (iteration == steps) {
-                clearInterval(interval);
-                for (name in attributes) {
-                    element.setAttribute(name, attributes[name]);
-                }
-            }
-            else {
-                for (name in attributes) {
-                    value = (values[name] += step[name]);
-                    value = Math.max(0, value);
-                    element.setAttribute(name, value);
-                }            
-            }
-        }, 50);
     },
 
     onTouchDown: function(event) {
@@ -157,25 +55,6 @@ var Widget = new Class({
         return false;
     },
 
-    clear: function() {
-        var nodes = [];
-        var children = this.canvas.childNodes;
-
-        for (var i = 0; i < children.length; i++) {
-            if (children[i].tagName != 'g') {
-                nodes.push(children[i]);
-            }
-        }
-
-        for (var i = 0; i < nodes.length; i++) {        
-            this.canvas.removeChild(nodes[i]); 
-        }
-
-        for (var i = 0; i < this.children.length; i++) {
-            this.children[i].clear();
-        }
-    },
-
     doLayout: function() {
         switch (this.layout) {
         case 'horizontal': 
@@ -186,6 +65,10 @@ var Widget = new Class({
             break;
         }
 
+        this.layoutChildren();
+    },
+
+    layoutChildren: function() {
         this.children.each(function(child) {
             child.doLayout();
         });
@@ -195,7 +78,9 @@ var Widget = new Class({
         var size = 0;
 
         this.children.each(function(child) {
-            size += child.sizeHint;
+            if (!child.absolute) {
+                size += child.sizeHint;
+            }
         });
 
         return size;
@@ -205,7 +90,9 @@ var Widget = new Class({
         var margin = 0;
 
         this.children.each(function(child) {
-            margin += child.marginTop + child.marginBottom;
+            if (!child.absolute) {
+                margin += child.marginTop + child.marginBottom;
+            }
         });
 
         return margin;
@@ -215,7 +102,9 @@ var Widget = new Class({
         var margin = 0;
 
         this.children.each(function(child) {
-            margin += child.marginLeft + child.marginRight;
+            if (!child.absolute) {
+                margin += child.marginLeft + child.marginRight;
+            }
         });
 
         return margin;
@@ -225,34 +114,82 @@ var Widget = new Class({
         var x = 0;
         var y = 0;
         var width = 0;
-        var w = (this.width() - this.sumHorizontalMargins()) / this.sumSizeHints();
-        var h = this.height();
+        var w = (this.width - this.sumHorizontalMargins()) / this.sumSizeHints();
+        var h = this.height;
 
         this.children.each(function(child) {
-            x += child.marginLeft;
-            child.extent(x, y, w * child.sizeHint, h);
-            x += child.width();
-            x += child.marginRight;
+            if (!child.absolute) {
+                x += child.marginLeft;
+                child.extent(x, y, w * child.sizeHint, h);
+                x += child.width;
+                x += child.marginRight;
+            }
         });
     },
 
     doVerticalLayout: function() {
         var x = 0;
         var y = 0;
-        var w = this.width();
-        var h = (this.height() - this.sumVerticalMargins()) / this.sumSizeHints();
+        var w = this.width;
+        var h = (this.height - this.sumVerticalMargins()) / this.sumSizeHints();
 
         this.children.each(function(child) {
-            y += child.marginTop;
-            child.extent(x, y, w, h * child.sizeHint);
-            y += child.height();
-            y += child.marginBottom;
+            if (!child.absolute) {
+                y += child.marginTop;
+                child.extent(x, y, w, h * child.sizeHint);
+                y += child.height;
+                y += child.marginBottom;
+            }
         });
     },
 
-    draw: function() {      
+    initCanvas: function() {
+        this.canvas = document.createElement('canvas');
+        this.canvas.setAttribute("width", window.innerWidth);
+        this.canvas.setAttribute("height", window.innerHeight);
+        this.touchtracker = new TouchTracker(this);
+
+        document.body.appendChild(this.canvas);
+
+        setInterval(function() {
+            this.draw()     
+        }.bind(this), 50);
+    },
+
+    drawCanvas: function(context) {
+    },
+
+    draw: function(context) {
+        if (!this.visible) {
+            return;
+        }
+
+        if (context) {
+            context.save();
+            context.translate(this.x, this.y);
+
+            this.drawChildren(context);
+            this.drawCanvas(context);
+
+            context.restore();
+        }
+        else {
+            this.canvas.setAttribute("width", window.innerWidth);
+            this.canvas.setAttribute("height", window.innerHeight);
+            this.width = window.innerWidth;
+            this.height = window.innerHeight;
+            this.doLayout();
+
+            context = this.canvas.getContext("2d");
+            context.clearRect(0, 0, this.width, this.height);
+
+            this.drawChildren(context);
+        }
+    },
+
+    drawChildren: function(context) {
         this.children.each(function(child) {
-            child.draw();
+            child.draw(context);
         });
     },
 
@@ -276,29 +213,30 @@ var Widget = new Class({
         }
     },
 
+    listen: function() {
+        this.controller.addEvent.apply(this.controller, arguments);
+    },
+
+    send: function() {
+        this.controller.send.apply(this.controller, arguments);
+    },
+
     add: function(options) {
         var type = options.type || Widget;
 
-        options._svg = this._svg;
-        options._parent = this;
-        options.container = this.canvas;
+        if (!options.controller) {
+            options.controller = this.controller;
+        }
+
+        if (!options._parent) {
+            options._parent = this;
+        }
 
         var child = new type.prototype.$constructor(options);
 
         this.children.push(child);
 
         return child;
-    },
-
-    append: function(widget) {
-        this.children.push(widget);
-
-        if (widget._parent) {
-            widget._parent.remove(widget);
-        }
-
-        widget._parent = this;
-        this.canvas.appendChild(widget.canvas);
     },
 
     find: function(id) {
@@ -314,7 +252,6 @@ var Widget = new Class({
     remove: function(widget) {
         var index = this.find(widget.id);
         this.children.splice(index, 1);
-        this.canvas.removeChild(widget.canvas);
         widget._parent = null;
     },
 
@@ -327,56 +264,37 @@ var Widget = new Class({
         return null;
     },
 
-    attr: function(key, val) {
-        if (key.constructor == Object) {
-            for (var k in key) {
-                this.canvas.setAttribute(k, key[k]);
-            }
-            return this;
-        }
-
-        if (val === undefined) {
-            return this.canvas.getAttribute(key);
-        }
-        
-        this.canvas.setAttribute(key, val);
-        return this;
-    },
-
     pos: function(x, y) {
         if (x === undefined) {
-            return [this._x, this._y];
+            return [this.x, this.y];
         }
         else {
-            this._x = x;
-            this._y = y;
-            this.updateTransform();
+            this.x = x;
+            this.y = y;
             return this;
         }
     },
 
     extent: function(x, y, w, h) {
         if (x === undefined) {
-            return [this._x, this._y, this._width, this._height]; 
+            return [this.x, this.y, this.width, this.height]; 
         }
         else {
-            this._x = x;
-            this._y = y;
-            this._width = w;
-            this._height = h;
-            this.updateTransform();
+            this.x = x;
+            this.y = y;
+            this.width = w;
+            this.height = h;
             return this;
         }
     },
 
     size: function(w, h) {
         if (w === undefined) {
-            return [this._width, this._height];
+            return [this.width, this.height];
         }
         else {
-            this._width = w;
-            this._height = h;
-            this.updateTransform();
+            this.width = w;
+            this.height = h;
             return this;
         }
     },
@@ -392,84 +310,20 @@ var Widget = new Class({
 
     pageX: function() {
         if (this._parent) {
-            return this._parent.pageX() + this.x();
+            return this._parent.pageX() + this.x;
         }
         else {
-            return this.x();
+            return this.x;
         }
     },
 
     pageY: function() {
         if (this._parent) {
-            return this._parent.pageY() + this.y();
+            return this._parent.pageY() + this.y;
         }
         else {
-            return this.y();
+            return this.y;
         }
-    },
-
-    createElement: function(name, settings, additional) {
-        var node = document.createElementNS(this.svgNS, name);
-
-        for (var name in settings) {
-            node.setAttribute(name, settings[name]);
-        }
-
-        if (additional) {
-            for (var name in additional) {
-                node.setAttribute(name, additional[name]);
-            }
-        }
-
-        this.canvas.appendChild(node);
-
-        return node;
-    },
-
-    svg: function(x, y, width, height, settings) {
-        return this.createElement('svg', { x: x, y: y, width: width, height: height }, settings);
-    },
-
-    rect: function(x, y, width, height, settings) {
-        return this.createElement('rect', { x: x, y: y, width: width, height: height }, settings);
-    },
-
-    circle: function(cx, cy, r, settings) {
-        return this.createElement('circle', { cx: cx, cy: cy, r: r }, settings);
-    },
-
-    ellipse: function(cx, cy, rx, ry, settings) {
-        return this.createElement('ellipse', { cx: cx, cy: cy, rx: rx, ry: ry }, settings);
-    },
-
-    line: function(x1, y1, x2, y2, settings) {
-        return this.createElement('line', { x1: x1, y1: y1, x2: x2, y2: y2 }, settings);
-    },
-
-    text: function(x, y, value, settings) {
-        var node = this.createElement('text', { x: x, y: y }, settings);
-        node.appendChild(node.ownerDocument.createTextNode(value));
-        return node;
-    },
-
-    link: function(ref, settings) {
-        var node = this.createElement('link', settings);
-        node.setAttributeNS(this.xlinkNS, 'href', ref);
-        return node;
-    },
-
-    image: function(x, y, width, height, ref, settings) {
-        var node = this.createElement('image', { x: x, y: y, width: width, height: height }, settings);
-        node.setAttributeNS(this.xlinkNS, 'href', ref);
-        return node;        
-    },
-
-    path: function(path, settings) {
-        return this.createElement('path', { path: path }, settings);
-    },
-
-    polyline: function(points, settings) {
-        return this.createElement('polyline', { points: points }, settings);       
     }
 
 });

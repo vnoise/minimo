@@ -3,21 +3,21 @@ var ModeMenu = new Class({
 
     initialize: function (options) {
         options.options = [
-            "chromatic",
-            "lydian",
-            "ionian",
+            // "lydian",
+            // "ionian",
+            "phrygian",
             "mixolydian",
             "dorian",
             "aeolian",
-            "phrygian",
-            "locrian",
-            "harmonic minor",
-            "melodic minor",        
+            // "locrian",
+            // "harmonic minor",
+            // "melodic minor",        
             "major pentatonic",
             "minor pentatonic",
-            "wholetone",
-            "whole-half",
-            "half-whole"
+            "chromatic",
+            // "wholetone",
+            // "whole-half",
+            // "half-whole"
         ];
 
         Menu.prototype.initialize.call(this, options);

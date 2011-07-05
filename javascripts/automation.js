@@ -2,6 +2,8 @@ var Automation = new Class({
     Extends: Widget,
 
     initialize: function (options) {
+        this.clockColor = '#fff';
+
         Widget.prototype.initialize.call(this, options);
 
         this.pattern = [];
@@ -14,29 +16,35 @@ var Automation = new Class({
         }
     },
 
-    draw: function() {
-        var w = this.width();
-        var h = this.height();
-
-        this.attr('class', 'automation');
-
-        this.rect(0, 0, w, h, 0, 0);
+    drawCanvas: function(context) {
+        var w = this.width;
+        var h = this.height;
 
         this.stepx = w / 16;
 
-        this.text = this.text(5, h / 2, this.key, { 'class': 'label' });
-
         for (var i = 0; i < 16; i++) {
-            this.steps[i] = this.rect(i * this.stepx, 0, this.stepx, 0, { 'class': 'step' });
-            this.clocks[i] = this.rect(i * this.stepx, 0, this.stepx, h, { 'class': 'clock', 'opacity': 0 });
+            var value = this.pattern[i];
+            var x = i * this.stepx;
+
+            context.fillStyle = this.bgColor;        
+            context.fillRect(x, 0, this.stepx, h);
+            context.fillStyle = this.fgColor;
+            context.fillRect(x, h - value * h, this.stepx, value * h);
+
+            if (this._clock == i) {
+                context.fillStyle = this.clockColor;
+                context.fillRect(i * this.stepx, h - 5, 1, 5);
+            }
         }
 
-        this.drawSteps();
+        context.font = (this.height / 5) + "px Arial";
+        context.fillStyle = "#fff";
+        context.fillText(this.key, 5, 20);
     },
 
     handleEvent: function(event) {
         var index = Math.floor(event.localX / this.stepx);
-        var value = Math.max(0, Math.min(1, 1 - event.localY / this.height()));
+        var value = Math.max(0, Math.min(1, 1 - event.localY / this.height));
         var step = this.step / (this.max - this.min);
 
         value = Math.floor(value / step) * step;
@@ -63,30 +71,9 @@ var Automation = new Class({
 
     setStep: function(index, value) {
         this.pattern[index] = value;
-        this.drawStep(index, value);
     },
 
-    drawStep: function(index, value) {
-        var rect = this.steps[index];
-        var h = this.height();
-
-        if (rect) {
-            rect.setAttribute('height', value * h);
-            rect.setAttribute('y', h - value * h);        
-        }
-    },
-
-    drawSteps: function() {
-        for (var i = 0; i < 16; i++) {
-            this.drawStep(i, this.pattern[i]);
-        }
-    },
-
-    clock: function(index) {
-        for (var i = 0; i < 16; i++) {
-            this.clocks[i].setAttribute('opacity', i % 4 == 0 ? 0.1 : 0);
-        }
-
-        this.clocks[(index + 16) % 16].setAttribute('opacity', 0.3);
+    clock: function(clock) {
+        this._clock = clock % 16;
     }
 });

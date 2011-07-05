@@ -3,24 +3,10 @@ var TypeMenu = new Class({
 
     initialize: function (options) {
         options.options = [
-            "sample",
             "sinus",
-            "sinus_noise",
-            "sinus_fifth",
-            "sinus_oct",
             "tri",
-            "tri_noise",
-            "tri_fifth",
-            "tri_oct",
             "saw",
-            "saw_noise",
-            "saw_fifth",
-            "saw_oct",
             "pulse",
-            "pulse_saw",
-            "pulse_tri",
-            "pulse_fifth",
-            "pulse_oct",
             "noise"
         ];
 
@@ -28,6 +14,20 @@ var TypeMenu = new Class({
     },
 
     onSelect: function(type) {
-        this.instrument.send('/type', 's', type);
+        this.instrument.send('/type', 'is', this.index, type);
+    }    
+});
+
+var PitchMenu = new Class({
+    Extends: Menu,
+
+    initialize: function (options) {
+        options.options = [0, 7, 12, 19, 24];
+
+        Menu.prototype.initialize.call(this, options);
+    },
+
+    onSelect: function(pitch) {
+        this.instrument.send('/pitch', 'ii', this.index, pitch);
     }    
 });

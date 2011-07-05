@@ -1,19 +1,20 @@
 var TouchTracker = new Class({
 
-    initialize: function(controller) {
+    initialize: function(root) {
+        this.root = root;
         this.touchModel = null;
         this.touches = {};
 
-        if (window.location.hash == '#touch') {
-            if (navigator.userAgent.match(/iPad|iPhone/i)) {
-                this.touchModel = "apple";
-                this.event = {
-                    down: 'touchstart',
-                    move: 'touchmove',
-                    up: 'touchend'
-                };
-            }
-            else if (navigator.userAgent.match(/Firefox/i)) {
+        if (navigator.userAgent.match(/iPad|iPhone/i)) {
+            this.touchModel = "apple";
+            this.event = {
+                down: 'touchstart',
+                move: 'touchmove',
+                up: 'touchend'
+            };
+        }
+        else {
+            if (window.location.hash == '#touch' && navigator.userAgent.match(/Firefox/i)) {
                 document.multitouchData = true;
                 this.touchModel = "mozilla";
                 this.event = {
@@ -23,16 +24,13 @@ var TouchTracker = new Class({
                 };
             }
             else {
-                throw "no touch device found";
+                this.touchModel = "mouse";
+                this.event = {
+                    down: 'mousedown',
+                    move: 'mousemove',
+                    up: 'mouseup'
+                };
             }
-        }
-        else {
-            this.touchModel = "mouse";
-            this.event = {
-                down: 'mousedown',
-                move: 'mousemove',
-                up: 'mouseup'
-            };
         }
 
         // document.documentElement.style.webkitTapHighlightColor = "rgba(0,0,0,0)";
@@ -44,15 +42,11 @@ var TouchTracker = new Class({
         document.ongesturechange = function(e) { e.preventDefault(); };
         document.ongesturestart = function(e) { e.preventDefault(); };
 
-        this.controller = controller;
-        this.root = controller.root;
-        this.svg = controller.svg;
-        
         document.addEventListener(this.event.down, this.onTouchDown.bind(this), false);
         document.addEventListener(this.event.move, this.onTouchMove.bind(this), false);
         document.addEventListener(this.event.up, this.onTouchUp.bind(this), false);
 
-        this.scrollManager = new ScrollManager();
+        // this.scrollManager = new ScrollManager();
     },
 
     log: function(str) {
@@ -70,11 +64,11 @@ var TouchTracker = new Class({
         var x = event.pageX - widget.pageX();
         var y = event.pageY - widget.pageY();
 
-        return x >= 0 && x <= widget.width() && y >= 0 && y <= widget.height();
+        return x >= 0 && x <= widget.width && y >= 0 && y <= widget.height;
     },
 
     findTarget: function(widget, event) {
-        if (this.eventInside(widget, event)) {
+        if (widget.visible && this.eventInside(widget, event)) {
             for (var i = widget.children.length - 1; i >= 0; i--) {
                 var target = this.findTarget(widget.children[i], event);
                 if (target) {
@@ -92,8 +86,8 @@ var TouchTracker = new Class({
             this.touches[event.identifier] = widget;
         }
         else {
-            if (widget.parent) {
-                this.bubbleEvent(widget, event);
+            if (widget._parent) {
+                this.bubbleEvent(widget._parent, event);
             }
         }
     },
@@ -109,7 +103,7 @@ var TouchTracker = new Class({
             this.bubbleEvent(target, event);
         }
         else {
-            this.scrollManager.onTouchDown(event);
+            // this.scrollManager.onTouchDown(event);
         }
     },
 
@@ -124,7 +118,7 @@ var TouchTracker = new Class({
             event.preventDefault();
         }
 
-        if (!event.streamId === undefined) {
+        if (event.streamId !== undefined) {
             event.identifier = event.streamId;
         }
 
