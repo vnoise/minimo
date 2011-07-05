@@ -78,7 +78,7 @@ InstrumentManager.prototype = {
 };
 
 var instruments = new InstrumentManager();
-var numInstruments = 1;
+var numInstruments = 2;
 
 setTimeout(function() {
     for (var i = 0; i < numInstruments; i++) {
@@ -121,6 +121,10 @@ function loadSamples(instrument) {
 
 function file(req, res) {
     var type = 'text/plain';
+
+    if (req.url.match(/\.html$/)) {
+        type = 'text/html';
+    }
 
     if (req.url.match(/\.js$/)) {
         type = 'text/javascript';

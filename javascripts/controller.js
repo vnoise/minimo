@@ -10,9 +10,9 @@ var Controller = new Class({
 
     initialize: function() {
         this.instruments = [];
-        this.width = 800;
+        this.width = 1200;
         this.height = 600;
-        this.numInstruments = 1;
+        this.numInstruments = 2;
 
         this.svg = document.getElementById('svg');
         this.console = document.getElementById('console');
@@ -21,7 +21,6 @@ var Controller = new Class({
             layout: 'horizontal',
             _svg: this.svg,
             container: this.svg,
-            y: 50,
             width: this.width,
             height: this.height
         });
@@ -43,7 +42,7 @@ var Controller = new Class({
     },
 
     connect: function() {
-        this.socket = new io.Socket('192.168.2.127'); 
+        this.socket = new io.Socket(location.host); 
         this.socket.connect();
         this.socket.on('connect', this.onConnect.bind(this));
         this.socket.on('message', this.onMessage.bind(this));
@@ -78,6 +77,9 @@ var Controller = new Class({
     create: function(index) {
         this.instruments[index] = this.root.add({
             type: Instrument,
+            marginLeft: 10,
+            marginTop: 10,
+            marginRight: 10,
             controller: this,
             index: index
         });

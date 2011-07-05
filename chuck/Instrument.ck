@@ -212,7 +212,7 @@ public class Instrument {
         pulse.gain => pulse2.gain =>
         saw.gain => sample.gain => noise.gain;
 
-        if (type == "sinus" || type == "sinus_pulse" || type == "sinus_noise" || type == "sinus_saw" || type == "sinus_tri" ) {
+        if (type == "sinus" || type == "sinus_noise") {
             1 => sinus.gain;
         }       
 
@@ -221,7 +221,7 @@ public class Instrument {
             0.5 => sinus2.gain;
         }
 
-        if (type == "pulse" || type == "sinus_pulse" || type == "pulse_saw" || type == "pulse_tri" || type == "pulse_noise") {
+        if (type == "pulse" || type == "pulse_saw" || type == "pulse_tri" || type == "pulse_noise") {
             0.5 => pulse.gain;
         }
 
@@ -230,7 +230,7 @@ public class Instrument {
             0.5 => pulse2.gain;
         }
 
-        if (type == "saw" || type == "sinus_saw" || type == "pulse_saw" || type == "saw_noise") {
+        if (type == "saw" || type == "pulse_saw" || type == "saw_noise") {
             0.5 => saw.gain;
         }
 
@@ -239,7 +239,7 @@ public class Instrument {
             0.5 => saw2.gain;
         }
 
-        if (type == "tri" || type == "sinus_tri" || type == "pulse_tri" || type == "tri_noise") {
+        if (type == "tri" || type == "pulse_tri" || type == "tri_noise") {
             0.5 => tri.gain;
         }
 

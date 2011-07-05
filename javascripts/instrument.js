@@ -18,7 +18,7 @@ var Instrument = new Class({
 
         this.sequencer = this.add({ 
             type: Sequencer, 
-            sizeHint: 2,
+            sizeHint: 4,
             marginTop: 10,
             instrument: this 
         });
@@ -134,38 +134,19 @@ var Instrument = new Class({
         //     callback: this.onTouchButton.bind(this)
         // });
 
-        // var automation = this.add({
-        //     type: Automation,
-        //     instrument: this,
-        //     marginTop: 10,
-        //     key: key, 
-        //     min: min, 
-        //     max: max, 
-        //     step: step
-        // });
+        if (this.children.length < 16) {
 
-        // this.automations.push(automation);
-    },
+            var automation = this.add({
+                type: Automation,
+                instrument: this,
+                key: key, 
+                min: min, 
+                max: max, 
+                step: step
+            });
 
-    slider: function(key, min, max, step) {
-        this.sliders.add({
-            type: Slider,
-            key: key, 
-            min: min, 
-            max: max, 
-            step: step
-        });
-
-        var automation = new Automation({
-            _parent: this,
-            instrument: this,
-            key: key, 
-            min: min, 
-            max: max, 
-            step: step
-        });
-
-        this.automations.push(automation);
+            this.automations.push(automation);
+        }
     },
     
     pattern: function(clip, index, value) {
