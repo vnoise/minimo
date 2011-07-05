@@ -88,8 +88,8 @@ setTimeout(function() {
 
 
 function index(req, res) {
-    res.writeHead(200, {'Content-Type': 'image/svg+xml'});
-    fs.readFile("index.svg", function(err, file) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    fs.readFile("index.html", function(err, file) {
         res.end(file);
     });
 }
