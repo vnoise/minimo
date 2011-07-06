@@ -5,7 +5,7 @@ var events = require('events');
 var io     = require('./socket.io/lib/socket.io');
 var _osc   = require('./osc/osc');
 var spawn  = require('child_process').spawn;
-
+var os = require('os');
 
 Function.prototype.bind = function(object) {
     var fn = this;
@@ -117,7 +117,13 @@ function file(req, res) {
 
 var clients = {};
 
-var chuck = spawn('chuck', 
+if (os.type().match(/CYGWIN*/)) {
+    chuck_executable = "./chuck";
+}else{
+    chuck_executable = "./chuck_OS_X";
+}
+
+var chuck = spawn( chuck_executable, 
                   ['./chuck/Parameter.ck',
                    './chuck/Mode.ck', 
                    './chuck/Instrument.ck', 
