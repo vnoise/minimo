@@ -118,7 +118,7 @@ function file(req, res) {
 var clients = {};
 
 if (os.type().match(/CYGWIN*/)) {
-    chuck_executable = "./chuck";
+    chuck_executable = "./chuck.exe";
 }else{
     chuck_executable = "./chuck_OS_X";
 }
