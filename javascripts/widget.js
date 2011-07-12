@@ -78,7 +78,7 @@ var Widget = new Class({
         var size = 0;
 
         this.children.each(function(child) {
-            if (!child.absolute) {
+            if (child.visible && !child.absolute) {
                 size += child.sizeHint;
             }
         });
@@ -90,7 +90,7 @@ var Widget = new Class({
         var margin = 0;
 
         this.children.each(function(child) {
-            if (!child.absolute) {
+            if (child.visible && !child.absolute) {
                 margin += child.marginTop + child.marginBottom;
             }
         });
@@ -102,7 +102,7 @@ var Widget = new Class({
         var margin = 0;
 
         this.children.each(function(child) {
-            if (!child.absolute) {
+            if (child.visible && !child.absolute) {
                 margin += child.marginLeft + child.marginRight;
             }
         });
@@ -118,7 +118,7 @@ var Widget = new Class({
         var h = this.height;
 
         this.children.each(function(child) {
-            if (!child.absolute) {
+            if (child.visible && !child.absolute) {
                 x += child.marginLeft;
                 child.extent(x, y, w * child.sizeHint, h);
                 x += child.width;
@@ -134,7 +134,7 @@ var Widget = new Class({
         var h = (this.height - this.sumVerticalMargins()) / this.sumSizeHints();
 
         this.children.each(function(child) {
-            if (!child.absolute) {
+            if (child.visible && !child.absolute) {
                 y += child.marginTop;
                 child.extent(x, y, w, h * child.sizeHint);
                 y += child.height;

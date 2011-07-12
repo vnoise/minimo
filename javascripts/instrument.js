@@ -23,7 +23,56 @@ var Instrument = new Class({
             instrument: this 
         });
 
+        this.initButtons();
         this.initSliders();
+    },
+
+    initButtons: function() {
+        this.buttons = this.add({ 
+            layout: 'horizontal',
+            sizeHint: 0.5,
+            instrument: this 
+        });
+
+        this.buttons.add({
+            type: ToggleButton,
+            label: "Osc",
+            on: {
+                click: this.toggleGroup.bind(this, ["volume", "pitch", "octave", "detune", "pwidth"])
+            }
+        });
+
+        this.buttons.add({
+            type: ToggleButton,
+            label: "Filter",
+            on: {
+                click: this.toggleGroup.bind(this, ["cutoff", "reso"])
+            }
+        });
+
+        this.buttons.add({
+            type: ToggleButton,
+            label: "ADSR",
+            on: {
+                click: this.toggleGroup.bind(this, ["attack", "decay", "sustain", "release"])
+            }
+        });
+
+        this.buttons.add({
+            type: ToggleButton,
+            label: "FX",
+            on: {
+                click: this.toggleGroup.bind(this, ["reverb", "delay", "dtime", "feedback"])                    
+            }
+        });
+
+    },
+
+    toggleGroup: function(keys) {
+        keys.each(function(key) {
+            var automation = this.getAutomation(key);
+            automation.visible = !automation.visible;
+        }.bind(this));
     },
 
     initMenus: function() {
@@ -71,7 +120,12 @@ var Instrument = new Class({
             instrument: this 
         });
 
-        this.automations = [];
+        this.automations = this.add({ 
+            layout: 'vertical',
+            sizeHint: 10,
+            marginTop: 5,
+            instrument: this 
+        });
 
         this.addSlider(this.color1, 'volume'    , 0, 1, 0.01);
         this.addSlider(this.color1, 'octave'    , 0, 6, 1);
@@ -110,9 +164,9 @@ var Instrument = new Class({
     },
 
     getAutomation: function(key) {
-        for (var i = 0; i < this.automations.length; i++) {
-            if (this.automations[i].key == key) {
-                return this.automations[i];
+        for (var i = 0; i < this.automations.children.length; i++) {
+            if (this.automations.children[i].key == key) {
+                return this.automations.children[i];
             }    
         }
         return null;
@@ -152,8 +206,9 @@ var Instrument = new Class({
             step: step
         });
 
-        var automation = this.add({
+        var automation = this.automations.add({
             type: Automation,
+            visible: false,
             fgColor: color,
             instrument: this,
             marginTop: 5,
@@ -162,8 +217,6 @@ var Instrument = new Class({
             max: max, 
             step: step
         });
-
-        this.automations.push(automation);
     },
     
     pattern: function(clip, index, value) {
