@@ -25,7 +25,8 @@ var Instrument = function(index) {
 
     this.index = index;
     this.server = new osc.Server(20000 + this.index, '127.0.0.1');
-    this.client = new _osc.Client(10000 + this.index, '127.0.0.1');
+    //this.client = new _osc.Client(10000 + this.index, '127.0.0.1');
+    console.log('client intanziated mit Port  ' + 10000 + this.index);
 
     this.server.on('message', this.onMessage.bind(this));
 };
@@ -34,7 +35,8 @@ Instrument.prototype = {
     __proto__: events.EventEmitter.prototype,
 
     send: function(message) {
-        this.client.send(message);
+        //this.client.send(message);
+        console.log('instrument send msg ->   ' + message);
     },
 
     onMessage: function(message) {
@@ -47,8 +49,8 @@ function InstrumentManager() {
     events.EventEmitter.call(this);
 
     this.instruments = {};
-
-    this.client = new _osc.Client(9998, '127.0.0.1');
+	//this.client = new _osc.Client(9998, '127.0.0.1');
+	console.log('client Instrument Manager ->  port 9998');
 };
 
 InstrumentManager.prototype = {
@@ -68,7 +70,9 @@ InstrumentManager.prototype = {
 
         var msg = new _osc.Message('/init');
         msg.append(index, 'i');
-        this.client.send(msg);
+        console.log('client send ->   ' + msg);
+        //this.client.send(msg);
+        
     },
 
     onMessage: function(index, message) {
@@ -117,8 +121,8 @@ function file(req, res) {
 
 var clients = {};
 
-if (os.type().match(/CYGWIN*/)) {
-    chuck_executable = "./chuck.exe";
+//if (os.type().match(/CYGWIN*/)) {
+/*    chuck_executable = "./chuck.exe";
 }else{
     chuck_executable = "./chuck_OS_X";
 }
@@ -137,6 +141,8 @@ chuck.stderr.on('data', function (data) {
 chuck.stdout.on('data', function (data) {
     console.log(data.toString());
 });
+*/
+
 
 // var chuck = spawn('chuck', ['-s', 'test.ck', 'stream.ck']);
 // var lame = spawn('lame', ['-', '-']);

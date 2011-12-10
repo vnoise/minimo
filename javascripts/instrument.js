@@ -249,6 +249,7 @@ var Instrument = new Class({
     receive: function(message) {
         var action = message.address.slice(1);
         var fun = this[action];
+        //console.log('action =========' + action);
 
         if (fun) {
             fun.apply(this, message.args);
